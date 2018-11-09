@@ -60,7 +60,7 @@ namespace DungeonRacer
 			Type = Global.TypeMap;
 			Width = Global.RoomWidthPx;
 			Height = Global.RoomHeightPx;
-			grid = new GridCollider(this, Global.RoomWidth, Global.RoomHeight, Global.TileSizePx, Global.TileSizePx);
+			grid = new GridCollider(Global.RoomWidth, Global.RoomHeight, Global.TileSizePx, Global.TileSizePx);
 			Collider = grid;
 
 			backMap = new Tilemap("room_default", Global.RoomWidth, Global.RoomHeight);

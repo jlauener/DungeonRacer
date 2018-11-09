@@ -136,7 +136,7 @@ namespace DungeonRacer
 				velocity *= data.MaxSpeed;
 			}
 
-			MoveBy(velocity * deltaTime, Global.TypeMap, Global.TypeEntity);
+			MoveBy(velocity * deltaTime, CollisionFlags.NonStop, Global.TypeMap, Global.TypeEntity);
 			Speed = velocity.Length();
 
 			sprite.Play(Input.IsDown("a") ? "accel" + data.SpriteId : "idle" + data.SpriteId);

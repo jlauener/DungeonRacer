@@ -54,10 +54,10 @@ namespace DungeonRacer
 					room.RemoveEntity(this);
 
 					//sprite.Play("hit");
-					Scene.Tween(this, new { Y = Y - Global.TileSizePx * 1.8f }, 0.35f).Ease(Ease.QuadOut).OnComplete(() =>
-					{
+					//Scene.Tween(this, new { Y = Y - Global.TileSizePx * 1.8f }, 0.35f).Ease(Ease.QuadOut).OnComplete(() =>
+					//{
 						sprite.Play("collect", RemoveFromScene);
-					});
+					//});
 					return false;
 				case EntityType.Door:
 					if (player.UseKey())
@@ -72,7 +72,7 @@ namespace DungeonRacer
 
 			if (data.Pushable)
 			{
-				if (!Collide(X + dx, Y + dy, Global.TypeMap, Global.TypeEntity))
+				if (!CollideAt(X + dx, Y + dy, Global.TypeMap, Global.TypeEntity))
 				{
 					X += dx;
 					Y += dy;
@@ -95,7 +95,7 @@ namespace DungeonRacer
 
 			if (data.DamagePerSec > 0.0f)
 			{
-				var info = Collide(X, Y, Global.TypePlayer);
+				var info = CollideAt(X, Y, Global.TypePlayer);
 				if (info.Other != null)
 				{
 					((Player)info.Other).Damage(data.DamagePerSec * deltaTime);
