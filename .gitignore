@@ -1,0 +1,7 @@
+DungeonRacer/bin/
+DungeonRacer/obj/
+DungeonRacer/Content/obj/
+DungeonRacer/Content/bin/
+DungeonRacer/release
+packages/
+.vs/
