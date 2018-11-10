@@ -5,9 +5,9 @@ VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DungeonRacer", "DungeonRacer\DungeonRacer.csproj", "{11F2BE4F-0C49-4448-A445-7D4F32258D05}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroPunk", "..\MicroPunk\MicroPunk\MicroPunk.csproj", "{2E765F33-B9AD-4535-A1CA-C5B3B4EB9A5C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoPunk", "..\MonoPunk\MonoPunk\MonoPunk.csproj", "{2E765F33-B9AD-4535-A1CA-C5B3B4EB9A5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MicroPunk.Content.Pipeline", "..\MicroPunk\MicroPunk.Content.Pipeline\MicroPunk.Content.Pipeline.csproj", "{BBE75591-8914-41BD-BD67-45D71977290F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoPunk.Content.Pipeline", "..\MonoPunk\MonoPunk.Content.Pipeline\MonoPunk.Content.Pipeline.csproj", "{BBE75591-8914-41BD-BD67-45D71977290F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

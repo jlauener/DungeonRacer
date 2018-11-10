@@ -10,8 +10,8 @@
 
 #-------------------------------- References --------------------------------#
 
-/reference:../../../MicroPunk/MicroPunk.Content.Pipeline/bin/Release/MicroPunk.Content.Pipeline.dll
-/reference:../../../MicroPunk/MicroPunk.Content.Pipeline/bin/Release/Newtonsoft.Json.dll
+/reference:../../../MonoPunk/MonoPunk.Content.Pipeline/bin/Release/MonoPunk.Content.Pipeline.dll
+/reference:../../../MonoPunk/MonoPunk.Content.Pipeline/bin/Release/Newtonsoft.Json.dll
 
 #---------------------------------- Content ---------------------------------#
 

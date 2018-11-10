@@ -112,9 +112,8 @@
     <None Include="app.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\MicroPunk\MicroPunk\MicroPunk.csproj">
-      <Project>{2e765f33-b9ad-4535-a1ca-c5b3b4eb9a5c}</Project>
-      <Name>MicroPunk</Name>
+    <ProjectReference Include="..\..\MonoPunk\MonoPunk\MonoPunk.csproj">
+      <Name>MonoPunk</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
