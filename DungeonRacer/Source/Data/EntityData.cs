@@ -27,6 +27,10 @@ namespace DungeonRacer
 		public int DamageOnHit { get; private set; }
 		public int DamagePerSec { get; private set; }
 
+		public Action<Scene, RoomEntity, Player> CollectAction { get; private set; }
+
+		public Sfx CollectSfx { get; private set; }
+
 		private EntityData(string name, EntityType type)
 		{
 			Name = name;
@@ -118,20 +122,49 @@ namespace DungeonRacer
 			e.CreateAnimator("entities_32_16").AddAnim("idle", 37);
 			e.SpriteOrigin = new Vector2(-Global.TileSize, 0.0f);
 
-			e = Create("key", EntityType.Collectible).SetLayer(Global.LayerFront).AddAnim("idle", AnimatorMode.Loop, 0.2f, 20, 21, 22, 23);
+			e = Create("key", EntityType.Collectible).SetLayer(Global.LayerFront);
+			e.CollectAction = (gameScene, room, player) => player.AddKey();
+			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 20, 21, 22, 23).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
+			e.CollectSfx = new Sfx("sfx/key");
 
 			e = Create("coin", EntityType.Collectible).SetLayer(Global.LayerFront);
-			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 24, 25, 26, 27).AddAnim("hit", AnimatorMode.Loop, 0.05f, 24, 25, 26, 27).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
+			e.CollectAction = (gameScene, room, player) => player.AddMoney(5);
+			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 24, 25, 26, 27).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
+			e.CollectSfx = new Sfx("sfx/coin");
+
+			e = Create("extra_time", EntityType.Collectible).SetLayer(Global.LayerFront);
+			e.CollectAction = (scene, room, player) => ((GameScene) scene).AddTime(20.0f);
+			e.AddAnim("idle", 30).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
+			e.CollectSfx = new Sfx("sfx/coin");
 
 			e = Create("spike");
 			e.Solid = false;
 			e.DamagePerSec = 50;
 			e.SetLayer(Global.LayerBack).AddAnim("idle", 10);
 
-			e = Create("door_left", EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32).CreateAnimator("entities_16_32").AddAnim("idle", 20).AddAnim("open", AnimatorMode.OneShot, 0.2f, 21);
-			e = Create("door_right", EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32).CreateAnimator("entities_16_32").AddAnim("idle", 22).AddAnim("open", AnimatorMode.OneShot, 0.2f, 23);
-			e = Create("door_up", EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16).CreateAnimator("entities_32_16").AddAnim("idle", 30).AddAnim("open", AnimatorMode.OneShot, 0.2f, 31);
-			e = Create("door_down", EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16).CreateAnimator("entities_32_16").AddAnim("idle", 35).AddAnim("open", AnimatorMode.OneShot, 0.2f, 36);
+			//CreateDoor("exit", 20);
+			CreateDoor("locked", 20);
+		}
+
+		private static void CreateDoor(string name, int id)
+		{
+			EntityData e;
+
+			e = Create("door_left_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSizePx / 2);
+			e.CreateAnimator("entities_16_32").AddAnim("idle", id).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 1);
+			e.SpriteOrigin = new Vector2(0, Global.TileSize / 2);
+
+			e = Create("door_right_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSizePx / 2);
+			e.CreateAnimator("entities_16_32").AddAnim("idle", id + 3).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 2);
+			e.SpriteOrigin = new Vector2(0, Global.TileSize / 2);
+
+			e = Create("door_up_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSizePx / 2, 0);
+			e.CreateAnimator("entities_32_16").AddAnim("idle", id + 10).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 11);
+			e.SpriteOrigin = new Vector2(Global.TileSize / 2, 0);
+
+			e = Create("door_down_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSizePx / 2, 0);
+			e.CreateAnimator("entities_32_16").AddAnim("idle", id + 15).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 16);
+			e.SpriteOrigin = new Vector2(Global.TileSize / 2, 0);
 		}
 
 		public static EntityData Get(string name)
@@ -139,7 +172,7 @@ namespace DungeonRacer
 			EntityData entityData;
 			if (!store.TryGetValue(name, out entityData))
 			{
-				throw new Exception("EntityData with name '" + name + "' not found.");
+				return null;
 			}
 			return entityData;
 		}

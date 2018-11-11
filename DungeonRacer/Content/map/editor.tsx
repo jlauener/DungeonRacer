@@ -3,12 +3,12 @@
  <image source="editor.png" width="128" height="128"/>
  <tile id="0">
   <properties>
-   <property name="solid" type="bool" value="true"/>
+   <property name="wall" value="normal"/>
   </properties>
  </tile>
  <tile id="1">
   <properties>
-   <property name="solid" type="bool" value="true"/>
+   <property name="wall" value="decoration"/>
   </properties>
  </tile>
  <tile id="8">
@@ -18,7 +18,7 @@
  </tile>
  <tile id="9">
   <properties>
-   <property name="door" value="normal"/>
+   <property name="door" value="exit"/>
   </properties>
  </tile>
  <tile id="10">
@@ -69,6 +69,11 @@
  <tile id="41">
   <properties>
    <property name="entity" value="coin"/>
+  </properties>
+ </tile>
+ <tile id="42">
+  <properties>
+   <property name="entity" value="extra_time"/>
   </properties>
  </tile>
  <tile id="48">

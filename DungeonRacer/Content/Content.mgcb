@@ -15,6 +15,29 @@
 
 #---------------------------------- Content ---------------------------------#
 
+#begin effects/CRT-easymode.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/build:effects/CRT-easymode.fx
+
+#begin font/04b.fnt
+/importer:
+/processor:
+/build:font/04b.fnt
+
+#begin font/04b_0.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:font/04b_0.png
+
 #begin font/04b03.fnt
 /importer:BitmapFontImporter
 /processor:BitmapFontProcessor
@@ -32,11 +55,41 @@
 /processorParam:TextureFormat=Color
 /build:font/04b03_0.png
 
-#begin effects/CRT-easymode.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:effects/CRT-easymode.fx
+#begin gfx/entities.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:gfx/entities.png
+
+#begin gfx/player.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:gfx/player.png
+
+#begin gfx/tileset.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:gfx/tileset.png
 
 #begin gfx/ui/hp_bar_back.png
 /importer:TextureImporter
@@ -86,114 +139,121 @@
 /processorParam:TextureFormat=Color
 /build:gfx/ui/ui_hp_bar_front.png
 
-#begin gfx/entities.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:gfx/entities.png
+#begin map/bonus_horiz.tmx
+/importer:
+/processor:
+/build:map/bonus_horiz.tmx
 
-#begin gfx/player.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:gfx/player.png
+#begin map/bonus_horiz_turn.tmx
+/importer:
+/processor:
+/build:map/bonus_horiz_turn.tmx
 
-#begin gfx/tileset.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:gfx/tileset.png
+#begin map/bonus_vert.tmx
+/importer:
+/processor:
+/build:map/bonus_vert.tmx
+
+#begin map/bonus_vert_turn.tmx
+/importer:
+/processor:
+/build:map/bonus_vert_turn.tmx
 
 #begin map/horiz_1.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/horiz_1.tmx
 
 #begin map/horiz_2.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/horiz_2.tmx
 
 #begin map/horiz_3.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/horiz_3.tmx
 
-#begin map/horiz_4.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
-/build:map/horiz_4.tmx
-
 #begin map/horiz_turn_1.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/horiz_turn_1.tmx
 
 #begin map/horiz_turn_2.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/horiz_turn_2.tmx
 
-#begin map/horiz_turn_3.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
-/build:map/horiz_turn_3.tmx
+#begin map/initial.tmx
+/importer:
+/processor:
+/build:map/initial.tmx
 
-#begin map/initial_1.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
-/build:map/initial_1.tmx
+#begin map/spike_horiz.tmx
+/importer:
+/processor:
+/build:map/spike_horiz.tmx
+
+#begin map/spike_horiz_turn.tmx
+/importer:
+/processor:
+/build:map/spike_horiz_turn.tmx
+
+#begin map/spike_vert.tmx
+/importer:
+/processor:
+/build:map/spike_vert.tmx
+
+#begin map/spike_vert_turn.tmx
+/importer:
+/processor:
+/build:map/spike_vert_turn.tmx
+
+#begin map/test.tmx
+/importer:
+/processor:
+/build:map/test.tmx
 
 #begin map/vert_1.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/vert_1.tmx
 
 #begin map/vert_2.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/vert_2.tmx
 
 #begin map/vert_3.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/vert_3.tmx
 
-#begin map/vert_4.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
-/build:map/vert_4.tmx
-
 #begin map/vert_turn_1.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/vert_turn_1.tmx
 
 #begin map/vert_turn_2.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/vert_turn_2.tmx
 
-#begin map/vert_turn_3.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
-/build:map/vert_turn_3.tmx
+#begin sfx/coin.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/coin.wav
+
+#begin sfx/hit.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/hit.wav
+
+#begin sfx/key.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/key.wav
 

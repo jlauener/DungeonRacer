@@ -18,7 +18,7 @@ namespace DungeonRacer
 	{
 		public static DoorId GetMatching(DoorId doorId)
 		{
-			switch(doorId)
+			switch (doorId)
 			{
 				case DoorId.Left:
 					return DoorId.Right;
@@ -35,12 +35,14 @@ namespace DungeonRacer
 	class Room : Entity
 	{
 		public const int TileWall = 0;
+		public const int TileWallDecoration = 40;
 		public const int TileGround = 3;
 		public const int RoofHoriz = 24;
 		public const int RoofVert = 25;
 		public const int RoofCorner = 26;
 
-		private readonly RoomData data;
+		public RoomData Data { get; }
+		private readonly RoomFlags flags;
 		private readonly bool flipX;
 		private readonly bool flipY;
 
@@ -49,11 +51,12 @@ namespace DungeonRacer
 		private readonly Tilemap frontMap;
 
 		private readonly Dictionary<DoorId, Room> nextRooms = new Dictionary<DoorId, Room>();
-		private List<RoomEntity> entities;
+		private readonly List<RoomEntity> entities = new List<RoomEntity>();
 
-		public Room(RoomData data, bool flipX = false, bool flipY = false)
+		public Room(RoomData data, RoomFlags flags, bool flipX = false, bool flipY = false)
 		{
-			this.data = data;
+			Data = data;
+			this.flags = flags;
 			this.flipX = flipX;
 			this.flipY = flipY;
 
@@ -72,6 +75,8 @@ namespace DungeonRacer
 			frontMap.Layer = Global.LayerMapFront;
 			frontMap.Scale = Global.Scale;
 			Add(frontMap);
+
+			// FIXME use map data to property draw the walls
 
 			// roof
 			frontMap.SetTileAt(0, 0, RoofCorner);
@@ -98,22 +103,19 @@ namespace DungeonRacer
 			// first pass set solid flag
 			data.IterateTiles(flipX, flipY, (x, y, properties) =>
 			{
-				if (properties.GetBool("solid"))
+				if (properties.ContainsKey("wall"))
 				{
 					grid.SetTileAt(x, y, TileSolidType.Full);
-				}
-			});
 
-			// second pass handle doors and entities
-			data.IterateTiles(flipX, flipY, (x, y, properties) =>
-			{
-				if (properties.ContainsKey("door"))
-				{
-					HandleDoor(x, y, properties);
-				}
-				else if(properties.ContainsKey("entity"))
-				{
-					HandleEntity(x, y, properties);
+					if(properties.GetString("wall") == "decoration")
+					{
+						// FIXME
+						var tid = TileWallDecoration;
+						if (x == 1) tid += 2;
+						else if (x == Global.RoomWidth - 2) tid += 3;
+						else if (y == Global.RoomHeight - 2) tid += 1;
+						backMap.SetTileAt(x, y, tid);
+					}
 				}
 			});
 		}
@@ -122,30 +124,60 @@ namespace DungeonRacer
 		{
 			base.OnAdded();
 
-			if(entities == null)
-			{
-				entities = new List<RoomEntity>();
-				data.IterateTiles(flipX, flipY, (x, y, properties) =>
-				{
-					if (properties.ContainsKey("entity"))
-					{
-						entities.Add(new RoomEntity(this, EntityData.Get(properties.GetString("entity")), x, y));
-					}
-				});
-			}
+			// FIXME better way to handle special tiles, more will come...
+			// Maybe store wall/entity/wall data in a better way in RoomData.
+			var extraTimeTiles = new List<Tuple<int, int>>();
 
-			foreach(var entity in entities)
+			Data.IterateTiles(flipX, flipY, (x, y, properties) =>
 			{
-				Scene.Add(entity);
+				if (properties.ContainsKey("door"))
+				{
+					HandleDoor(x, y, properties.GetString("door"));
+				}
+				else if (properties.ContainsKey("entity"))
+				{
+					var entityName = properties.GetString("entity");
+					if (entityName == "extra_time")
+					{
+						extraTimeTiles.Add(new Tuple<int, int>(x, y));
+					}
+					else
+					{
+						CreateEntity(properties.GetString("entity"), x, y);
+					}
+				}
+			});
+
+			if((flags & RoomFlags.ExtraTime) > 0)
+			{
+				var tile = Rand.GetRandomElement(extraTimeTiles);
+				if(tile != null)
+				{
+					CreateEntity("extra_time", tile.Item1, tile.Item2);
+				}
+				else
+				{
+					Log.Error("RoomFlags.ExtraTime present but no 'extra_time' entity found.");
+				}
 			}
 		}
 
+		private void CreateEntity(string name, float x, float y)
+		{
+			var entityData = EntityData.Get(name);
+			if (entityData != null)
+			{
+				var entity = new RoomEntity(this, entityData, x, y);
+				entities.Add(entity);
+				Scene.Add(entity);
+			}
+		}
 
 		protected override void OnRemoved()
 		{
 			base.OnRemoved();
 
-			foreach(var entity in entities)
+			foreach (var entity in entities)
 			{
 				Scene.Remove(entity);
 			}
@@ -172,7 +204,7 @@ namespace DungeonRacer
 			nextRoom.nextRooms[DoorUtils.GetMatching(doorId)] = this;
 		}
 
-		private void HandleDoor(int x, int y, TiledMapProperties properties)
+		private void HandleDoor(int x, int y, string name)
 		{
 			if (x == 1)
 			{
@@ -187,6 +219,8 @@ namespace DungeonRacer
 				backMap.SetTileAt(x, y - 1, 6);
 				backMap.SetTileAt(x, y, 14);
 				backMap.SetTileAt(x, y + 1, 22);
+
+				CreateEntity("door_left_" + name, x, y);
 			}
 			else if (x == Global.RoomWidth - 2)
 			{
@@ -201,10 +235,12 @@ namespace DungeonRacer
 				backMap.SetTileAt(x, y - 1, 7);
 				backMap.SetTileAt(x, y, 15);
 				backMap.SetTileAt(x, y + 1, 23);
+
+				CreateEntity("door_right_" + name, x, y);
 			}
 			else if (y == 1)
 			{
-				// top
+				// up
 				for (var iy = -1; iy <= 0; iy++)
 				{
 					grid.SetTileAt(x - 1, y + iy, TileSolidType.HalfLeft);
@@ -215,10 +251,12 @@ namespace DungeonRacer
 				backMap.SetTileAt(x - 1, y, 27);
 				backMap.SetTileAt(x, y, 28);
 				backMap.SetTileAt(x + 1, y, 29);
+
+				CreateEntity("door_up_" + name, x, y);
 			}
 			else if (y == Global.RoomHeight - 2)
 			{
-				// bottom
+				// down
 				for (var iy = 0; iy <= 1; iy++)
 				{
 					grid.SetTileAt(x - 1, y + iy, TileSolidType.HalfLeft);
@@ -229,6 +267,8 @@ namespace DungeonRacer
 				backMap.SetTileAt(x - 1, y, 35);
 				backMap.SetTileAt(x, y, 36);
 				backMap.SetTileAt(x + 1, y, 37);
+
+				CreateEntity("door_down_" + name, x, y);
 			}
 			else
 			{
@@ -236,9 +276,10 @@ namespace DungeonRacer
 			}
 		}
 
-		private void HandleEntity(int x, int y, TiledMapProperties properties)
+		private void CreateDoorEntity(string name, float x, float y)
 		{
-			var entity = new RoomEntity(this, EntityData.Get(properties.GetString("entity")), x, y);
+			if (name == "exit") CreateEntity("door_left", x, y);
+			else if (name == "locked") CreateEntity("door_left_locked", x, y);
 		}
 
 		private void DrawRect(Tilemap tilemap, int x, int y, int width, int height, int tileId, bool fill = false)

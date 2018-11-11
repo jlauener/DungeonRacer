@@ -119,11 +119,11 @@ namespace DungeonRacer
 
 			if (Input.IsDown("left"))
 			{
-				angularVelocity -= data.TurnSpeed * deltaTime * (velocity.Length() / data.MaxSpeed);
+				angularVelocity -= data.TurnSpeed * deltaTime;// * (velocity.Length() / data.MaxSpeed);
 			}
 			if (Input.IsDown("right"))
 			{
-				angularVelocity += data.TurnSpeed * deltaTime * (velocity.Length() / data.MaxSpeed);
+				angularVelocity += data.TurnSpeed * deltaTime;// * (velocity.Length() / data.MaxSpeed);
 			}
 
 			velocity *= data.Friction;
@@ -162,6 +162,8 @@ namespace DungeonRacer
 				{
 					velocity.X = -velocity.X * BounceRestitution;
 				}
+
+				Asset.LoadSoundEffect("sfx/hit").Play();
 			}
 
 			return stop;

@@ -5,24 +5,75 @@ using System.Collections.Generic;
 
 namespace DungeonRacer
 {
-	enum RoomType
+	[Flags]
+	enum RoomFlags
 	{
-		Initial,
-		Horizontal,
-		Vertical,
-		HorizontalTurn,
-		VerticalTurn
+		None = 0x0000,
+		Initial = 0x0001,
+		ExtraTime = 0x0002,
+		Bonus = 0x0004,
+		Spike = 0x0008,
+		Vertical = 0x1000,
+		Horizontal = 0x2000,
+		Test = 0x8000
 	}
 
 	class RoomData
 	{
-		public RoomType Type { get; }
+		public string Name { get { return map.Name; } }
+		public RoomFlags Flags { get; private set; }
+
 		private readonly TiledMap map;
+		private readonly TiledMapTileLayer layer;
 
 		private RoomData(TiledMap map)
 		{
-			Type = map.Properties.GetEnum<RoomType>("type");
 			this.map = map;
+			layer = map.GetLayer<TiledMapTileLayer>("main");
+
+			if (map.Properties.GetBool("initial")) Flags |= RoomFlags.Initial;
+			if (map.Properties.GetBool("bonus")) Flags |= RoomFlags.Bonus;
+			if (map.Properties.GetBool("spike")) Flags |= RoomFlags.Spike;
+			if (map.Properties.GetBool("test")) Flags |= RoomFlags.Test;
+
+			if (HasEntrance(0, 5)) Flags |= RoomFlags.Horizontal;
+			if (HasEntrance(7, 0)) Flags |= RoomFlags.Vertical;
+
+			// TODO create a list of extra time tiles, remove them from map, store them somehwere
+			IterateTiles(false, false, (x, y, properties) =>
+			{
+				if(properties.ContainsKey("entity") && properties.GetString("entity") == "extra_time")
+				{
+					Flags |= RoomFlags.ExtraTime;
+				}
+			});
+
+			Log.Debug("Created room data with flags " + Flags + ".");
+		}
+
+		private bool HasEntrance(int x, int y)
+		{
+			return "entrance" == map.GetTilePropertiesAt(layer, x, y).GetString("door");
+		}
+
+		public bool HasFlag(RoomFlags flag)
+		{
+			return (Flags & flag) > 0;
+		}
+
+		private bool Match(RoomFlags flags)
+		{
+			// FIXME standardize mentadory and optional flags.
+
+			var extraTime = (flags & RoomFlags.ExtraTime) > 0;
+			if (extraTime)
+			{
+				return Flags == flags;
+			}
+			else
+			{
+				return (Flags & ~RoomFlags.ExtraTime) == flags;
+			}
 		}
 
 		public void IterateTiles(bool flipX, bool flipY, Action<int, int, TiledMapProperties> action)
@@ -43,27 +94,38 @@ namespace DungeonRacer
 			}
 		}
 
-		private static readonly Dictionary<RoomType, List<RoomData>> rooms = new Dictionary<RoomType, List<RoomData>>();
+		public override string ToString()
+		{
+			return "[RoomData Name='" + Name + " Flags=" + Flags + "]";
+		}
+
+		private static readonly List<RoomData> rooms = new List<RoomData>();
 
 		public static void Init()
 		{
 			var maps = Asset.LoadAll<TiledMap>("map");
 			foreach(var map in maps.Values)
 			{
-				var room = new RoomData(map);
-				GetRooms(room.Type).Add(room);
+				rooms.Add(new RoomData(map));
 			}
 		}
 
-		public static List<RoomData> GetRooms(RoomType type)
+		public static void Query(RoomFlags flags, Action<RoomData> action)
 		{
-			List<RoomData> typeList;
-			if (!rooms.TryGetValue(type, out typeList))
+			foreach(var room in rooms)
 			{
-				typeList = new List<RoomData>();
-				rooms.Add(type, typeList);
+				if(room.Match(flags))
+				{
+					action(room);
+				}
 			}
-			return typeList;
+		}
+
+		public static RoomData GetRandom(RoomFlags flags)
+		{
+			var candidates = new List<RoomData>();
+			Query(flags, (room) => candidates.Add(room));
+			return Rand.GetRandomElement(candidates);
 		}
 	}
 }

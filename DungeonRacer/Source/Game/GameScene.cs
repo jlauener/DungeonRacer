@@ -7,12 +7,13 @@ namespace DungeonRacer
 {
 	class GameScene : Scene
 	{
+		public float TimeLeft { get; private set; } = Global.PlayerTimeInitial;
 		private readonly Player player;
 
+		private int roomIndex;
 		private Room currentRoom;
 
-		private readonly Label playerLabel;
-		private readonly Label roomLabel;
+		private readonly Label timeLabel;
 		private readonly Bar hpBar;
 
 		public GameScene()
@@ -22,7 +23,7 @@ namespace DungeonRacer
 			uiCamera.Origin = new Vector2(0.0f, 0.0f);
 			SetCamera(Global.LayerUi, uiCamera);
 
-			currentRoom = new Room(GetRandomRoomData(RoomType.Initial));
+			currentRoom = new Room(RoomData.GetRandom(RoomFlags.Initial), RoomFlags.Initial);
 			Add(currentRoom);
 
 			Camera.Position = GetCameraPosition(currentRoom);
@@ -34,26 +35,25 @@ namespace DungeonRacer
 			uiBack.Layer = Global.LayerUi;
 			Add(uiBack);
 
-			playerLabel = new Label(Global.Font);
-			playerLabel.Layer = Global.LayerUi;
-			Add(playerLabel, 2, 2);
-
-			roomLabel = new Label(Global.Font);
-			roomLabel.Layer = Global.LayerUi;
-			roomLabel.HAlign = TextAlign.Right;
-			Add(roomLabel, Engine.Width - 4, 2);
+			timeLabel = new Label("font/04b");
+			timeLabel.Layer = Global.LayerUi;
+			timeLabel.HAlign = TextAlign.Center;
+			Add(timeLabel, Engine.Width / (2 * Global.Scale), 7);
 
 			var hpBarBack = new Sprite("gfx/ui/hp_bar_back");
 			hpBarBack.Layer = Global.LayerUi;
 			hpBarBack.X = 4;
-			hpBarBack.Y = 9;
+			hpBarBack.Y = 1;
 			Add(hpBarBack);
 
 			hpBar = new Bar("gfx/ui/hp_bar_front");
 			hpBar.Layer = Global.LayerUi;
 			Add(hpBar, hpBarBack.X + 2, hpBarBack.Y + 3);
+		}
 
-			UpdateRoomLabel();
+		public void AddTime(float duration)
+		{
+			TimeLeft += duration;
 		}
 
 		protected override void OnUpdate(float deltaTime)
@@ -78,11 +78,19 @@ namespace DungeonRacer
 				{
 					GotoRoom(0, 1, DoorId.Down);
 				}
+
+				if (!currentRoom.Data.HasFlag(RoomFlags.Initial))
+				{
+					TimeLeft -= deltaTime;
+					if (TimeLeft <= 0.0f)
+					{
+						TimeLeft = 0.0f;
+					}
+				}
 			}
 
-			//playerLabel.Text = "hp " + player.Hp + " money: " + player.Money + " key: " + player.Key;
-
 			hpBar.Percent = player.Hp / player.MaxHp;
+			timeLabel.Text = TimeLeft.ToString("0.00");
 
 			if (Input.WasPressed("back"))
 			{
@@ -153,66 +161,50 @@ namespace DungeonRacer
 			player.Paused = true;
 			Tween(Camera, new { Position = GetCameraPosition(nextRoom) }, 1.0f).Ease(Ease.QuadInOut).OnComplete(() =>
 			 {
-				 UpdateRoomLabel();
 				 player.Paused = false;
 				 Remove(currentRoom);
 				 currentRoom = nextRoom;
 			 });
 		}
 
-		private RoomData GetRandomRoomData(params RoomType[] types)
-		{
-			var candidates = new List<RoomData>();
-			foreach (var type in types)
-			{
-				candidates.AddRange(RoomData.GetRooms(type));
-			}
-			return Rand.GetRandomElement(candidates);
-		}
-
 		private Room CreateRandomNextRoom(DoorId doorId)
 		{
-			RoomData data;
+			var flags = RoomFlags.None;
+
+			roomIndex++;
+			if (roomIndex % 6 == 0) flags |= RoomFlags.ExtraTime;
+			if ((roomIndex + 2) % 6 == 0) flags |= RoomFlags.Spike;
+			if ((roomIndex + 4) % 6 == 0) flags |= RoomFlags.Bonus;
+
 			bool flipX = false;
 			bool flipY = false;
 			switch (doorId)
 			{
 				case DoorId.Left:
-					data = GetRandomRoomData(RoomType.Horizontal, RoomType.HorizontalTurn);
+					flags |= RoomFlags.Horizontal;
 					flipX = true;
 					break;
 				case DoorId.Right:
-					data = GetRandomRoomData(RoomType.Horizontal, RoomType.HorizontalTurn);
+					flags |= RoomFlags.Horizontal;
 					break;
 				case DoorId.Up:
-					data = GetRandomRoomData(RoomType.Vertical, RoomType.VerticalTurn);
+					flags |= RoomFlags.Vertical;
 					flipY = true;
 					break;
 				default: // DoorId.Down
-					data = GetRandomRoomData(RoomType.Vertical, RoomType.VerticalTurn);
+					flags |= RoomFlags.Vertical;
 					break;
 			}
 
-			if (data.Type == RoomType.HorizontalTurn)
-			{
-				flipY = Rand.NextBool();
-			}
-			else if (data.Type == RoomType.VerticalTurn)
-			{
-				flipX = Rand.NextBool();
-			}
-
-			return new Room(data, flipX, flipY);
+			Log.Debug("Querying room with flags " + flags + ".");
+			var data = RoomData.GetRandom(flags);
+			Log.Debug("Found " + data);
+			return new Room(data, flags, flipX, flipY);
 		}
 
 		private Vector2 GetCameraPosition(Room room)
 		{
 			return new Vector2(room.X + Global.TileSizePx / 2, room.Y - Global.UiHeight + Global.TileSizePx / 2);
-		}
-
-		private void UpdateRoomLabel()
-		{
-			//roomLabel.Text = (roomX + 1) + "-" + char.ConvertFromUtf32('A' + roomY);
 		}
 	}
 }

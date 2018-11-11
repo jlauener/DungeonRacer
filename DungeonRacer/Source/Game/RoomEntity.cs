@@ -42,25 +42,16 @@ namespace DungeonRacer
 			switch (data.Type)
 			{
 				case EntityType.Collectible:
-					if (data.Name == "key")
-					{
-						player.AddKey();
-					}
-					else if (data.Name == "coin")
-					{
-						player.AddMoney(1);
-					}
+					data.CollectAction?.Invoke(Scene, this, player);
+					if (data.CollectSfx != null) data.CollectSfx.Play();
+
 					Collidable = false;
 					room.RemoveEntity(this);
-
-					//sprite.Play("hit");
-					//Scene.Tween(this, new { Y = Y - Global.TileSizePx * 1.8f }, 0.35f).Ease(Ease.QuadOut).OnComplete(() =>
-					//{
-						sprite.Play("collect", RemoveFromScene);
-					//});
+					sprite.Play("collect", RemoveFromScene);
 					return false;
+
 				case EntityType.Door:
-					if (player.UseKey())
+					if (!data.Name.Contains("locked") || player.UseKey())
 					{
 						Collidable = false;
 						room.RemoveEntity(this);
