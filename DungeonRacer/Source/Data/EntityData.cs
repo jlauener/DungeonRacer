@@ -150,19 +150,19 @@ namespace DungeonRacer
 		{
 			EntityData e;
 
-			e = Create("door_left_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSizePx / 2);
+			e = Create("door_left_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSize / 2);
 			e.CreateAnimator("entities_16_32").AddAnim("idle", id).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 1);
 			e.SpriteOrigin = new Vector2(0, Global.TileSize / 2);
 
-			e = Create("door_right_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSizePx / 2);
+			e = Create("door_right_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSize / 2);
 			e.CreateAnimator("entities_16_32").AddAnim("idle", id + 3).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 2);
 			e.SpriteOrigin = new Vector2(0, Global.TileSize / 2);
 
-			e = Create("door_up_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSizePx / 2, 0);
+			e = Create("door_up_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSize / 2, 0);
 			e.CreateAnimator("entities_32_16").AddAnim("idle", id + 10).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 11);
 			e.SpriteOrigin = new Vector2(Global.TileSize / 2, 0);
 
-			e = Create("door_down_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSizePx / 2, 0);
+			e = Create("door_down_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSize / 2, 0);
 			e.CreateAnimator("entities_32_16").AddAnim("idle", id + 15).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 16);
 			e.SpriteOrigin = new Vector2(Global.TileSize / 2, 0);
 		}

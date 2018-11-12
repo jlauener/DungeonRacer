@@ -41,13 +41,12 @@ namespace DungeonRacer
 			this.data = data;
 			Type = Global.TypePlayer;
 			Layer = Global.LayerMain;
-			SetCenteredHitbox(12 * Global.Scale, 12 * Global.Scale);
+			SetCenteredHitbox(12, 12);
 
 			Hp = data.Hp;
 			MaxHp = data.Hp;
 
 			sprite = new Animator("player");
-			sprite.Scale = Global.Scale;
 			sprite.CenterOrigin();
 			sprite.Play("idle" + data.SpriteId);
 			Add(sprite);
@@ -119,22 +118,16 @@ namespace DungeonRacer
 
 			if (Input.IsDown("left"))
 			{
-				angularVelocity -= data.TurnSpeed * deltaTime;// * (velocity.Length() / data.MaxSpeed);
+				angularVelocity -= data.TurnSpeed * deltaTime;
 			}
 			if (Input.IsDown("right"))
 			{
-				angularVelocity += data.TurnSpeed * deltaTime;// * (velocity.Length() / data.MaxSpeed);
+				angularVelocity += data.TurnSpeed * deltaTime;
 			}
 
 			velocity *= data.Friction;
 			angle += angularVelocity;
 			angularVelocity *= data.AngularFriction;
-
-			if (velocity.Length() > data.MaxSpeed)
-			{
-				velocity.Normalize();
-				velocity *= data.MaxSpeed;
-			}
 
 			MoveBy(velocity * deltaTime, CollisionFlags.NonStop, Global.TypeMap, Global.TypeEntity);
 			Speed = velocity.Length();

@@ -11,7 +11,6 @@ namespace DungeonRacer
 		public int SpriteId { get; }
 
 		public float Friction { get; private set; }
-		public float MaxSpeed { get; private set; }
 		public float FrontGearForce { get; private set; }
 		public float RearGearForce { get; private set; }
 		public float BreakFriction { get; private set; }
@@ -48,19 +47,17 @@ namespace DungeonRacer
 
 			p = Create("adventure", 100, 1);
 			p.Friction = 0.92f;
-			p.MaxSpeed = 200.0f;
-			p.FrontGearForce = 1400.0f;
+			p.FrontGearForce = 480.0f;
 			p.BreakFriction = 0.98f;
-			p.RearGearForce = 800.0f;
+			p.RearGearForce = 280.0f;
 			p.TurnSpeed = 0.5f;
 			p.AngularFriction = 0.8f;
 
 			p = Create("race", 80, 0);
 			p.Friction = 0.99f;
-			p.MaxSpeed = 300.0f;
-			p.FrontGearForce = 1400.0f;
+			p.FrontGearForce = 460.0f;
 			p.BreakFriction = 0.98f;
-			p.RearGearForce = 1400.0f;
+			p.RearGearForce = 460.0f;
 			p.TurnSpeed = 2.5f;
 			p.AngularFriction = 0.25f;
 		}

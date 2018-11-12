@@ -9,19 +9,18 @@ namespace DungeonRacer
 		private readonly EntityData data;
 		private readonly Animator sprite;
 
-		public RoomEntity(Room room, EntityData data, float x, float y) : base(room.X + x * Global.TileSizePx, room.Y + y * Global.TileSizePx)
+		public RoomEntity(Room room, EntityData data, float x, float y) : base(room.X + x * Global.TileSize, room.Y + y * Global.TileSize)
 		{
 			this.room = room;
 			this.data = data;
 			Type = Global.TypeEntity;
 			Layer = data.Layer;
-			Width = data.Hitbox.Width * Global.Scale;
-			Height = data.Hitbox.Height * Global.Scale;
+			Width = data.Hitbox.Width;
+			Height = data.Hitbox.Height;
 			OriginX = data.Hitbox.X;
 			OriginY = data.Hitbox.Y;
 
 			sprite = new Animator(data.Anim);
-			sprite.Scale = Global.Scale;
 			sprite.Origin = data.SpriteOrigin;
 			Add(sprite);
 

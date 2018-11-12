@@ -19,8 +19,6 @@ namespace DungeonRacer
 		public GameScene()
 		{
 			var uiCamera = Engine.CreateCamera();
-			uiCamera.Zoom = Global.Scale;
-			uiCamera.Origin = new Vector2(0.0f, 0.0f);
 			SetCamera(Global.LayerUi, uiCamera);
 
 			currentRoom = new Room(RoomData.GetRandom(RoomFlags.Initial), RoomFlags.Initial);
@@ -38,7 +36,7 @@ namespace DungeonRacer
 			timeLabel = new Label("font/04b");
 			timeLabel.Layer = Global.LayerUi;
 			timeLabel.HAlign = TextAlign.Center;
-			Add(timeLabel, Engine.Width / (2 * Global.Scale), 7);
+			Add(timeLabel, Engine.Width / 2, 7);
 
 			var hpBarBack = new Sprite("gfx/ui/hp_bar_back");
 			hpBarBack.Layer = Global.LayerUi;
@@ -62,19 +60,19 @@ namespace DungeonRacer
 
 			if (!player.Paused)
 			{
-				if (player.VelocityX < 0.0f && player.X < currentRoom.Left + Global.TileSizePx / 2)
+				if (player.VelocityX < 0.0f && player.X < currentRoom.Left + Global.TileSize / 2)
 				{
 					GotoRoom(-1, 0, DoorId.Left);
 				}
-				else if (player.VelocityX > 0.0f && player.X > currentRoom.Right - Global.TileSizePx / 2)
+				else if (player.VelocityX > 0.0f && player.X > currentRoom.Right - Global.TileSize / 2)
 				{
 					GotoRoom(1, 0, DoorId.Right);
 				}
-				else if (player.VelocityY < 0.0f && player.Y < currentRoom.Top + Global.TileSizePx / 2)
+				else if (player.VelocityY < 0.0f && player.Y < currentRoom.Top + Global.TileSize / 2)
 				{
 					GotoRoom(0, -1, DoorId.Up);
 				}
-				else if (player.VelocityY > 0.0f && player.Y > currentRoom.Bottom - Global.TileSizePx / 2)
+				else if (player.VelocityY > 0.0f && player.Y > currentRoom.Bottom - Global.TileSize / 2)
 				{
 					GotoRoom(0, 1, DoorId.Down);
 				}
@@ -151,8 +149,8 @@ namespace DungeonRacer
 			if (nextRoom == null)
 			{
 				nextRoom = CreateRandomNextRoom(doorId);
-				nextRoom.X += currentRoom.X + dx * (Global.RoomWidthPx - Global.TileSizePx);
-				nextRoom.Y += currentRoom.Y + dy * (Global.RoomHeightPx - Global.TileSizePx);
+				nextRoom.X += currentRoom.X + dx * (Global.RoomWidthPx - Global.TileSize);
+				nextRoom.Y += currentRoom.Y + dy * (Global.RoomHeightPx - Global.TileSize);
 				currentRoom.SetNextRoom(doorId, nextRoom);
 			}
 			Add(nextRoom);
@@ -204,7 +202,7 @@ namespace DungeonRacer
 
 		private Vector2 GetCameraPosition(Room room)
 		{
-			return new Vector2(room.X + Global.TileSizePx / 2, room.Y - Global.UiHeight + Global.TileSizePx / 2);
+			return new Vector2(room.X + Global.TileSize / 2, room.Y - Global.UiHeight + Global.TileSize / 2);
 		}
 	}
 }

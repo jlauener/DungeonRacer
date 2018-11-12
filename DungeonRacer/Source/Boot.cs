@@ -15,7 +15,7 @@ namespace DungeonRacer
 		private const bool FullScreen = true;
 #endif
 
-		public Boot() : base(width: Global.ScreenWidth * Global.Scale, height: Global.ScreenHeight * Global.Scale, windowScale: 1, fullScreen: FullScreen)
+		public Boot() : base(width: Global.ScreenWidth, height: Global.ScreenHeight, windowScale: 3, fullScreen: FullScreen)
 		{
 			OnViewportChanged += HandleViewportChanged;
 		}

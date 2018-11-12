@@ -63,17 +63,15 @@ namespace DungeonRacer
 			Type = Global.TypeMap;
 			Width = Global.RoomWidthPx;
 			Height = Global.RoomHeightPx;
-			grid = new GridCollider(Global.RoomWidth, Global.RoomHeight, Global.TileSizePx, Global.TileSizePx);
+			grid = new GridCollider(Global.RoomWidth, Global.RoomHeight, Global.TileSize, Global.TileSize);
 			Collider = grid;
 
 			backMap = new Tilemap("room_default", Global.RoomWidth, Global.RoomHeight);
 			backMap.Layer = Global.LayerMapBack;
-			backMap.Scale = Global.Scale;
 			Add(backMap);
 
 			frontMap = new Tilemap("room_default", Global.RoomWidth, Global.RoomHeight);
 			frontMap.Layer = Global.LayerMapFront;
-			frontMap.Scale = Global.Scale;
 			Add(frontMap);
 
 			// FIXME use map data to property draw the walls

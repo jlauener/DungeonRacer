@@ -5,7 +5,6 @@ namespace DungeonRacer
 	static class Global
 	{
 		public static bool CrtEnabled = false;
-		public const int Scale = 3;
 
 		public const float PlayerTimeInitial = 30.0f;
 
@@ -14,13 +13,12 @@ namespace DungeonRacer
 
 		public const int RoomWidth = 17;
 		public const int RoomHeight = 13;
-		public const int RoomWidthPx = RoomWidth * TileSize * Scale;
-		public const int RoomHeightPx = RoomHeight * TileSize * Scale;
+		public const int RoomWidthPx = RoomWidth * TileSize;
+		public const int RoomHeightPx = RoomHeight * TileSize;
 
 		public const int TileSize = 16;
-		public const int TileSizePx = TileSize * Scale;
 
-		public const int UiHeight = 2 * TileSizePx;
+		public const int UiHeight = 2 * TileSize;
 
 		public const int TypeMap = 1;
 		public const int TypePlayer = 2;
