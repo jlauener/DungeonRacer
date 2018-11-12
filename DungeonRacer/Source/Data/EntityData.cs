@@ -17,6 +17,7 @@ namespace DungeonRacer
 		public string Name { get; }
 		public EntityType Type { get; }
 		public Rectangle Hitbox { get; private set; }
+		public PixelMask PixelMask { get; private set; }
 
 		public int Layer { get; private set; } = Global.LayerMain;
 		public AnimatorData Anim { get; private set; }
@@ -39,9 +40,10 @@ namespace DungeonRacer
 			{
 				case EntityType.Default:
 					SetHitbox(Global.TileSize, Global.TileSize);
+					PixelMask = new PixelMask("gfx/game/entity_mask"); // TODO cache the mask ?
 					break;
 				case EntityType.Collectible:
-					SetHitbox(8, 12, -8, -4);
+					SetHitbox(8, 12, -4, -4);
 					break;
 			}
 		}
@@ -95,9 +97,9 @@ namespace DungeonRacer
 
 		public static void Init()
 		{
-			Asset.AddTileset("entities_16_16", "gfx/entities", 16, 16);
-			Asset.AddTileset("entities_16_32", "gfx/entities", 16, 32);
-			Asset.AddTileset("entities_32_16", "gfx/entities", 32, 16);
+			Asset.AddTileset("entities_16_16", "gfx/game/entities", 16, 16);
+			Asset.AddTileset("entities_16_32", "gfx/game/entities", 16, 32);
+			Asset.AddTileset("entities_32_16", "gfx/game/entities", 32, 16);
 
 			EntityData e;
 

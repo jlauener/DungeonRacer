@@ -26,7 +26,7 @@ namespace DungeonRacer
 
 			Camera.Position = GetCameraPosition(currentRoom);
 
-			player = new Player(PlayerData.Get("adventure"), Global.RoomWidthPx / 2, Global.RoomHeightPx / 2);
+			player = new Player(PlayerData.Get("normal"), Global.RoomWidthPx / 2, Global.RoomHeightPx / 2);
 			Add(player);
 
 			var uiBack = new RectangleShape(Engine.Width, 32, Color.Black);
@@ -102,12 +102,10 @@ namespace DungeonRacer
 
 			if (Input.WasPressed("debug_1"))
 			{
-				player.SetData(PlayerData.Get("adventure"));
 			}
 
 			if (Input.WasPressed("debug_2"))
 			{
-				player.SetData(PlayerData.Get("race"));
 			}
 
 			if (Input.WasPressed("debug_3"))

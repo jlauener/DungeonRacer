@@ -8,7 +8,8 @@ namespace DungeonRacer
 	{
 		public string Name { get; }
 		public int Hp { get; }
-		public int SpriteId { get; }
+		public PixelMask PixelMask { get; private set; }
+		public AnimatorData Anim { get; private set; }
 
 		public float Friction { get; private set; }
 		public float FrontGearForce { get; private set; }
@@ -18,21 +19,20 @@ namespace DungeonRacer
 		public float AngularFriction { get; private set; }
 
 
-		private PlayerData(string name, int hp, int spriteId)
+		private PlayerData(string name, int hp)
 		{
 			Name = name;
 			Hp = hp;
-			SpriteId = spriteId;
 		}
 
-		private static PlayerData Create(string name, int hp, int spriteId)
+		private static PlayerData Create(string name, int hp)
 		{
 			if (store.ContainsKey(name))
 			{
 				throw new Exception("PlayerData with name '" + name + "' already exists.");
 			}
 
-			var playerData = new PlayerData(name, hp, spriteId);
+			var playerData = new PlayerData(name, hp);
 			store[name] = playerData;
 			return playerData;
 		}
@@ -41,25 +41,18 @@ namespace DungeonRacer
 
 		public static void Init()
 		{
-			Asset.AddTileset("player", "gfx/player", 16, 16);
-
 			PlayerData p;
 
-			p = Create("adventure", 100, 1);
+			p = Create("normal", 100);
 			p.Friction = 0.92f;
 			p.FrontGearForce = 480.0f;
 			p.BreakFriction = 0.98f;
 			p.RearGearForce = 280.0f;
 			p.TurnSpeed = 0.5f;
 			p.AngularFriction = 0.8f;
-
-			p = Create("race", 80, 0);
-			p.Friction = 0.99f;
-			p.FrontGearForce = 460.0f;
-			p.BreakFriction = 0.98f;
-			p.RearGearForce = 460.0f;
-			p.TurnSpeed = 2.5f;
-			p.AngularFriction = 0.25f;
+			p.PixelMask = new PixelMask("gfx/game/player_mask");
+			p.Anim = new AnimatorData("gfx/game/player", 16, 16);
+			p.Anim.Add("idle", 0);
 		}
 
 		public static PlayerData Get(string name)

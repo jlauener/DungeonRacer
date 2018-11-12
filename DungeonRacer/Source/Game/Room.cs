@@ -63,7 +63,7 @@ namespace DungeonRacer
 			Type = Global.TypeMap;
 			Width = Global.RoomWidthPx;
 			Height = Global.RoomHeightPx;
-			grid = new GridCollider(Global.RoomWidth, Global.RoomHeight, Global.TileSize, Global.TileSize);
+			grid = new GridCollider(Global.RoomWidth, Global.RoomHeight, Global.TileSize, Global.TileSize, PIXEL_MASK);
 			Collider = grid;
 
 			backMap = new Tilemap("room_default", Global.RoomWidth, Global.RoomHeight);
@@ -105,7 +105,7 @@ namespace DungeonRacer
 				{
 					grid.SetTileAt(x, y, TileSolidType.Full);
 
-					if(properties.GetString("wall") == "decoration")
+					if (properties.GetString("wall") == "decoration")
 					{
 						// FIXME
 						var tid = TileWallDecoration;
@@ -146,10 +146,10 @@ namespace DungeonRacer
 				}
 			});
 
-			if((flags & RoomFlags.ExtraTime) > 0)
+			if ((flags & RoomFlags.ExtraTime) > 0)
 			{
 				var tile = Rand.GetRandomElement(extraTimeTiles);
-				if(tile != null)
+				if (tile != null)
 				{
 					CreateEntity("extra_time", tile.Item1, tile.Item2);
 				}
@@ -207,12 +207,13 @@ namespace DungeonRacer
 			if (x == 1)
 			{
 				// left
-				for (var ix = -1; ix <= 0; ix++)
-				{
-					grid.SetTileAt(x + ix, y - 1, TileSolidType.HalfTop);
-					grid.SetTileAt(x + ix, y, TileSolidType.None);
-					grid.SetTileAt(x + ix, y + 1, TileSolidType.HalfBottom);
-				}
+				grid.SetPixelMaskAt(x, y - 1, 6);
+				grid.SetTileAt(x, y, TileSolidType.None);
+				grid.SetPixelMaskAt(x, y + 1, 22);
+
+				grid.SetTileAt(x - 1, y - 1, TileSolidType.HalfTop);
+				grid.SetTileAt(x - 1, y, TileSolidType.None);
+				grid.SetTileAt(x - 1, y + 1, TileSolidType.HalfBottom);
 
 				backMap.SetTileAt(x, y - 1, 6);
 				backMap.SetTileAt(x, y, 14);
@@ -223,12 +224,13 @@ namespace DungeonRacer
 			else if (x == Global.RoomWidth - 2)
 			{
 				// right
-				for (var ix = 0; ix <= 1; ix++)
-				{
-					grid.SetTileAt(x + ix, y - 1, TileSolidType.HalfTop);
-					grid.SetTileAt(x + ix, y, TileSolidType.None);
-					grid.SetTileAt(x + ix, y + 1, TileSolidType.HalfBottom);
-				}
+				grid.SetPixelMaskAt(x, y - 1, 7);
+				grid.SetTileAt(x, y, TileSolidType.None);
+				grid.SetPixelMaskAt(x, y + 1, 23);
+
+				grid.SetTileAt(x + 1, y - 1, TileSolidType.HalfTop);
+				grid.SetTileAt(x + 1, y, TileSolidType.None);
+				grid.SetTileAt(x + 1, y + 1, TileSolidType.HalfBottom);
 
 				backMap.SetTileAt(x, y - 1, 7);
 				backMap.SetTileAt(x, y, 15);
@@ -239,12 +241,13 @@ namespace DungeonRacer
 			else if (y == 1)
 			{
 				// up
-				for (var iy = -1; iy <= 0; iy++)
-				{
-					grid.SetTileAt(x - 1, y + iy, TileSolidType.HalfLeft);
-					grid.SetTileAt(x, y + iy, TileSolidType.None);
-					grid.SetTileAt(x + 1, y + iy, TileSolidType.HalfRight);
-				}
+				grid.SetPixelMaskAt(x - 1, y, 27);
+				grid.SetTileAt(x, y, TileSolidType.None);
+				grid.SetPixelMaskAt(x + 1, y, 29);
+
+				grid.SetTileAt(x - 1, y - 1, TileSolidType.HalfLeft);
+				grid.SetTileAt(x, y - 1, TileSolidType.None);
+				grid.SetTileAt(x + 1, y - 1, TileSolidType.HalfRight);
 
 				backMap.SetTileAt(x - 1, y, 27);
 				backMap.SetTileAt(x, y, 28);
@@ -255,12 +258,13 @@ namespace DungeonRacer
 			else if (y == Global.RoomHeight - 2)
 			{
 				// down
-				for (var iy = 0; iy <= 1; iy++)
-				{
-					grid.SetTileAt(x - 1, y + iy, TileSolidType.HalfLeft);
-					grid.SetTileAt(x, y + iy, TileSolidType.None);
-					grid.SetTileAt(x + 1, y + iy, TileSolidType.HalfRight);
-				}
+				grid.SetPixelMaskAt(x - 1, y, 35);
+				grid.SetTileAt(x, y, TileSolidType.None);
+				grid.SetPixelMaskAt(x + 1, y, 37);
+
+				grid.SetTileAt(x - 1, y + 1, TileSolidType.HalfLeft);
+				grid.SetTileAt(x, y + 1, TileSolidType.None);
+				grid.SetTileAt(x + 1, y + 1, TileSolidType.HalfRight);
 
 				backMap.SetTileAt(x - 1, y, 35);
 				backMap.SetTileAt(x, y, 36);
@@ -315,10 +319,12 @@ namespace DungeonRacer
 			}
 		}
 
+		private static PixelMaskSet PIXEL_MASK;
 		[AssetLoader]
 		public static void LoadAssets()
 		{
-			Asset.AddTileset("room_default", "gfx/tileset", 16, 16);
+			PIXEL_MASK = new PixelMaskSet("gfx/game/tileset_mask", Global.TileSize, Global.TileSize);
+			Asset.AddTileset("room_default", "gfx/game/tileset", Global.TileSize, Global.TileSize);
 		}
 	}
 }

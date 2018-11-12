@@ -41,17 +41,21 @@ namespace DungeonRacer
 			this.data = data;
 			Type = Global.TypePlayer;
 			Layer = Global.LayerMain;
-			SetCenteredHitbox(12, 12);
+			Collider = data.PixelMask;
+			OriginX = Width / 2;
+			OriginY = Height / 2;
 
 			Hp = data.Hp;
 			MaxHp = data.Hp;
 
-			sprite = new Animator("player");
+			sprite = new Animator(data.Anim);
 			sprite.CenterOrigin();
-			sprite.Play("idle" + data.SpriteId);
+			sprite.Play("idle");
 			Add(sprite);
 
 			Engine.Track(this, "Speed");
+			Engine.Track(this, "angle");
+			Engine.Track(this, "velocity");
 		}
 
 		public void SetData(PlayerData data)
@@ -132,7 +136,6 @@ namespace DungeonRacer
 			MoveBy(velocity * deltaTime, CollisionFlags.NonStop, Global.TypeMap, Global.TypeEntity);
 			Speed = velocity.Length();
 
-			sprite.Play(Input.IsDown("a") ? "accel" + data.SpriteId : "idle" + data.SpriteId);
 			sprite.Rotation = angle;
 			sprite.SortOrder = Mathf.Floor(Bottom) * 10;
 		}
@@ -160,18 +163,6 @@ namespace DungeonRacer
 			}
 
 			return stop;
-		}
-
-		[AssetLoader]
-		public static void LoadAssets()
-		{
-			var anim = new AnimatorData("gfx/player", 16, 16);
-			for (var i = 0; i < 10; i++)
-			{
-				anim.Add("idle" + i, i * 10);
-				anim.Add("accel" + i, AnimatorMode.Loop, 0.1f, i * 10 + 1, i * 10 + 2);
-			}
-			Asset.AddAnimatorData("player", anim);
 		}
 	}
 }

@@ -19,6 +19,7 @@ namespace DungeonRacer
 			Height = data.Hitbox.Height;
 			OriginX = data.Hitbox.X;
 			OriginY = data.Hitbox.Y;
+			Collider = data.PixelMask;
 
 			sprite = new Animator(data.Anim);
 			sprite.Origin = data.SpriteOrigin;
