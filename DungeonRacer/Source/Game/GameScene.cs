@@ -60,19 +60,19 @@ namespace DungeonRacer
 
 			if (!player.Paused)
 			{
-				if (player.VelocityX < 0.0f && player.X < currentRoom.Left + Global.TileSize / 2)
+				if (player.VelocityX < 0.0f && player.X < currentRoom.Left + Global.TileSize / 2 + Global.RoomSwitchMargin)
 				{
 					GotoRoom(-1, 0, DoorId.Left);
 				}
-				else if (player.VelocityX > 0.0f && player.X > currentRoom.Right - Global.TileSize / 2)
+				else if (player.VelocityX > 0.0f && player.X > currentRoom.Right - Global.TileSize / 2 - Global.RoomSwitchMargin)
 				{
 					GotoRoom(1, 0, DoorId.Right);
 				}
-				else if (player.VelocityY < 0.0f && player.Y < currentRoom.Top + Global.TileSize / 2)
+				else if (player.VelocityY < 0.0f && player.Y < currentRoom.Top + Global.TileSize / 2 + Global.RoomSwitchMargin)
 				{
 					GotoRoom(0, -1, DoorId.Up);
 				}
-				else if (player.VelocityY > 0.0f && player.Y > currentRoom.Bottom - Global.TileSize / 2)
+				else if (player.VelocityY > 0.0f && player.Y > currentRoom.Bottom - Global.TileSize / 2 - Global.RoomSwitchMargin)
 				{
 					GotoRoom(0, 1, DoorId.Down);
 				}
