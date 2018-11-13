@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using MonoPunk;
 using MonoGame.Extended.Tiled;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework;
 
 namespace DungeonRacer
 {
@@ -52,6 +54,8 @@ namespace DungeonRacer
 
 		private readonly Dictionary<DoorId, Room> nextRooms = new Dictionary<DoorId, Room>();
 		private readonly List<RoomEntity> entities = new List<RoomEntity>();
+
+		private readonly DrawLayer tireLayer;
 
 		public Room(RoomData data, RoomFlags flags, bool flipX = false, bool flipY = false)
 		{
@@ -116,6 +120,10 @@ namespace DungeonRacer
 					}
 				}
 			});
+
+			tireLayer = new DrawLayer(Engine.Width, Engine.Height);
+			tireLayer.Layer = Global.LayerBack;
+			Add(tireLayer);
 		}
 
 		protected override void OnAdded()
@@ -158,6 +166,13 @@ namespace DungeonRacer
 					Log.Error("RoomFlags.ExtraTime present but no 'extra_time' entity found.");
 				}
 			}
+		}
+
+		public void DrawDriftEffect(float x, float y, float alpha, float angle)
+		{
+			tireLayer.BeginDraw();
+			tireLayer.Draw(Asset.LoadTexture("gfx/game/tire_fx"), x - X, y - Y, Color.White * alpha, 8.0f, 8.0f, angle);
+			tireLayer.EndDraw();
 		}
 
 		private void CreateEntity(string name, float x, float y)

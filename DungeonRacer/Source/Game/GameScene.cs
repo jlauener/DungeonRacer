@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using MonoPunk;
 using Microsoft.Xna.Framework;
 
@@ -7,7 +6,7 @@ namespace DungeonRacer
 {
 	class GameScene : Scene
 	{
-		public float TimeLeft { get; private set; } = Global.PlayerTimeInitial;
+		public float Time { get; private set; }
 		private readonly Player player;
 
 		private int roomIndex;
@@ -49,46 +48,45 @@ namespace DungeonRacer
 			Add(hpBar, hpBarBack.X + 2, hpBarBack.Y + 3);
 		}
 
-		public void AddTime(float duration)
-		{
-			TimeLeft += duration;
-		}
-
 		protected override void OnUpdate(float deltaTime)
 		{
 			base.OnUpdate(deltaTime);
 
 			if (!player.Paused)
 			{
-				if (player.VelocityX < 0.0f && player.X < currentRoom.Left + Global.TileSize / 2 + Global.RoomSwitchMargin)
+				if (player.Velocity.X < 0.0f && player.X < currentRoom.Left + Global.TileSize / 2 + Global.RoomSwitchMargin)
 				{
 					GotoRoom(-1, 0, DoorId.Left);
 				}
-				else if (player.VelocityX > 0.0f && player.X > currentRoom.Right - Global.TileSize / 2 - Global.RoomSwitchMargin)
+				else if (player.Velocity.X > 0.0f && player.X > currentRoom.Right - Global.TileSize / 2 - Global.RoomSwitchMargin)
 				{
 					GotoRoom(1, 0, DoorId.Right);
 				}
-				else if (player.VelocityY < 0.0f && player.Y < currentRoom.Top + Global.TileSize / 2 + Global.RoomSwitchMargin)
+				else if (player.Velocity.Y < 0.0f && player.Y < currentRoom.Top + Global.TileSize / 2 + Global.RoomSwitchMargin)
 				{
 					GotoRoom(0, -1, DoorId.Up);
 				}
-				else if (player.VelocityY > 0.0f && player.Y > currentRoom.Bottom - Global.TileSize / 2 - Global.RoomSwitchMargin)
+				else if (player.Velocity.Y > 0.0f && player.Y > currentRoom.Bottom - Global.TileSize / 2 - Global.RoomSwitchMargin)
 				{
 					GotoRoom(0, 1, DoorId.Down);
 				}
 
 				if (!currentRoom.Data.HasFlag(RoomFlags.Initial))
 				{
-					TimeLeft -= deltaTime;
-					if (TimeLeft <= 0.0f)
-					{
-						TimeLeft = 0.0f;
-					}
+					Time += deltaTime;					
+				}
+
+				if (player.Speed > 80.0f && player.DriftAngle > 0.25f)
+				{
+					var speedPct = Mathf.Min(1.0f, (player.Speed - 80.0f) / 10.0f);
+					var driftPct = Mathf.Min(1.0f, (player.DriftAngle - 0.25f) / 0.3f);
+					var alpha = speedPct * driftPct * 0.5f;
+					currentRoom.DrawDriftEffect(player.X, player.Y, alpha, player.Angle);
 				}
 			}
 
 			hpBar.Percent = player.Hp / player.MaxHp;
-			timeLabel.Text = TimeLeft.ToString("0.00");
+			timeLabel.Text = Time.ToString("0.00");
 
 			if (Input.WasPressed("back"))
 			{
@@ -168,7 +166,7 @@ namespace DungeonRacer
 			var flags = RoomFlags.None;
 
 			roomIndex++;
-			if (roomIndex % 6 == 0) flags |= RoomFlags.ExtraTime;
+			//if (roomIndex % 6 == 0) flags |= RoomFlags.ExtraTime;
 			if ((roomIndex + 2) % 6 == 0) flags |= RoomFlags.Spike;
 			if ((roomIndex + 4) % 6 == 0) flags |= RoomFlags.Bonus;
 

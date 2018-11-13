@@ -1,32 +1,23 @@
 ﻿using System;
 using MonoPunk;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended.Shapes;
 
 namespace DungeonRacer
 {
 	class Player : Entity
 	{
-		private const float BounceRestitution = 1.0f;
-
 		public float Speed { get; private set; }
 		public float Hp { get; private set; }
 		public int MaxHp { get; private set; }
 
 		private Vector2 velocity;
-		public float VelocityX { get { return velocity.X; } }
-		public float VelocityY { get { return velocity.Y; } }
+		public Vector2 Velocity { get { return velocity; } }
 
-		private float angle;
-		private float angularVelocity;		
-
-		//private enum TurnDir
-		//{
-		//	None,
-		//	Left,
-		//	Right
-		//}
-		//private TurnDir turnDir = TurnDir.None;
-		//private float turnAngle;
+		public float DriftAngle { get; private set; }
+		public float Angle { get; private set; }
+		private float angularVelocity;
 
 		public int Key { get; private set; }
 		public int Money { get; private set; }
@@ -54,8 +45,9 @@ namespace DungeonRacer
 			Add(sprite);
 
 			Engine.Track(this, "Speed");
-			Engine.Track(this, "angle");
 			Engine.Track(this, "velocity");
+			Engine.Track(this, "Angle");
+			Engine.Track(this, "DriftAngle");
 		}
 
 		public void SetData(PlayerData data)
@@ -102,21 +94,22 @@ namespace DungeonRacer
 			if (Input.IsDown("a"))
 			{
 				// front gear
-				velocity += Vector2.UnitX.Rotate(angle) * data.FrontGearForce * deltaTime;
+				velocity += Vector2.UnitX.Rotate(Angle) * data.FrontGearForce * deltaTime;
 			}
+
+			var goingForward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(Angle)) > 3.0f;
 
 			if (Input.IsDown("b"))
 			{
-				var goingBackward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(angle)) <= 5.0f;
-				if (goingBackward)
-				{
-					// rear gear
-					velocity -= Vector2.UnitX.Rotate(angle) * data.RearGearForce * deltaTime;
-				}
-				else
+				if (goingForward)
 				{
 					// break
 					velocity *= data.BreakFriction;
+				}
+				else
+				{
+					// rear gear
+					velocity -= Vector2.UnitX.Rotate(Angle) * data.RearGearForce * deltaTime;
 				}
 			}
 
@@ -130,13 +123,25 @@ namespace DungeonRacer
 			}
 
 			velocity *= data.Friction;
-			angle += angularVelocity;
+			Angle += angularVelocity;
+			while (Angle < 0.0f) Angle += Mathf.Pi2;
+			while (Angle > Mathf.Pi2) Angle -= Mathf.Pi2;
 			angularVelocity *= data.AngularFriction;
 
-			MoveBy(velocity * deltaTime, CollisionFlags.NonStop, Global.TypeMap, Global.TypeEntity);
-			Speed = velocity.Length();
+			if(goingForward)
+			{
+				Speed = velocity.Length();
+				DriftAngle = Velocity.AngleWith(Vector2.UnitX.Rotate(Angle));
+			}
+			else
+			{
+				Speed = 0.0f;
+				DriftAngle = 0.0f;
+			}
 
-			sprite.Rotation = angle;
+			MoveBy(velocity * deltaTime, CollisionFlags.NonStop, Global.TypeMap, Global.TypeEntity);
+
+			sprite.Rotation = Angle;
 			sprite.SortOrder = Mathf.Floor(Bottom) * 10;
 		}
 
@@ -150,19 +155,33 @@ namespace DungeonRacer
 
 			if (stop)
 			{
+				Speed = 0.0f;
+				DriftAngle = 0.0f;
+
 				if (info.IsVerticalMovement)
 				{
-					velocity.Y = -velocity.Y * BounceRestitution;
+					velocity.Y = -velocity.Y * PlayerData.BounceRestitution;
 				}
 				else if (info.IsHorizontalMovement)
 				{
-					velocity.X = -velocity.X * BounceRestitution;
+					velocity.X = -velocity.X * PlayerData.BounceRestitution;
 				}
 
 				Asset.LoadSoundEffect("sfx/hit").Play();
 			}
 
 			return stop;
+		}
+
+		protected override void OnRenderDebug(SpriteBatch spriteBatch)
+		{
+			base.OnRenderDebug(spriteBatch);
+
+			if (Speed > 30.0f)
+			{
+				spriteBatch.DrawLine(GlobalPosition, GlobalPosition + Velocity, Color.AliceBlue);
+			}
+			spriteBatch.DrawLine(GlobalPosition, GlobalPosition + Vector2.UnitX.Rotate(Angle) * 20.0f, Color.Yellow);
 		}
 	}
 }

@@ -4,9 +4,7 @@ namespace DungeonRacer
 {
 	static class Global
 	{
-		public static bool CrtEnabled = false;
-
-		public const float PlayerTimeInitial = 30.0f;
+		public static bool CrtEnabled = false;		
 
 		public static int ScreenWidth = 256;
 		public static int ScreenHeight = 224;

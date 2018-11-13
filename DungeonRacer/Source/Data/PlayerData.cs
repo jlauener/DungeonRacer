@@ -6,6 +6,8 @@ namespace DungeonRacer
 {
 	class PlayerData
 	{
+		public const float BounceRestitution = 1.0f;
+
 		public string Name { get; }
 		public int Hp { get; }
 		public PixelMask PixelMask { get; private set; }

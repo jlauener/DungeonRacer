@@ -135,7 +135,7 @@ namespace DungeonRacer
 			e.CollectSfx = new Sfx("sfx/coin");
 
 			e = Create("extra_time", EntityType.Collectible).SetLayer(Global.LayerFront);
-			e.CollectAction = (scene, room, player) => ((GameScene) scene).AddTime(20.0f);
+			//e.CollectAction = (scene, room, player) => ((GameScene) scene).AddTime(20.0f);
 			e.AddAnim("idle", 30).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
 			e.CollectSfx = new Sfx("sfx/coin");
 
