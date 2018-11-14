@@ -7,7 +7,7 @@ namespace DungeonRacer
 {
 	class Boot : Engine
 	{
-		private Microsoft.Xna.Framework.Graphics.Effect crtEffect;
+		public static Microsoft.Xna.Framework.Graphics.Effect CrtEffect { get; private set; } // TODO put this somewhere else..
 
 #if DEBUG
 		private const bool FullScreen = false;
@@ -40,6 +40,12 @@ namespace DungeonRacer
 			Input.Define("b", Keys.X, Keys.M);
 			Input.Define("b", Buttons.B);
 
+			Input.Define("move_front", Keys.W, Keys.Up, Keys.Z, Keys.N);
+			Input.Define("move_front", Buttons.DPadUp, Buttons.A);
+
+			Input.Define("move_back", Keys.S, Keys.Down, Keys.X, Keys.M);
+			Input.Define("move_back", Buttons.DPadDown, Buttons.B);
+
 			Input.Define("start", Keys.Enter, Keys.Space);
 			Input.Define("start", Buttons.Start);
 
@@ -62,24 +68,24 @@ namespace DungeonRacer
 
 			EntityData.Init();
 			PlayerData.Init();
-			RoomData.Init();
+			DungeonData.Init();
 
-			crtEffect = Asset.LoadEffect("effects/CRT-easymode");
-			crtEffect.Parameters["InputSize"].SetValue(new Vector2(Width, Height));
+			CrtEffect = Asset.LoadEffect("effects/CRT-easymode");
+			CrtEffect.Parameters["InputSize"].SetValue(new Vector2(Width, Height));
 			if (Global.CrtEnabled)
 			{
-				PostProcessor = crtEffect;
+				PostProcessor = CrtEffect;
 			}
 		}
 
 		protected override void OnStart()
 		{
-			Scene = new GameScene();		
+			Scene = new GameScene(DungeonData.Get("dungeon1"));		
 		}
 
 		private void HandleViewportChanged(int width, int height, bool fullscreen)
 		{
-			crtEffect.Parameters["OutputSize"].SetValue(new Vector2(width, height));
+			CrtEffect.Parameters["OutputSize"].SetValue(new Vector2(width, height));
 		}
 	}
 

@@ -6,87 +6,95 @@ namespace DungeonRacer
 {
 	class GameScene : Scene
 	{
+		private enum State
+		{
+			Start,
+			Play,
+			Switch
+		}
+		private State state = State.Play;
+
 		public float Time { get; private set; }
 		private readonly Player player;
 
-		private int roomIndex;
-		private Room currentRoom;
+		private readonly DungeonData dungeonData;
 
-		private readonly Label timeLabel;
-		private readonly Bar hpBar;
+		private int roomX;
+		private int roomY;
 
-		public GameScene()
+		private Dungeon dungeon;
+
+		//private readonly Label timeLabel;
+		//private readonly Bar hpBar;
+
+		public GameScene(DungeonData dungeonData)
 		{
+			this.dungeonData = dungeonData;
+
+			dungeon = new Dungeon(dungeonData); ;
+			Add(dungeon);
+
+			player = new Player(PlayerData.Get("normal"), dungeonData.PlayerStartTile);
+			Add(player);
+
+			roomX = dungeonData.PlayerStartTile.X / Global.RoomWidth;
+			roomY = dungeonData.PlayerStartTile.Y / Global.RoomHeight;
+			Camera.Position = GetCameraPosition(roomX, roomY);
+
 			var uiCamera = Engine.CreateCamera();
 			SetCamera(Global.LayerUi, uiCamera);
 
-			currentRoom = new Room(RoomData.GetRandom(RoomFlags.Initial), RoomFlags.Initial);
-			Add(currentRoom);
+			if (!Global.ScrollingEnabled)
+			{
+				var uiBack = new RectangleShape(Engine.Width, 32, Color.Black);
+				uiBack.Layer = Global.LayerUi;
+				Add(uiBack);
+			}
 
-			Camera.Position = GetCameraPosition(currentRoom);
+			//timeLabel = new Label("font/04b");
+			//timeLabel.Layer = Global.LayerUi;
+			//timeLabel.HAlign = TextAlign.Center;
+			//Add(timeLabel, Engine.Width / 2, 7);
 
-			player = new Player(PlayerData.Get("normal"), Global.RoomWidthPx / 2, Global.RoomHeightPx / 2);
-			Add(player);
+			//var hpBarBack = new Sprite("gfx/ui/hp_bar_back");
+			//hpBarBack.Layer = Global.LayerUi;
+			//hpBarBack.X = 4;
+			//hpBarBack.Y = 1;
+			//Add(hpBarBack);
 
-			var uiBack = new RectangleShape(Engine.Width, 32, Color.Black);
-			uiBack.Layer = Global.LayerUi;
-			Add(uiBack);
+			//hpBar = new Bar("gfx/ui/hp_bar_front");
+			//hpBar.Layer = Global.LayerUi;
+			//Add(hpBar, hpBarBack.X + 2, hpBarBack.Y + 3);
 
-			timeLabel = new Label("font/04b");
-			timeLabel.Layer = Global.LayerUi;
-			timeLabel.HAlign = TextAlign.Center;
-			Add(timeLabel, Engine.Width / 2, 7);
-
-			var hpBarBack = new Sprite("gfx/ui/hp_bar_back");
-			hpBarBack.Layer = Global.LayerUi;
-			hpBarBack.X = 4;
-			hpBarBack.Y = 1;
-			Add(hpBarBack);
-
-			hpBar = new Bar("gfx/ui/hp_bar_front");
-			hpBar.Layer = Global.LayerUi;
-			Add(hpBar, hpBarBack.X + 2, hpBarBack.Y + 3);
+			Engine.Track(this, "roomX");
+			Engine.Track(this, "roomY");
 		}
 
 		protected override void OnUpdate(float deltaTime)
 		{
 			base.OnUpdate(deltaTime);
 
-			if (!player.Paused)
+			if (state == State.Play)
 			{
-				if (player.Velocity.X < 0.0f && player.X < currentRoom.Left + Global.TileSize / 2 + Global.RoomSwitchMargin)
+				if (Global.ScrollingEnabled)
 				{
-					GotoRoom(-1, 0, DoorId.Left);
+					UpdateScrollingCamera(deltaTime);
 				}
-				else if (player.Velocity.X > 0.0f && player.X > currentRoom.Right - Global.TileSize / 2 - Global.RoomSwitchMargin)
+				else
 				{
-					GotoRoom(1, 0, DoorId.Right);
-				}
-				else if (player.Velocity.Y < 0.0f && player.Y < currentRoom.Top + Global.TileSize / 2 + Global.RoomSwitchMargin)
-				{
-					GotoRoom(0, -1, DoorId.Up);
-				}
-				else if (player.Velocity.Y > 0.0f && player.Y > currentRoom.Bottom - Global.TileSize / 2 - Global.RoomSwitchMargin)
-				{
-					GotoRoom(0, 1, DoorId.Down);
+					UpdateRoomCamera(deltaTime);
 				}
 
-				if (!currentRoom.Data.HasFlag(RoomFlags.Initial))
+				Time += deltaTime;					
+				
+				if (player.DriftPct > 0.0f)
 				{
-					Time += deltaTime;					
-				}
-
-				if (player.Speed > 80.0f && player.DriftAngle > 0.25f)
-				{
-					var speedPct = Mathf.Min(1.0f, (player.Speed - 80.0f) / 10.0f);
-					var driftPct = Mathf.Min(1.0f, (player.DriftAngle - 0.25f) / 0.3f);
-					var alpha = speedPct * driftPct * 0.5f;
-					currentRoom.DrawDriftEffect(player.X, player.Y, alpha, player.Angle);
+					dungeon.DrawDriftEffect(player.X, player.Y, player.DriftPct, player.Angle);
 				}
 			}
 
-			hpBar.Percent = player.Hp / player.MaxHp;
-			timeLabel.Text = Time.ToString("0.00");
+			//hpBar.Percent = player.Hp / player.MaxHp;
+			//timeLabel.Text = Time.ToString("0.00");
 
 			if (Input.WasPressed("back"))
 			{
@@ -95,15 +103,19 @@ namespace DungeonRacer
 
 			if (Input.WasPressed("reset"))
 			{
-				Engine.Scene = new GameScene();
+				Engine.Scene = new GameScene(dungeonData);
 			}
 
 			if (Input.WasPressed("debug_1"))
 			{
+				Global.ScrollingEnabled = !Global.ScrollingEnabled;
+				Engine.Scene = new GameScene(dungeonData);
 			}
 
 			if (Input.WasPressed("debug_2"))
 			{
+				Global.CrtEnabled = !Global.CrtEnabled;
+				Engine.PostProcessor = Global.CrtEnabled ? Boot.CrtEffect : null;
 			}
 
 			if (Input.WasPressed("debug_3"))
@@ -139,66 +151,64 @@ namespace DungeonRacer
 			}
 		}
 
-		private void GotoRoom(int dx, int dy, DoorId doorId)
+		private void UpdateScrollingCamera(float deltaTime)
 		{
-			var nextRoom = currentRoom.GetNextRoom(doorId);
-			if (nextRoom == null)
-			{
-				nextRoom = CreateRandomNextRoom(doorId);
-				nextRoom.X += currentRoom.X + dx * (Global.RoomWidthPx - Global.TileSize);
-				nextRoom.Y += currentRoom.Y + dy * (Global.RoomHeightPx - Global.TileSize);
-				currentRoom.SetNextRoom(doorId, nextRoom);
-			}
-			Add(nextRoom);
+			var cameraEdge = new Vector2(96.0f, 96.0f);
 
-			var target = GetCameraPosition(nextRoom);
+			if (player.X < Camera.X + cameraEdge.X) Camera.X = player.X - cameraEdge.X;
+			else if (player.X > Camera.X + Engine.Width - cameraEdge.X) Camera.X = player.X - Engine.Width + cameraEdge.X;
+
+			if (player.Y < Camera.Y + cameraEdge.Y) Camera.Y = player.Y - cameraEdge.Y;
+			else if (player.Y > Camera.Y + Engine.Height - cameraEdge.Y) Camera.Y = player.Y - Engine.Height + cameraEdge.Y;
+
+			Camera.X = Mathf.Clamp(Camera.X, 0.0f, dungeon.Width - Engine.Width);
+			Camera.Y = Mathf.Clamp(Camera.Y, 0.0f, dungeon.Height - Engine.Height);
+		}
+		
+		private void UpdateRoomCamera(float deltaTime)
+		{
+			if (player.Velocity.X < 0.0f && player.X < roomX * Global.RoomWidthPx + Global.TileSize / 2 + Global.RoomSwitchMargin)
+			{
+				GotoRoom(-1, 0);
+			}
+			else if (player.Velocity.X > 0.0f && player.X > roomX * Global.RoomWidthPx + Global.RoomWidthPx + Global.TileSize / 2 - Global.RoomSwitchMargin)
+			{
+				GotoRoom(1, 0);
+			}
+			else if (player.Velocity.Y < 0.0f && player.Y < roomY * Global.RoomHeightPx + Global.TileSize / 2 + Global.RoomSwitchMargin)
+			{
+				GotoRoom(0, -1);
+			}
+			else if (player.Velocity.Y > 0.0f && player.Y > roomY * Global.RoomHeightPx + Global.RoomHeightPx + Global.TileSize / 2 - Global.RoomSwitchMargin)
+			{
+				GotoRoom(0, 1);
+			}
+		}
+
+		private void GotoRoom(int dx, int dy)
+		{
+			roomX += dx;
+			roomY += dy;
 			player.Paused = true;
-			Tween(Camera, new { Position = GetCameraPosition(nextRoom) }, 1.0f).Ease(Ease.QuadInOut).OnComplete(() =>
+			state = State.Switch;
+			var target = GetCameraPosition(roomX, roomY);
+			Tween(Camera, new { Position = target }, 1.0f).Ease(Ease.QuadInOut).OnComplete(() =>
 			 {
 				 player.Paused = false;
-				 Remove(currentRoom);
-				 currentRoom = nextRoom;
+				 state = State.Play;
 			 });
+
+			Asset.LoadSoundEffect("sfx/room_switch").Play();
 		}
 
-		private Room CreateRandomNextRoom(DoorId doorId)
+		private Vector2 GetCameraPosition(int roomX, int roomY)
 		{
-			var flags = RoomFlags.None;
-
-			roomIndex++;
-			//if (roomIndex % 6 == 0) flags |= RoomFlags.ExtraTime;
-			if ((roomIndex + 2) % 6 == 0) flags |= RoomFlags.Spike;
-			if ((roomIndex + 4) % 6 == 0) flags |= RoomFlags.Bonus;
-
-			bool flipX = false;
-			bool flipY = false;
-			switch (doorId)
+			var pos = new Vector2(roomX * Global.RoomWidthPx + Global.TileSize / 2, roomY * Global.RoomHeightPx);
+			if(!Global.ScrollingEnabled)
 			{
-				case DoorId.Left:
-					flags |= RoomFlags.Horizontal;
-					flipX = true;
-					break;
-				case DoorId.Right:
-					flags |= RoomFlags.Horizontal;
-					break;
-				case DoorId.Up:
-					flags |= RoomFlags.Vertical;
-					flipY = true;
-					break;
-				default: // DoorId.Down
-					flags |= RoomFlags.Vertical;
-					break;
+				pos.Y -= Global.UiHeight - Global.TileSize / 2;
 			}
-
-			Log.Debug("Querying room with flags " + flags + ".");
-			var data = RoomData.GetRandom(flags);
-			Log.Debug("Found " + data);
-			return new Room(data, flags, flipX, flipY);
-		}
-
-		private Vector2 GetCameraPosition(Room room)
-		{
-			return new Vector2(room.X + Global.TileSize / 2, room.Y - Global.UiHeight + Global.TileSize / 2);
+			return pos;
 		}
 	}
 }

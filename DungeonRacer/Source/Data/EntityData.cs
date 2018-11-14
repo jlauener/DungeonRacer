@@ -28,7 +28,7 @@ namespace DungeonRacer
 		public int DamageOnHit { get; private set; }
 		public int DamagePerSec { get; private set; }
 
-		public Action<Scene, RoomEntity, Player> CollectAction { get; private set; }
+		public Action<Scene, DungeonEntity, Player> CollectAction { get; private set; }
 
 		public Sfx CollectSfx { get; private set; }
 
@@ -40,7 +40,7 @@ namespace DungeonRacer
 			{
 				case EntityType.Default:
 					SetHitbox(Global.TileSize, Global.TileSize);
-					PixelMask = new PixelMask("gfx/game/entity_mask"); // TODO cache the mask ?
+					PixelMask = Asset.GetPixelMask("edged_square");
 					break;
 				case EntityType.Collectible:
 					SetHitbox(8, 12, -4, -4);
@@ -62,6 +62,7 @@ namespace DungeonRacer
 
 		private EntityData SetHitbox(int width, int height, int originX = 0, int originY = 0)
 		{
+			PixelMask = null;
 			Hitbox = new Rectangle(originX, originY, width, height);
 			return this;
 		}
@@ -101,28 +102,19 @@ namespace DungeonRacer
 			Asset.AddTileset("entities_16_32", "gfx/game/entities", 16, 32);
 			Asset.AddTileset("entities_32_16", "gfx/game/entities", 32, 16);
 
+			Asset.AddPixelMask("edged_square", "gfx/game/entity_mask");
+
 			EntityData e;
 
-			e = Create("block1").AddAnim("idle", 0);
-			e = Create("block2").AddAnim("idle", 1);
-			e = Create("push_block").AddAnim("idle", 2);
-			e.Pushable = true;
+			e = Create("block").AddAnim("idle", 0);
 
-			e = Create("pillar_top");
+			e = Create("push_block").SetHitbox(Global.TileSize, Global.TileSize);
+			e.Pushable = true;
+			e.AddAnim("idle", 1);
+
+			e = Create("pillar");
 			e.CreateAnimator("entities_16_32").AddAnim("idle", 24);
 			e.SpriteOrigin = new Vector2(0.0f, Global.TileSize);
-
-			e = Create("pillar_bottom");
-			e.CreateAnimator("entities_16_32").AddAnim("idle", 25);
-			e.SpriteOrigin = new Vector2(0.0f, -Global.TileSize);
-
-			e = Create("pillar_left");
-			e.CreateAnimator("entities_32_16").AddAnim("idle", 32);
-			e.SpriteOrigin = new Vector2(Global.TileSize, 0.0f);
-
-			e = Create("pillar_right");
-			e.CreateAnimator("entities_32_16").AddAnim("idle", 37);
-			e.SpriteOrigin = new Vector2(-Global.TileSize, 0.0f);
 
 			e = Create("key", EntityType.Collectible).SetLayer(Global.LayerFront);
 			e.CollectAction = (gameScene, room, player) => player.AddKey();
@@ -134,18 +126,12 @@ namespace DungeonRacer
 			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 24, 25, 26, 27).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
 			e.CollectSfx = new Sfx("sfx/coin");
 
-			e = Create("extra_time", EntityType.Collectible).SetLayer(Global.LayerFront);
-			//e.CollectAction = (scene, room, player) => ((GameScene) scene).AddTime(20.0f);
-			e.AddAnim("idle", 30).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
-			e.CollectSfx = new Sfx("sfx/coin");
-
 			e = Create("spike");
 			e.Solid = false;
 			e.DamagePerSec = 50;
 			e.SetLayer(Global.LayerBack).AddAnim("idle", 10);
 
-			//CreateDoor("exit", 20);
-			CreateDoor("locked", 20);
+			CreateDoor("normal", 20);
 		}
 
 		private static void CreateDoor(string name, int id)
@@ -153,11 +139,11 @@ namespace DungeonRacer
 			EntityData e;
 
 			e = Create("door_left_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSize / 2);
-			e.CreateAnimator("entities_16_32").AddAnim("idle", id).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 1);
+			e.CreateAnimator("entities_16_32").AddAnim("idle", id + 3).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 2);
 			e.SpriteOrigin = new Vector2(0, Global.TileSize / 2);
 
 			e = Create("door_right_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSize / 2);
-			e.CreateAnimator("entities_16_32").AddAnim("idle", id + 3).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 2);
+			e.CreateAnimator("entities_16_32").AddAnim("idle", id + 0).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 1);
 			e.SpriteOrigin = new Vector2(0, Global.TileSize / 2);
 
 			e = Create("door_up_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSize / 2, 0);

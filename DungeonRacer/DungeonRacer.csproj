@@ -45,9 +45,9 @@
     <Compile Include="Source\Boot.cs" />
     <Compile Include="Source\Data\EntityData.cs" />
     <Compile Include="Source\Data\PlayerData.cs" />
-    <Compile Include="Source\Data\RoomData.cs" />
-    <Compile Include="Source\Game\RoomEntity.cs" />
-    <Compile Include="Source\Game\Room.cs" />
+    <Compile Include="Source\Data\DungeonData.cs" />
+    <Compile Include="Source\Game\DungeonEntity.cs" />
+    <Compile Include="Source\Game\Dungeon.cs" />
     <Compile Include="Source\Game\GameScene.cs" />
     <Compile Include="Source\Game\Player.cs" />
     <Compile Include="Source\Global.cs" />

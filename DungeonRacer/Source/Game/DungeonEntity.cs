@@ -3,15 +3,13 @@ using MonoPunk;
 
 namespace DungeonRacer
 {
-	class RoomEntity : Entity
+	class DungeonEntity : Entity
 	{
-		private readonly Room room;
 		private readonly EntityData data;
 		private readonly Animator sprite;
 
-		public RoomEntity(Room room, EntityData data, float x, float y) : base(room.X + x * Global.TileSize, room.Y + y * Global.TileSize)
+		public DungeonEntity(EntityData data, Dungeon dungeon, DungeonTile tile) : base(tile.X * Global.TileSize, tile.Y * Global.TileSize)
 		{
-			this.room = room;
 			this.data = data;
 			Type = Global.TypeEntity;
 			Layer = data.Layer;
@@ -46,15 +44,13 @@ namespace DungeonRacer
 					if (data.CollectSfx != null) data.CollectSfx.Play();
 
 					Collidable = false;
-					room.RemoveEntity(this);
 					sprite.Play("collect", RemoveFromScene);
 					return false;
 
 				case EntityType.Door:
-					if (!data.Name.Contains("locked") || player.UseKey())
+					if (player.UseKey())
 					{
 						Collidable = false;
-						room.RemoveEntity(this);
 						sprite.Play("open", RemoveFromScene);
 						return false;
 					}

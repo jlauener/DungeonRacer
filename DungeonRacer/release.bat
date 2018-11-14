@@ -30,7 +30,7 @@ IF %errorlevel% neq 0 GOTO :cleanup
 COPY readme.txt %release_folder%
 IF %errorlevel% neq 0 GOTO :cleanup
 
-COPY %build_folder%\MicroPunk.dll %release_folder%
+COPY %build_folder%\MonoPunk.dll %release_folder%
 IF %errorlevel% neq 0 GOTO :cleanup
 
 COPY %build_folder%\%app_name%.exe %release_folder%\%app_name%.exe

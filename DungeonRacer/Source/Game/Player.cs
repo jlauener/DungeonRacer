@@ -3,6 +3,7 @@ using MonoPunk;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.Shapes;
+using Microsoft.Xna.Framework.Audio;
 
 namespace DungeonRacer
 {
@@ -15,7 +16,8 @@ namespace DungeonRacer
 		private Vector2 velocity;
 		public Vector2 Velocity { get { return velocity; } }
 
-		public float DriftAngle { get; private set; }
+		public float DriftPct { get; private set; }
+		private float driftAngle;
 		public float Angle { get; private set; }
 		private float angularVelocity;
 
@@ -24,12 +26,19 @@ namespace DungeonRacer
 
 		public bool Paused { get; set; }
 
+		private float enginePct;
+
 		private PlayerData data;
 		private readonly Animator sprite;
 
-		public Player(PlayerData data, float x, float y) : base(x, y)
+		private readonly SoundEffectInstance engineSound;
+		//private readonly SoundEffectInstance driftSound;
+
+		public Player(PlayerData data, DungeonTile tile) : base()
 		{
 			this.data = data;
+			X = tile.X * Global.TileSize + Global.TileSize / 2;
+			Y = tile.Y * Global.TileSize + Global.TileSize / 2;
 			Type = Global.TypePlayer;
 			Layer = Global.LayerMain;
 			Collider = data.PixelMask;
@@ -44,10 +53,21 @@ namespace DungeonRacer
 			sprite.Play("idle");
 			Add(sprite);
 
+			engineSound = Asset.LoadSoundEffect("sfx/engine").CreateInstance();
+			engineSound.Volume = 0.0f;
+			engineSound.IsLooped = true;
+			engineSound.Play();
+
+			//driftSound = Asset.LoadSoundEffect("sfx/drift").CreateInstance();
+			//driftSound.Volume = 0.0f;
+			//driftSound.IsLooped = true;
+			//driftSound.Play();
+
 			Engine.Track(this, "Speed");
-			Engine.Track(this, "velocity");
 			Engine.Track(this, "Angle");
-			Engine.Track(this, "DriftAngle");
+			Engine.Track(this, "DriftPct");
+			Engine.Track(this, "velocity");
+			Engine.Track(this, "driftAngle");
 		}
 
 		public void SetData(PlayerData data)
@@ -88,18 +108,30 @@ namespace DungeonRacer
 
 		protected override void OnUpdate(float deltaTime)
 		{
-			if (Paused) return;
+			if (Paused)
+			{
+				engineSound.Volume = 0.0f;
+				//driftSound.Volume = 0.0f;
+				return;
+			}
+
 			base.OnUpdate(deltaTime);
 
-			if (Input.IsDown("a"))
+			if (Input.IsDown("move_front"))
 			{
 				// front gear
 				velocity += Vector2.UnitX.Rotate(Angle) * data.FrontGearForce * deltaTime;
+				enginePct += deltaTime;
+				enginePct = Mathf.Min(enginePct, 1.0f);
+			}
+			else
+			{
+				enginePct *= 0.95f;
 			}
 
 			var goingForward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(Angle)) > 3.0f;
 
-			if (Input.IsDown("b"))
+			if (Input.IsDown("move_back"))
 			{
 				if (goingForward)
 				{
@@ -128,18 +160,42 @@ namespace DungeonRacer
 			while (Angle > Mathf.Pi2) Angle -= Mathf.Pi2;
 			angularVelocity *= data.AngularFriction;
 
-			if(goingForward)
+			if (goingForward)
 			{
 				Speed = velocity.Length();
-				DriftAngle = Velocity.AngleWith(Vector2.UnitX.Rotate(Angle));
+				driftAngle = Velocity.AngleWith(Vector2.UnitX.Rotate(Angle));
 			}
 			else
 			{
 				Speed = 0.0f;
-				DriftAngle = 0.0f;
+				driftAngle = 0.0f;
 			}
 
 			MoveBy(velocity * deltaTime, CollisionFlags.NonStop, Global.TypeMap, Global.TypeEntity);
+
+			if (Speed > 80.0f && driftAngle > 0.25f)
+			{
+				var speedPct = Mathf.Min(1.0f, (Speed - 80.0f) / 10.0f);
+				var anglePct = Mathf.Min(1.0f, (driftAngle - 0.25f) / 0.3f);
+				DriftPct = speedPct * anglePct * 0.5f;
+			}
+			else
+			{
+				DriftPct = 0.0f;
+			}
+
+			engineSound.Pitch = enginePct;
+			engineSound.Volume = enginePct;
+
+			//if (DriftPct > 0.0f)
+			//{
+			//	driftSound.Pitch = 1.0f;
+			//	driftSound.Volume = DriftPct * 0.25f;
+			//}
+			//else
+			//{
+			//	driftSound.Volume = 0.0f;
+			//}
 
 			sprite.Rotation = Angle;
 			sprite.SortOrder = Mathf.Floor(Bottom) * 10;
@@ -148,15 +204,15 @@ namespace DungeonRacer
 		protected override bool OnHit(HitInfo info)
 		{
 			var stop = true;
-			if (info.Other is RoomEntity)
+			if (info.Other is DungeonEntity)
 			{
-				stop = ((RoomEntity)info.Other).HandlePlayerHit(this, info.DeltaX, info.DeltaY);
+				stop = ((DungeonEntity)info.Other).HandlePlayerHit(this, info.DeltaX, info.DeltaY);
 			}
 
 			if (stop)
 			{
 				Speed = 0.0f;
-				DriftAngle = 0.0f;
+				driftAngle = 0.0f;
 
 				if (info.IsVerticalMovement)
 				{
