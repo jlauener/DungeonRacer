@@ -192,6 +192,11 @@
 /processor:
 /build:map/dungeon1.tmx
 
+#begin map/test.tmx
+/importer:
+/processor:
+/build:map/test.tmx
+
 #begin sfx/coin.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor

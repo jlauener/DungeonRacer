@@ -1,32 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using MonoPunk;
-using MonoGame.Extended.Tiled;
-using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework;
 
 namespace DungeonRacer
 {
 	class Dungeon : Entity
 	{
-		[Flags]
-		enum TilePositions
-		{
-			None = 0x00,
-			Left = 0x01,
-			Right = 0x02,
-			Up = 0x04,
-			Down = 0x08
-		}
-
-		public const int TileWall = 0;
-		public const int TileGround = 8;
-		public const int TileRoof = 12;
-
-		public const int RoofHoriz = 24;
-		public const int RoofVert = 25;
-		public const int RoofCorner = 26;
-
 		public DungeonData Data { get; }
 
 		private readonly DrawLayer tireLayer;
@@ -39,7 +18,7 @@ namespace DungeonRacer
 			Width = data.Width * Global.TileSize;
 			Height = data.Height * Global.TileSize;
 
-			var grid = new GridCollider(data.Width, data.Height, Global.TileSize, Global.TileSize, "dungeon");
+			var grid = new GridCollider(data.Width, data.Height, Global.TileSize, Global.TileSize);
 			Collider = grid;
 
 			var groundMap = new Tilemap(data.Tileset, data.Width, data.Height);
@@ -116,7 +95,7 @@ namespace DungeonRacer
 			{
 				if (tile.Entity != null)
 				{
-					Scene.Add(new DungeonEntity(tile.Entity, this, tile));
+					Scene.Add(GameEntity.Create(tile.Entity, this, tile));
 				}
 			});
 		}

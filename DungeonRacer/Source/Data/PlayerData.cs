@@ -59,8 +59,7 @@ namespace DungeonRacer
 
 		public static PlayerData Get(string name)
 		{
-			PlayerData playerData;
-			if (!store.TryGetValue(name, out playerData))
+			if (!store.TryGetValue(name, out PlayerData playerData))
 			{
 				throw new Exception("PlayerData with name '" + name + "' not found.");
 			}

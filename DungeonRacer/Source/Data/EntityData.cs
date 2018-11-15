@@ -5,17 +5,16 @@ using Microsoft.Xna.Framework;
 
 namespace DungeonRacer
 {
-	enum EntityType
+	enum ItemType
 	{
-		Default,
-		Collectible,
-		Door
+		Coin,
+		Key
 	}
 
 	class EntityData
 	{
 		public string Name { get; }
-		public EntityType Type { get; }
+		public Type Type { get; }
 		public Rectangle Hitbox { get; private set; }
 		public PixelMask PixelMask { get; private set; }
 
@@ -28,27 +27,22 @@ namespace DungeonRacer
 		public int DamageOnHit { get; private set; }
 		public int DamagePerSec { get; private set; }
 
-		public Action<Scene, DungeonEntity, Player> CollectAction { get; private set; }
+		public ItemType ItemType { get; private set; }
 
 		public Sfx CollectSfx { get; private set; }
 
-		private EntityData(string name, EntityType type)
+		private EntityData(string name, Type type)
 		{
 			Name = name;
 			Type = type;
-			switch (type)
-			{
-				case EntityType.Default:
-					SetHitbox(Global.TileSize, Global.TileSize);
-					PixelMask = Asset.GetPixelMask("edged_square");
-					break;
-				case EntityType.Collectible:
-					SetHitbox(8, 12, -4, -4);
-					break;
-			}
 		}
 
-		private static EntityData Create(string name, EntityType type = EntityType.Default)
+		private static EntityData Create(string name)
+		{
+			return Create(name, typeof(GameEntity));
+		}
+
+		private static EntityData Create(string name, Type type)
 		{
 			if (store.ContainsKey(name))
 			{
@@ -61,9 +55,14 @@ namespace DungeonRacer
 		}
 
 		private EntityData SetHitbox(int width, int height, int originX = 0, int originY = 0)
-		{
-			PixelMask = null;
+		{		
 			Hitbox = new Rectangle(originX, originY, width, height);
+			return this;
+		}
+
+		private EntityData SetPixelMask(string name)
+		{
+			PixelMask = Asset.GetPixelMask(name);
 			return this;
 		}
 
@@ -106,27 +105,26 @@ namespace DungeonRacer
 
 			EntityData e;
 
-			e = Create("block").AddAnim("idle", 0);
+			e = Create("block").SetPixelMask("edged_square");
+			e.AddAnim("idle", 0);
 
-			e = Create("push_block").SetHitbox(Global.TileSize, Global.TileSize);
+			e = Create("push_block").SetHitbox(Global.TileSize, Global.TileSize);			
 			e.Pushable = true;
 			e.AddAnim("idle", 1);
 
-			e = Create("pillar");
+			e = Create("pillar").SetPixelMask("edged_square");
 			e.CreateAnimator("entities_16_32").AddAnim("idle", 24);
 			e.SpriteOrigin = new Vector2(0.0f, Global.TileSize);
 
-			e = Create("key", EntityType.Collectible).SetLayer(Global.LayerFront);
-			e.CollectAction = (gameScene, room, player) => player.AddKey();
-			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 20, 21, 22, 23).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
-			e.CollectSfx = new Sfx("sfx/key");
-
-			e = Create("coin", EntityType.Collectible).SetLayer(Global.LayerFront);
-			e.CollectAction = (gameScene, room, player) => player.AddMoney(5);
+			e = CreateItem("coin", ItemType.Coin);
 			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 24, 25, 26, 27).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
 			e.CollectSfx = new Sfx("sfx/coin");
 
-			e = Create("spike");
+			e = CreateItem("key", ItemType.Key);
+			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 20, 21, 22, 23).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
+			e.CollectSfx = new Sfx("sfx/key");
+
+			e = Create("spike").SetPixelMask("edged_square");
 			e.Solid = false;
 			e.DamagePerSec = 50;
 			e.SetLayer(Global.LayerBack).AddAnim("idle", 10);
@@ -136,33 +134,39 @@ namespace DungeonRacer
 
 		private static void CreateDoor(string name, int id)
 		{
-			EntityData e;
-
-			e = Create("door_left_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSize / 2);
+			var e = Create("door_left_" + name, typeof(Door)).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSize / 2);
 			e.CreateAnimator("entities_16_32").AddAnim("idle", id + 3).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 2);
 			e.SpriteOrigin = new Vector2(0, Global.TileSize / 2);
 
-			e = Create("door_right_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSize / 2);
+			e = Create("door_right_" + name, typeof(Door)).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSize / 2);
 			e.CreateAnimator("entities_16_32").AddAnim("idle", id + 0).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 1);
 			e.SpriteOrigin = new Vector2(0, Global.TileSize / 2);
 
-			e = Create("door_up_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSize / 2, 0);
+			e = Create("door_up_" + name, typeof(Door)).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSize / 2, 0);
 			e.CreateAnimator("entities_32_16").AddAnim("idle", id + 10).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 11);
 			e.SpriteOrigin = new Vector2(Global.TileSize / 2, 0);
 
-			e = Create("door_down_" + name, EntityType.Door).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSize / 2, 0);
+			e = Create("door_down_" + name, typeof(Door)).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSize / 2, 0);
 			e.CreateAnimator("entities_32_16").AddAnim("idle", id + 15).AddAnim("open", AnimatorMode.OneShot, 0.1f, id + 16);
 			e.SpriteOrigin = new Vector2(Global.TileSize / 2, 0);
 		}
 
+		private static EntityData CreateItem(string name, ItemType itemType)
+		{
+			var e = Create(name, typeof(Item));
+			e.SetHitbox(8, 12, -4, -4);
+			e.ItemType = itemType;
+			e.Layer = Global.LayerFront;
+			return e;
+		}
+
 		public static EntityData Get(string name)
 		{
-			EntityData entityData;
-			if (!store.TryGetValue(name, out entityData))
+			if (store.TryGetValue(name, out EntityData entityData))
 			{
-				return null;
+				return entityData;
 			}
-			return entityData;
+			return null;
 		}
 	}
 }

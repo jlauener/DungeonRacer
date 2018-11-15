@@ -46,12 +46,17 @@
     <Compile Include="Source\Data\EntityData.cs" />
     <Compile Include="Source\Data\PlayerData.cs" />
     <Compile Include="Source\Data\DungeonData.cs" />
-    <Compile Include="Source\Game\DungeonEntity.cs" />
+    <Compile Include="Source\Entity\Door.cs" />
+    <Compile Include="Source\Entity\Item.cs" />
+    <Compile Include="Source\Entity\GameEntity.cs" />
     <Compile Include="Source\Game\Dungeon.cs" />
     <Compile Include="Source\Game\GameScene.cs" />
     <Compile Include="Source\Game\Player.cs" />
     <Compile Include="Source\Global.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Source\Ui\CoinWidget.cs" />
+    <Compile Include="Source\Ui\InventoryWidget.cs" />
+    <Compile Include="Source\Ui\TimeWidget.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">

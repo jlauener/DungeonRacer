@@ -45,6 +45,11 @@ namespace DungeonRacer
 
 		public DungeonTile PlayerStartTile { get; private set; }
 
+		public int CoinCount { get; private set; }
+		public float TimeGold { get; private set; }
+		public float TimeSilver { get; private set; }
+		public float TimeBronze { get; private set; }
+
 		private readonly DungeonTile[,] tiles;
 
 		private DungeonData(TiledMap map)
@@ -53,6 +58,10 @@ namespace DungeonRacer
 			Width = map.Width;
 			Height = map.Height;
 			Tileset = new Tileset("gfx/game/" + map.Properties.GetString("tileset"), Global.TileSize, Global.TileSize);
+
+			TimeGold = map.Properties.GetFloat("timeGold");
+			TimeSilver = map.Properties.GetFloat("timeSilver");
+			TimeBronze = map.Properties.GetFloat("timeBronze");
 
 			tiles = new DungeonTile[Width, Height];
 
@@ -99,8 +108,7 @@ namespace DungeonRacer
 		{
 			if (properties.ContainsKey("solidType"))
 			{
-				TileSolidType solidType;
-				if (Enum.TryParse(properties.GetString("solidType"), out solidType))
+				if (Enum.TryParse(properties.GetString("solidType"), out TileSolidType solidType))
 				{
 					tile.SolidType = solidType;
 				}
@@ -112,8 +120,7 @@ namespace DungeonRacer
 
 			if (properties.ContainsKey("layer"))
 			{
-				DungeonTileLayer layer;
-				if (Enum.TryParse(properties.GetString("layer"), out layer))
+				if (Enum.TryParse(properties.GetString("layer"), out DungeonTileLayer layer))
 				{
 					tile.Layer = layer;
 				}
@@ -155,6 +162,11 @@ namespace DungeonRacer
 			}
 			else
 			{
+				if (entityName == "coin")
+				{
+					CoinCount++;
+				}
+
 				tile.Entity = EntityData.Get(entityName);
 				if (tile.Entity == null)
 				{
@@ -206,8 +218,7 @@ namespace DungeonRacer
 
 		public static DungeonData Get(string name)
 		{
-			DungeonData dungeon;
-			if (!dungeons.TryGetValue(name, out dungeon))
+			if (!dungeons.TryGetValue(name, out DungeonData dungeon))
 			{
 				throw new Exception("Dungeon '" + name + "' not found.");
 			}
@@ -216,6 +227,17 @@ namespace DungeonRacer
 	}
 
 	// some auto tile algo prototype... might be useful one day, or not...
+
+	//[Flags]
+	//enum TilePositions
+	//{
+	//	None = 0x00,
+	//	Left = 0x01,
+	//	Right = 0x02,
+	//	Up = 0x04,
+	//	Down = 0x08
+	//}
+
 	//private void RenderFlatTile(Tilemap tilemap, DungeonTile tile, int tid)
 	//{
 	//	var neighbors = GetNeighbors(tile);

@@ -4,11 +4,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extended.Shapes;
 using Microsoft.Xna.Framework.Audio;
+using System.Collections.Generic;
 
 namespace DungeonRacer
 {
 	class Player : Entity
 	{
+		public event Action<Player, ItemType> OnCollect;
+		public event Action<Player, ItemType> OnUse;
+
 		public float Speed { get; private set; }
 		public float Hp { get; private set; }
 		public int MaxHp { get; private set; }
@@ -21,14 +25,13 @@ namespace DungeonRacer
 		public float Angle { get; private set; }
 		private float angularVelocity;
 
-		public int Key { get; private set; }
-		public int Money { get; private set; }
-
-		public bool Paused { get; set; }
+		public bool Paused { get; set; } // FIXME
 
 		private float enginePct;
 
 		private PlayerData data;
+		private readonly Dictionary<ItemType, int> inventory = new Dictionary<ItemType, int>();
+
 		private readonly Animator sprite;
 
 		private readonly SoundEffectInstance engineSound;
@@ -85,25 +88,29 @@ namespace DungeonRacer
 			}
 		}
 
-		public void AddKey()
+		public void Collect(ItemType item)
 		{
-			Key++;
+			inventory.TryGetValue(item, out int count);
+			inventory[item] = count + 1;
+			OnCollect?.Invoke(this, item);
 		}
 
-		public void AddMoney(int value)
+		public bool Use(ItemType item)
 		{
-			Money += value;
-		}
-
-		public bool UseKey()
-		{
-			if (Key == 0)
+			if(!inventory.TryGetValue(item, out int count) || count == 0)
 			{
 				return false;
 			}
 
-			Key--;
+			inventory[item] = count - 1;
+			OnUse?.Invoke(this, item);
 			return true;
+		}
+
+		public int GetItemCount(ItemType item)
+		{
+			inventory.TryGetValue(item, out int count);
+			return count;
 		}
 
 		protected override void OnUpdate(float deltaTime)
@@ -204,9 +211,9 @@ namespace DungeonRacer
 		protected override bool OnHit(HitInfo info)
 		{
 			var stop = true;
-			if (info.Other is DungeonEntity)
+			if (info.Other is GameEntity)
 			{
-				stop = ((DungeonEntity)info.Other).HandlePlayerHit(this, info.DeltaX, info.DeltaY);
+				stop = ((GameEntity)info.Other).HandlePlayerHit(this, info.DeltaX, info.DeltaY);
 			}
 
 			if (stop)

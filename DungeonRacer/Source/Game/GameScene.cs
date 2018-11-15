@@ -14,23 +14,20 @@ namespace DungeonRacer
 		}
 		private State state = State.Play;
 
-		public float Time { get; private set; }
-		private readonly Player player;
+		public bool Paused { get { return state != State.Play; } }
 
-		private readonly DungeonData dungeonData;
+		public float Time { get; private set; }
+
+		private readonly Player player;
+		private readonly Dungeon dungeon;
 
 		private int roomX;
 		private int roomY;
 
-		private Dungeon dungeon;
-
-		//private readonly Label timeLabel;
 		//private readonly Bar hpBar;
 
 		public GameScene(DungeonData dungeonData)
 		{
-			this.dungeonData = dungeonData;
-
 			dungeon = new Dungeon(dungeonData); ;
 			Add(dungeon);
 
@@ -51,11 +48,9 @@ namespace DungeonRacer
 				Add(uiBack);
 			}
 
-			//timeLabel = new Label("font/04b");
-			//timeLabel.Layer = Global.LayerUi;
-			//timeLabel.HAlign = TextAlign.Center;
-			//Add(timeLabel, Engine.Width / 2, 7);
-
+			Add(new TimeWidget(this, Engine.HalfWidth, 2));
+			Add(new InventoryWidget(player, Engine.Width - 80, 4));
+			Add(new CoinWidget(player, dungeon.Data.CoinCount, Engine.Width - 42, 4));
 			//var hpBarBack = new Sprite("gfx/ui/hp_bar_back");
 			//hpBarBack.Layer = Global.LayerUi;
 			//hpBarBack.X = 4;
@@ -93,8 +88,7 @@ namespace DungeonRacer
 				}
 			}
 
-			//hpBar.Percent = player.Hp / player.MaxHp;
-			//timeLabel.Text = Time.ToString("0.00");
+			//hpBar.Percent = player.Hp / player.MaxHp;			
 
 			if (Input.WasPressed("back"))
 			{
@@ -103,13 +97,13 @@ namespace DungeonRacer
 
 			if (Input.WasPressed("reset"))
 			{
-				Engine.Scene = new GameScene(dungeonData);
+				Engine.Scene = new GameScene(dungeon.Data);
 			}
 
 			if (Input.WasPressed("debug_1"))
 			{
 				Global.ScrollingEnabled = !Global.ScrollingEnabled;
-				Engine.Scene = new GameScene(dungeonData);
+				Engine.Scene = new GameScene(dungeon.Data);
 			}
 
 			if (Input.WasPressed("debug_2"))
@@ -148,6 +142,7 @@ namespace DungeonRacer
 
 			if (Input.WasPressed("debug_10"))
 			{
+				Engine.Scene = new GameScene(DungeonData.Get("test"));
 			}
 		}
 
