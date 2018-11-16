@@ -103,7 +103,7 @@ namespace DungeonRacer
 		public void DrawDriftEffect(float x, float y, float alpha, float angle)
 		{
 			tireLayer.BeginDraw();
-			tireLayer.Draw(Asset.LoadTexture("gfx/game/tire_fx"), x - X, y - Y, Color.White * alpha, 8.0f, 8.0f, angle);
+			tireLayer.Draw(Asset.LoadTexture("gfx/game/tire_fx"), x - X, y - Y, Color.White * alpha * 0.35f, 8.0f, 8.0f, angle);
 			tireLayer.EndDraw();
 		}
 

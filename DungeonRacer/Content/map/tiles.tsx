@@ -292,6 +292,12 @@
    <property name="solidType" value="Full"/>
   </properties>
  </tile>
+ <tile id="236">
+  <properties>
+   <property name="displayTid" value="65"/>
+   <property name="solidType" value="Full"/>
+  </properties>
+ </tile>
  <tile id="237">
   <properties>
    <property name="displayTid" type="int" value="84"/>
@@ -322,7 +328,7 @@
  </tile>
  <tile id="252">
   <properties>
-   <property name="displayTid" type="int" value="67"/>
+   <property name="displayTid" type="int" value="65"/>
    <property name="layer" value="Front"/>
   </properties>
  </tile>

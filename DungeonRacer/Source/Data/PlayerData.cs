@@ -57,13 +57,13 @@ namespace DungeonRacer
 			p.EngineDecay = 0.95f;
 			p.BreakFriction = 0.98f;
 			p.RearGearForce = 280.0f;
-			p.TurnSpeed = 0.5f;
-			p.AngularFriction = 0.82f;
+			p.TurnSpeed = 4.0f;
+			p.AngularFriction = 0.0f;
 			p.BoostForce = 1100.0f;
 			p.BoostManaPerSec = 30.0f;
 			p.PixelMask = new PixelMask("gfx/mask/player_mask");
 			p.Anim = new AnimatorData("gfx/game/player", 16, 16);
-			p.Anim.Add("idle", 0);
+			p.Anim.Add("idle", 4);
 		}
 
 		public static PlayerData Get(string name)

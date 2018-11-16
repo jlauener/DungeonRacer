@@ -194,13 +194,14 @@ namespace DungeonRacer
 				}
 			}
 
+			var speedPct = Speed / 100.0f;
 			if (Input.IsDown("left"))
 			{
-				angularVelocity -= data.TurnSpeed * deltaTime;
+				angularVelocity -= data.TurnSpeed * deltaTime * speedPct;
 			}
 			if (Input.IsDown("right"))
 			{
-				angularVelocity += data.TurnSpeed * deltaTime;
+				angularVelocity += data.TurnSpeed * deltaTime * speedPct;
 			}
 
 			velocity *= data.Friction;
@@ -216,7 +217,7 @@ namespace DungeonRacer
 			}
 			else
 			{
-				Speed = 0.0f;
+				Speed = -velocity.Length();
 				driftAngle = 0.0f;
 			}
 
@@ -224,7 +225,7 @@ namespace DungeonRacer
 
 			if (Speed > 80.0f && driftAngle > 0.25f)
 			{
-				var speedPct = Mathf.Min(1.0f, (Speed - 80.0f) / 10.0f);
+				//var speedPct = Mathf.Min(1.0f, (Speed - 80.0f) / 10.0f);
 				var anglePct = Mathf.Min(1.0f, (driftAngle - 0.25f) / 0.3f);
 				DriftPct = speedPct * anglePct * 0.5f;
 			}
@@ -246,7 +247,7 @@ namespace DungeonRacer
 			//	driftSound.Volume = 0.0f;
 			//}
 
-			sprite.Rotation = Angle;
+			sprite.Rotation = ((int)(Angle * 16.0f)) / 16.0f;
 			sprite.SortOrder = Mathf.Floor(Bottom) * 10;
 		}
 
