@@ -10,7 +10,7 @@ namespace DungeonRacer
 
 		public override bool HandlePlayerHit(Player player, int dx, int dy)
 		{
-			if (!player.Use(ItemType.Key))
+			if (!player.UseItem(ItemType.Key))
 			{
 				return true;
 			}

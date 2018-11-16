@@ -29,6 +29,7 @@ namespace DungeonRacer
 
 		public ItemType ItemType { get; private set; }
 
+		public Action<Player> OnCollect { get; private set; }
 		public Sfx CollectSfx { get; private set; }
 
 		private EntityData(string name, Type type)
@@ -101,7 +102,7 @@ namespace DungeonRacer
 			Asset.AddTileset("entities_16_32", "gfx/game/entities", 16, 32);
 			Asset.AddTileset("entities_32_16", "gfx/game/entities", 32, 16);
 
-			Asset.AddPixelMask("edged_square", "gfx/game/entity_mask");
+			Asset.AddPixelMask("edged_square", "gfx/mask/entity_mask");
 
 			EntityData e;
 
@@ -116,13 +117,25 @@ namespace DungeonRacer
 			e.CreateAnimator("entities_16_32").AddAnim("idle", 24);
 			e.SpriteOrigin = new Vector2(0.0f, Global.TileSize);
 
-			e = CreateItem("coin", ItemType.Coin);
-			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 24, 25, 26, 27).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
+			e = CreateItem("coin");
+			e.OnCollect = (player) => player.AddItem(ItemType.Coin);
+			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 20, 21, 22, 23).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
 			e.CollectSfx = new Sfx("sfx/coin");
 
-			e = CreateItem("key", ItemType.Key);
-			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 20, 21, 22, 23).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
+			e = CreateItem("key");
+			e.OnCollect = (player) => player.AddItem(ItemType.Key);
+			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 24, 25, 26, 27).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
 			e.CollectSfx = new Sfx("sfx/key");
+
+			e = CreateItem("potion_hp");
+			e.OnCollect = (player) => player.Heal(20);
+			e.AddAnim("idle", 30).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
+			// TODO e.CollectSfx = new Sfx("sfx/key");
+
+			e = CreateItem("potion_mp");
+			e.OnCollect = (player) => player.GainMp(20);
+			e.AddAnim("idle", 31).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
+			// TODO e.CollectSfx = new Sfx("sfx/key");
 
 			e = Create("spike").SetPixelMask("edged_square");
 			e.Solid = false;
@@ -151,11 +164,10 @@ namespace DungeonRacer
 			e.SpriteOrigin = new Vector2(Global.TileSize / 2, 0);
 		}
 
-		private static EntityData CreateItem(string name, ItemType itemType)
+		private static EntityData CreateItem(string name)
 		{
-			var e = Create(name, typeof(Item));
+			var e = Create(name, typeof(Collectible));
 			e.SetHitbox(8, 12, -4, -4);
-			e.ItemType = itemType;
 			e.Layer = Global.LayerFront;
 			return e;
 		}

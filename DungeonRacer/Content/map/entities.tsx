@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset name="entities" tilewidth="16" tileheight="16" tilecount="64" columns="8">
+<tileset version="1.2" tiledversion="1.2.1" name="entities" tilewidth="16" tileheight="16" tilecount="64" columns="8">
  <image source="entities.png" width="128" height="128"/>
  <tile id="0">
   <properties>
@@ -34,6 +34,16 @@
  <tile id="17">
   <properties>
    <property name="entity" value="key"/>
+  </properties>
+ </tile>
+ <tile id="18">
+  <properties>
+   <property name="entity" value="potion_hp"/>
+  </properties>
+ </tile>
+ <tile id="19">
+  <properties>
+   <property name="entity" value="potion_mp"/>
   </properties>
  </tile>
  <tile id="24">

@@ -15,7 +15,6 @@ namespace DungeonRacer
 		private State state = State.Play;
 
 		public bool Paused { get { return state != State.Play; } }
-
 		public float Time { get; private set; }
 
 		private readonly Player player;
@@ -23,8 +22,6 @@ namespace DungeonRacer
 
 		private int roomX;
 		private int roomY;
-
-		//private readonly Bar hpBar;
 
 		public GameScene(DungeonData dungeonData)
 		{
@@ -48,18 +45,11 @@ namespace DungeonRacer
 				Add(uiBack);
 			}
 
+			Add(new HpWidget(player, 1, 1));
+			Add(new MpWidget(player, 1, 12));
 			Add(new TimeWidget(this, Engine.HalfWidth, 2));
 			Add(new InventoryWidget(player, Engine.Width - 80, 4));
 			Add(new CoinWidget(player, dungeon.Data.CoinCount, Engine.Width - 42, 4));
-			//var hpBarBack = new Sprite("gfx/ui/hp_bar_back");
-			//hpBarBack.Layer = Global.LayerUi;
-			//hpBarBack.X = 4;
-			//hpBarBack.Y = 1;
-			//Add(hpBarBack);
-
-			//hpBar = new Bar("gfx/ui/hp_bar_front");
-			//hpBar.Layer = Global.LayerUi;
-			//Add(hpBar, hpBarBack.X + 2, hpBarBack.Y + 3);
 
 			Engine.Track(this, "roomX");
 			Engine.Track(this, "roomY");
@@ -80,15 +70,13 @@ namespace DungeonRacer
 					UpdateRoomCamera(deltaTime);
 				}
 
-				Time += deltaTime;					
-				
+				Time += deltaTime;
+
 				if (player.DriftPct > 0.0f)
 				{
 					dungeon.DrawDriftEffect(player.X, player.Y, player.DriftPct, player.Angle);
 				}
 			}
-
-			//hpBar.Percent = player.Hp / player.MaxHp;			
 
 			if (Input.WasPressed("back"))
 			{
@@ -159,7 +147,7 @@ namespace DungeonRacer
 			Camera.X = Mathf.Clamp(Camera.X, 0.0f, dungeon.Width - Engine.Width);
 			Camera.Y = Mathf.Clamp(Camera.Y, 0.0f, dungeon.Height - Engine.Height);
 		}
-		
+
 		private void UpdateRoomCamera(float deltaTime)
 		{
 			if (player.Velocity.X < 0.0f && player.X < roomX * Global.RoomWidthPx + Global.TileSize / 2 + Global.RoomSwitchMargin)
@@ -199,7 +187,7 @@ namespace DungeonRacer
 		private Vector2 GetCameraPosition(int roomX, int roomY)
 		{
 			var pos = new Vector2(roomX * Global.RoomWidthPx + Global.TileSize / 2, roomY * Global.RoomHeightPx);
-			if(!Global.ScrollingEnabled)
+			if (!Global.ScrollingEnabled)
 			{
 				pos.Y -= Global.UiHeight - Global.TileSize / 2;
 			}

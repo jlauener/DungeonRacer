@@ -112,7 +112,7 @@ namespace DungeonRacer
 		{
 			// TODO maybe we don't need this huge mask, but only few masks shared between map, entity and player.
 			// e.g. "circle", "edged_square", "edge_corder_top_left", ...
-			Asset.AddPixelMaskSet("dungeon", "gfx/game/tileset_mask", Global.TileSize, Global.TileSize);
+			Asset.AddPixelMaskSet("dungeon", "gfx/mask/tileset_mask", Global.TileSize, Global.TileSize);
 		}
 	}
 }
