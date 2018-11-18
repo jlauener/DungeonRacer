@@ -63,7 +63,7 @@ namespace DungeonRacer
 			p.BoostManaPerSec = 30.0f;
 			p.PixelMask = new PixelMask("gfx/mask/player_mask");
 			p.Anim = new AnimatorData("gfx/game/player", 16, 16);
-			p.Anim.Add("idle", 4);
+			p.Anim.Add("idle", 0);
 		}
 
 		public static PlayerData Get(string name)

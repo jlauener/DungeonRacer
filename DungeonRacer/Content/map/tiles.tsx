@@ -336,7 +336,7 @@
   <properties>
    <property name="displayTid" type="int" value="83"/>
    <property name="layer" value="Front"/>
-   <property name="solidType" value="HalfRight"/>
+   <property name="solidType" value="HalfLeft"/>
   </properties>
  </tile>
  <tile id="254">
@@ -349,7 +349,7 @@
   <properties>
    <property name="displayTid" type="int" value="83"/>
    <property name="layer" value="Front"/>
-   <property name="solidType" value="HalfLeft"/>
+   <property name="solidType" value="HalfRight"/>
   </properties>
  </tile>
 </tileset>

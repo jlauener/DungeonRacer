@@ -247,7 +247,8 @@ namespace DungeonRacer
 			//	driftSound.Volume = 0.0f;
 			//}
 
-			sprite.Rotation = ((int)(Angle * 16.0f)) / 16.0f;
+			var angleId = (int)((Angle / Mathf.Pi2) * Global.PlayerAngleResolution);
+			sprite.Rotation = (angleId / Global.PlayerAngleResolution) * Mathf.Pi2;
 			sprite.SortOrder = Mathf.Floor(Bottom) * 10;
 		}
 
