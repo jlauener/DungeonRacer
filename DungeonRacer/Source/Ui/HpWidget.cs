@@ -21,9 +21,9 @@ namespace DungeonRacer
 			player.OnModifyHp += HandleModifyHp;
 		}
 
-		private void HandleModifyHp(Player player, float delta)
+		private void HandleModifyHp(Player player, int delta)
 		{
-			bar.Percent = player.Hp / player.MaxHp;
+			bar.Percent = player.Hp / ((float) player.MaxHp);
 		}
 	}
 }

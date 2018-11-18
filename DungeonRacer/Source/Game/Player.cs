@@ -12,10 +12,10 @@ namespace DungeonRacer
 	{
 		public event Action<Player, ItemType> OnCollect;
 		public event Action<Player, ItemType> OnUse;
-		public event Action<Player, float> OnModifyHp;
+		public event Action<Player, int> OnModifyHp;
 		public event Action<Player, float> OnModifyMp;
 
-		public float Hp { get; private set; }
+		public int Hp { get; private set; }
 		public int MaxHp { get; private set; }
 		public float Mp { get; private set; }
 		public int MaxMp { get; private set; }
@@ -30,6 +30,8 @@ namespace DungeonRacer
 		private float driftAngle;
 		private float angularVelocity;
 
+		private float invincibleCounter;
+
 		public bool Paused { get; set; } // FIXME
 
 		private float enginePct;
@@ -38,6 +40,7 @@ namespace DungeonRacer
 		private readonly Dictionary<ItemType, int> inventory = new Dictionary<ItemType, int>();
 
 		private readonly Animator sprite;
+		private readonly Blinker blinker;
 
 		private readonly SoundEffectInstance engineSound;
 		//private readonly SoundEffectInstance driftSound;
@@ -64,6 +67,9 @@ namespace DungeonRacer
 			sprite.Play("idle");
 			Add(sprite);
 
+			blinker = new Blinker(PlayerData.InvincibleBlinkInterval, sprite);
+			Add(blinker);
+
 			engineSound = Asset.LoadSoundEffect("sfx/engine").CreateInstance();
 			engineSound.Volume = 0.0f;
 			engineSound.IsLooped = true;
@@ -87,25 +93,33 @@ namespace DungeonRacer
 			this.data = data;
 		}
 
-		public void Damage(float value)
+		public void Damage(int value)
 		{
-			Hp -= value;
-			if (Hp <= 0.0f)
-			{
-				Hp = 0.0f;
-			}
-			OnModifyHp?.Invoke(this, value);
+			if (invincibleCounter > 0.0f) return;
 
-			if (Hp == 0.0f)
+			Hp -= value;
+			Hp = Mathf.Max(Hp, 0);
+
+			OnModifyHp?.Invoke(this, value);
+			invincibleCounter = PlayerData.InvincibleDuration;
+			sprite.Play("hurt", () =>
+			{
+				sprite.Play("idle");
+				blinker.Enabled = true;
+			});
+			enginePct = 0.0f;
+
+			if (Hp == 0)
 			{
 				// TODO die
 			}
+
 		}
 
-		public void Heal(float value)
+		public void Heal(int value)
 		{
 			Hp += value;
-			if (Hp > MaxHp) Hp = MaxHp;
+			Hp = Mathf.Min(Hp, MaxHp);
 			OnModifyHp?.Invoke(this, value);
 		}
 
@@ -158,6 +172,15 @@ namespace DungeonRacer
 			}
 
 			base.OnUpdate(deltaTime);
+
+			if(invincibleCounter > 0.0f)
+			{
+				invincibleCounter -= deltaTime;
+				if(invincibleCounter <= 0.0f)
+				{
+					blinker.Enabled = false;
+				}
+			}
 
 			if (Mp > 0.0f && Input.IsDown("special"))
 			{
@@ -247,8 +270,8 @@ namespace DungeonRacer
 			//	driftSound.Volume = 0.0f;
 			//}
 
-			var angleId = (int)((Angle / Mathf.Pi2) * Global.PlayerAngleResolution);
-			sprite.Rotation = (angleId / Global.PlayerAngleResolution) * Mathf.Pi2;
+			var angleId = (int)((Angle / Mathf.Pi2) * PlayerData.AngleResolution);
+			sprite.Rotation = (angleId / PlayerData.AngleResolution) * Mathf.Pi2;
 			sprite.SortOrder = Mathf.Floor(Bottom) * 10;
 		}
 
@@ -258,6 +281,15 @@ namespace DungeonRacer
 			if (info.Other is GameEntity)
 			{
 				stop = ((GameEntity)info.Other).HandlePlayerHit(this, info.DeltaX, info.DeltaY);
+			}
+			else if(info.Tile != null)
+			{
+				var damage = info.Tile.GetInt("damageOnHit", -1);
+				if(damage != -1)
+				{
+					Damage(damage);
+				}
+				stop = !info.Tile.GetBool("trigger");
 			}
 
 			if (stop)

@@ -37,11 +37,11 @@ namespace DungeonRacer
 			{
 				if (tile.SolidType == TileSolidType.PixelMask)
 				{
-					grid.SetPixelMaskAt(tile.X, tile.Y, Asset.GetPixelMaskSet("dungeon").GetMask(tile.Id));
+					grid.SetPixelMaskAt(tile.X, tile.Y, Asset.GetPixelMaskSet("dungeon").GetMask(tile.Id), tile.Properties);
 				}
 				else
 				{
-					grid.SetTileAt(tile.X, tile.Y, tile.SolidType);
+					grid.SetTileAt(tile.X, tile.Y, tile.SolidType, tile.Properties);
 				}
 
 				if (tile.Anim != null)

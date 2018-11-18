@@ -7,6 +7,9 @@ namespace DungeonRacer
 	class PlayerData
 	{
 		public const float BounceRestitution = 1.0f;
+		public const float AngleResolution = 32.0f;
+		public const float InvincibleDuration = 0.8f;
+		public const float InvincibleBlinkInterval = 0.15f;
 
 		public string Name { get; }
 		public int Hp { get; private set; }
@@ -49,8 +52,8 @@ namespace DungeonRacer
 			PlayerData p;
 
 			p = Create("normal");
-			p.Hp = 100;
-			p.Mp = 100;
+			p.Hp = 5;
+			p.Mp = 5;
 			p.Friction = 0.92f;
 			p.FrontGearForce = 600.0f;
 			p.EngineSpeed = 1.75f;
@@ -64,6 +67,7 @@ namespace DungeonRacer
 			p.PixelMask = new PixelMask("gfx/mask/player_mask");
 			p.Anim = new AnimatorData("gfx/game/player", 16, 16);
 			p.Anim.Add("idle", 0);
+			p.Anim.Add("hurt", AnimatorMode.OneShot, 0.1f, 2);
 		}
 
 		public static PlayerData Get(string name)

@@ -223,6 +223,19 @@
    <property name="solidType" value="Full"/>
   </properties>
  </tile>
+ <tile id="112">
+  <properties>
+   <property name="layer" value="Front"/>
+   <property name="solidType" value="Full"/>
+  </properties>
+ </tile>
+ <tile id="113">
+  <properties>
+   <property name="damageOnHit" type="int" value="1"/>
+   <property name="solidType" value="Full"/>
+   <property name="trigger" type="bool" value="true"/>
+  </properties>
+ </tile>
  <tile id="144">
   <properties>
    <property name="solidType" value="PixelMask"/>

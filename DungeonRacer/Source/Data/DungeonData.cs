@@ -16,6 +16,7 @@ namespace DungeonRacer
 	{
 		public int X { get; }
 		public int Y { get; }
+		public Dictionary<string, string> Properties { get; }
 
 		public int Id { get; set; } = -1;
 		public int DisplayTid { get; set; } = -1;
@@ -24,10 +25,11 @@ namespace DungeonRacer
 		public AnimatorData Anim { get; set; }
 		public EntityData Entity { get; set; }
 
-		public DungeonTile(int x, int y)
+		public DungeonTile(int x, int y, Dictionary<string, string> properties)
 		{
 			X = x;
 			Y = y;
+			Properties = properties;
 		}
 
 		public override string ToString()
@@ -72,7 +74,9 @@ namespace DungeonRacer
 			{
 				for (var iy = 0; iy < map.Height; iy++)
 				{
-					var tile = new DungeonTile(ix, iy);
+					var tileProperties = map.GetTilePropertiesAt(tilesLayer, ix, iy);
+
+					var tile = new DungeonTile(ix, iy, tileProperties);
 					tiles[ix, iy] = tile;
 
 					var tiledTile = map.GetTileAt(tilesLayer, ix, iy);
@@ -82,7 +86,6 @@ namespace DungeonRacer
 						tile.DisplayTid = tiledTile.Id;
 					}
 
-					var tileProperties = map.GetTilePropertiesAt(tilesLayer, ix, iy);
 					if (tileProperties != null)
 					{
 						InitTile(tile, tileProperties);

@@ -22,8 +22,6 @@ namespace DungeonRacer
 		// Prevents player car from being already visible on the next room when switching room.
 		public const int RoomSwitchMargin = 3;
 
-		public const float PlayerAngleResolution = 32.0f;
-
 		public const int TypeMap = 1;
 		public const int TypePlayer = 2;
 		public const int TypeEntity = 3;

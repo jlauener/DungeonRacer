@@ -46,6 +46,7 @@
     <Compile Include="Source\Data\EntityData.cs" />
     <Compile Include="Source\Data\PlayerData.cs" />
     <Compile Include="Source\Data\DungeonData.cs" />
+    <Compile Include="Source\Entity\Enemy.cs" />
     <Compile Include="Source\Entity\Door.cs" />
     <Compile Include="Source\Entity\Collectible.cs" />
     <Compile Include="Source\Entity\GameEntity.cs" />

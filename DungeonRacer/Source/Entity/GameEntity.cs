@@ -31,7 +31,7 @@ namespace DungeonRacer
 			base.OnAdded();
 
 			Collidable = true;
-			Sprite.Play("idle");
+			if(Sprite.Contains("idle")) Sprite.Play("idle");
 			UpdateSortOrder();
 		}
 
@@ -60,12 +60,12 @@ namespace DungeonRacer
 		{
 			base.OnUpdate(deltaTime);
 
-			if (Data.DamagePerSec > 0.0f)
+			if (Data.DamageOnTouch > 0.0f)
 			{
 				var info = CollideAt(X, Y, Global.TypePlayer);
 				if (info.Other != null)
 				{
-					((Player)info.Other).Damage(Data.DamagePerSec * deltaTime);
+					((Player)info.Other).Damage(Data.DamageOnTouch);
 				}
 			}
 		}

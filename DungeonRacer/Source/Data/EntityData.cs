@@ -24,8 +24,7 @@ namespace DungeonRacer
 
 		public bool Solid { get; private set; } = true;
 		public bool Pushable { get; private set; }
-		public int DamageOnHit { get; private set; }
-		public int DamagePerSec { get; private set; }
+		public int DamageOnTouch { get; private set; }
 
 		public ItemType ItemType { get; private set; }
 
@@ -128,19 +127,36 @@ namespace DungeonRacer
 			e.CollectSfx = new Sfx("sfx/key");
 
 			e = CreateItem("potion_hp");
-			e.OnCollect = (player) => player.Heal(20);
+			e.OnCollect = (player) => player.Heal(1);
 			e.AddAnim("idle", 30).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
 			// TODO e.CollectSfx = new Sfx("sfx/key");
 
 			e = CreateItem("potion_mp");
-			e.OnCollect = (player) => player.GainMp(20);
+			e.OnCollect = (player) => player.GainMp(1);
 			e.AddAnim("idle", 31).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 91, 90);
 			// TODO e.CollectSfx = new Sfx("sfx/key");
 
 			e = Create("spike").SetPixelMask("edged_square");
 			e.Solid = false;
-			e.DamagePerSec = 50;
+			e.DamageOnTouch = 1;
 			e.SetLayer(Global.LayerBack).AddAnim("idle", 10);
+
+			e = Create("goblin_h", typeof(Enemy));
+			e.Solid = false;
+			e.SetHitbox(8, 8, -4, -4);
+			//e.DamageOnTouch = 1;
+			e.AddAnim("walk", AnimatorMode.Loop, 0.25f, 104, 105);
+			e.AddAnim("die", 106);
+			e.AddAnim("poof", AnimatorMode.OneShot, 0.1f, 107, 108, 109);
+
+			e = Create("goblin_v", typeof(Enemy));
+			e.Solid = false;
+			e.SetHitbox(8, 8, -4, -4);
+			//e.DamageOnTouch = 1;
+			e.AddAnim("walk_up", AnimatorMode.Loop, 0.25f, 102, 103);
+			e.AddAnim("walk_down", AnimatorMode.Loop, 0.25f, 100, 101);
+			e.AddAnim("die", 106);
+			e.AddAnim("poof", AnimatorMode.OneShot, 0.1f, 107, 108, 109);
 
 			CreateDoor("normal", 20);
 		}
