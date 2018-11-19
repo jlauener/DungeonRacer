@@ -95,15 +95,20 @@ namespace DungeonRacer
 			{
 				if (tile.Entity != null)
 				{
-					Scene.Add(GameEntity.Create(tile.Entity, this, tile));
+					Scene.Add(GameEntity.Create(tile.Entity, tile));
 				}
 			});
 		}
 
-		public void DrawDriftEffect(float x, float y, float alpha, float angle)
+		public void DrawGroundEffect(float x, float y, string name, float alpha = 1.0f, float angle = 0.0f)
+		{
+			DrawGroundEffect(x, y, name, Color.White, alpha, angle);
+		}
+
+		public void DrawGroundEffect(float x, float y, string name, Color color, float alpha = 1.0f, float angle = 0.0f)
 		{
 			tireLayer.BeginDraw();
-			tireLayer.Draw(Asset.LoadTexture("gfx/game/tire_fx"), x - X, y - Y, Color.White * alpha * 0.35f, 8.0f, 8.0f, angle);
+			tireLayer.Draw(Asset.LoadTexture("gfx/game/fx_" + name), x - X, y - Y, color * alpha, 8.0f, 8.0f, angle);
 			tireLayer.EndDraw();
 		}
 

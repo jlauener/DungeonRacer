@@ -226,13 +226,13 @@
  <tile id="112">
   <properties>
    <property name="layer" value="Front"/>
-   <property name="solidType" value="Full"/>
+   <property name="solidType" value="PixelMask"/>
   </properties>
  </tile>
  <tile id="113">
   <properties>
    <property name="damageOnHit" type="int" value="1"/>
-   <property name="solidType" value="Full"/>
+   <property name="solidType" value="PixelMask"/>
    <property name="trigger" type="bool" value="true"/>
   </properties>
  </tile>

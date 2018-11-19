@@ -4,13 +4,13 @@ namespace DungeonRacer
 {
 	class Door : GameEntity
 	{
-		public Door(EntityData data, Dungeon dungeon, DungeonTile tile) : base(data, dungeon, tile)
+		public Door(EntityData data, EntityArguments args) : base(data, args)
 		{
 		}
 
 		public override bool HandlePlayerHit(Player player, int dx, int dy)
 		{
-			if (!player.UseItem(ItemType.Key))
+			if (!player.UseItem(Data.ItemType))
 			{
 				return true;
 			}

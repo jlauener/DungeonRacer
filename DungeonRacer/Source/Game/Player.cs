@@ -15,14 +15,18 @@ namespace DungeonRacer
 		public event Action<Player, int> OnModifyHp;
 		public event Action<Player, float> OnModifyMp;
 
-		public int Hp { get; private set; }
+		public float Hp { get; private set; }
 		public int MaxHp { get; private set; }
 		public float Mp { get; private set; }
 		public int MaxMp { get; private set; }
 
 		public float Speed { get; private set; }
 		public float Angle { get; private set; }
-		public float DriftPct { get; private set; }
+
+		private float enginePct;
+		private float driftPct;
+		private float bloodPct;
+		private int blood;
 
 		private Vector2 velocity;
 		public Vector2 Velocity { get { return velocity; } }
@@ -34,20 +38,20 @@ namespace DungeonRacer
 
 		public bool Paused { get; set; } // FIXME
 
-		private float enginePct;
-
 		private PlayerData data;
 		private readonly Dictionary<ItemType, int> inventory = new Dictionary<ItemType, int>();
 
 		private readonly Animator sprite;
 		private readonly Blinker blinker;
+		private readonly Dungeon dungeon;
 
-		private readonly SoundEffectInstance engineSound;
+		//private readonly SoundEffectInstance engineSound;
 		//private readonly SoundEffectInstance driftSound;
 
-		public Player(PlayerData data, DungeonTile tile) : base()
+		public Player(PlayerData data, DungeonTile tile, Dungeon dungeon) : base()
 		{
 			this.data = data;
+			this.dungeon = dungeon;
 			X = tile.X * Global.TileSize + Global.TileSize / 2;
 			Y = tile.Y * Global.TileSize + Global.TileSize / 2;
 			Type = Global.TypePlayer;
@@ -62,18 +66,21 @@ namespace DungeonRacer
 			Mp = data.Mp;
 			MaxMp = data.Mp;
 
+			Angle = ((int)tile.Direction) * Mathf.HalfPi;
+
 			sprite = new Animator(data.Anim);
 			sprite.CenterOrigin();
-			sprite.Play("idle");
+			PlayIdleSprite();
 			Add(sprite);
 
 			blinker = new Blinker(PlayerData.InvincibleBlinkInterval, sprite);
+			blinker.Enabled = false;
 			Add(blinker);
 
-			engineSound = Asset.LoadSoundEffect("sfx/engine").CreateInstance();
-			engineSound.Volume = 0.0f;
-			engineSound.IsLooped = true;
-			engineSound.Play();
+			//engineSound = Asset.LoadSoundEffect("sfx/engine").CreateInstance();
+			//engineSound.Volume = 0.0f;
+			//engineSound.IsLooped = true;
+			//engineSound.Play();
 
 			//driftSound = Asset.LoadSoundEffect("sfx/drift").CreateInstance();
 			//driftSound.Volume = 0.0f;
@@ -82,15 +89,11 @@ namespace DungeonRacer
 
 			Engine.Track(this, "Speed");
 			Engine.Track(this, "Angle");
-			Engine.Track(this, "DriftPct");
 			Engine.Track(this, "enginePct");
+			Engine.Track(this, "driftPct");
+			Engine.Track(this, "bloodPct");
 			Engine.Track(this, "velocity");
 			Engine.Track(this, "driftAngle");
-		}
-
-		public void SetData(PlayerData data)
-		{
-			this.data = data;
 		}
 
 		public void Damage(int value)
@@ -104,7 +107,7 @@ namespace DungeonRacer
 			invincibleCounter = PlayerData.InvincibleDuration;
 			sprite.Play("hurt", () =>
 			{
-				sprite.Play("idle");
+				PlayIdleSprite();
 				blinker.Enabled = true;
 			});
 			enginePct = 0.0f;
@@ -166,17 +169,17 @@ namespace DungeonRacer
 		{
 			if (Paused)
 			{
-				engineSound.Volume = 0.0f;
+				//engineSound.Volume = 0.0f;
 				//driftSound.Volume = 0.0f;
 				return;
 			}
 
 			base.OnUpdate(deltaTime);
 
-			if(invincibleCounter > 0.0f)
+			if (invincibleCounter > 0.0f)
 			{
 				invincibleCounter -= deltaTime;
-				if(invincibleCounter <= 0.0f)
+				if (invincibleCounter <= 0.0f)
 				{
 					blinker.Enabled = false;
 				}
@@ -244,21 +247,21 @@ namespace DungeonRacer
 				driftAngle = 0.0f;
 			}
 
-			MoveBy(velocity * deltaTime, CollisionFlags.NonStop, Global.TypeMap, Global.TypeEntity);
+			MoveBy(velocity * deltaTime, CollisionFlags.NonStop, Global.TypeEnemy, Global.TypeCollectible, Global.TypeSolid, Global.TypeMap);
 
 			if (Speed > 80.0f && driftAngle > 0.25f)
 			{
 				//var speedPct = Mathf.Min(1.0f, (Speed - 80.0f) / 10.0f);
 				var anglePct = Mathf.Min(1.0f, (driftAngle - 0.25f) / 0.3f);
-				DriftPct = speedPct * anglePct * 0.5f;
+				driftPct = speedPct * anglePct * 0.5f;
 			}
 			else
 			{
-				DriftPct = 0.0f;
+				driftPct = 0.0f;
 			}
 
-			engineSound.Pitch = enginePct;
-			engineSound.Volume = enginePct;
+			//engineSound.Pitch = enginePct;
+			//engineSound.Volume = enginePct;
 
 			//if (DriftPct > 0.0f)
 			//{
@@ -269,6 +272,16 @@ namespace DungeonRacer
 			//{
 			//	driftSound.Volume = 0.0f;
 			//}
+
+			if (bloodPct > 0.1f)
+			{
+				bloodPct *= 0.9f;
+				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0xCF, 0x32, 0x32), bloodPct * 0.35f, Angle);
+			}
+			else if (driftPct > 0.1f)
+			{
+				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0x00, 0x00, 0x00), driftPct * 0.15f, Angle);
+			}
 
 			var angleId = (int)((Angle / Mathf.Pi2) * PlayerData.AngleResolution);
 			sprite.Rotation = (angleId / PlayerData.AngleResolution) * Mathf.Pi2;
@@ -281,11 +294,32 @@ namespace DungeonRacer
 			if (info.Other is GameEntity)
 			{
 				stop = ((GameEntity)info.Other).HandlePlayerHit(this, info.DeltaX, info.DeltaY);
+
+				if (info.Other is Enemy)
+				{
+					// FIXME
+					if (stop)
+					{
+						bloodPct = 1.0f;
+						if (blood == 0)
+						{
+							blood++;
+							PlayIdleSprite();
+						}
+						else if(blood < 3 && Rand.NextFloat() < 0.33f)
+						{
+							blood++;
+							PlayIdleSprite();
+						}
+						stop = false; // FIXME
+						Log.Debug("hit enemy blood=" + blood);
+					}
+				}
 			}
-			else if(info.Tile != null)
+			else if (info.Tile != null)
 			{
 				var damage = info.Tile.GetInt("damageOnHit", -1);
-				if(damage != -1)
+				if (damage != -1)
 				{
 					Damage(damage);
 				}
@@ -311,6 +345,11 @@ namespace DungeonRacer
 			}
 
 			return stop;
+		}
+
+		private void PlayIdleSprite()
+		{
+			sprite.Play(blood == 0 ? "idle" : "blood" + blood);
 		}
 
 		protected override void OnRenderDebug(SpriteBatch spriteBatch)

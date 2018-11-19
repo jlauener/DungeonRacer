@@ -14,7 +14,7 @@ namespace DungeonRacer
 
 			this.maxCoin = maxCoin;
 
-			var icon = new TileSprite(Asset.GetTileset("entities_16_16"), 20);
+			var icon = new TileSprite(Asset.GetTileset("entities_16_16"), 64);
 			Add(icon, -6, -4);
 
 			label = new Label(Global.Font, player.GetItemCount(ItemType.Coin) + "/" + maxCoin);

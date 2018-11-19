@@ -20,6 +20,7 @@ namespace DungeonRacer
 
 		public int Id { get; set; } = -1;
 		public int DisplayTid { get; set; } = -1;
+		public Direction Direction { get; set; }
 		public TileSolidType SolidType { get; set; } = TileSolidType.None;
 		public DungeonTileLayer Layer { get; set; } = DungeonTileLayer.Back;
 		public AnimatorData Anim { get; set; }
@@ -156,6 +157,15 @@ namespace DungeonRacer
 			{
 				Log.Error("Invalid entity at " + tile + ": 'entity' not found.");
 				return;
+			}
+
+			if (Enum.TryParse(properties.GetString("direction", "Down"), out Direction direction))
+			{
+				tile.Direction = direction;
+			}
+			else
+			{
+				Log.Error("Unknown tile direction '" + properties.GetString("direction") + "' at " + tile);
 			}
 
 			var entityName = properties.GetString("entity");

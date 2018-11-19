@@ -5,7 +5,7 @@ namespace DungeonRacer
 	static class Global
 	{
 		public static bool CrtEnabled = false;
-		public static bool ScrollingEnabled = true;
+		public static bool ScrollingEnabled = false;
 
 		public static int ScreenWidth = 256;
 		public static int ScreenHeight = 224;
@@ -24,7 +24,9 @@ namespace DungeonRacer
 
 		public const int TypeMap = 1;
 		public const int TypePlayer = 2;
-		public const int TypeEntity = 3;
+		public const int TypeSolid = 3;
+		public const int TypeCollectible = 4;
+		public const int TypeEnemy = 5;
 
 		public const int LayerUi = 20;
 		public const int LayerMapFront = 30;

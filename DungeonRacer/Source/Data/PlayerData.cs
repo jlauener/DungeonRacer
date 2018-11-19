@@ -67,7 +67,10 @@ namespace DungeonRacer
 			p.PixelMask = new PixelMask("gfx/mask/player_mask");
 			p.Anim = new AnimatorData("gfx/game/player", 16, 16);
 			p.Anim.Add("idle", 0);
-			p.Anim.Add("hurt", AnimatorMode.OneShot, 0.1f, 2);
+			p.Anim.Add("blood1", 1);
+			p.Anim.Add("blood2", 2);
+			p.Anim.Add("blood3", 3);
+			p.Anim.Add("hurt", AnimatorMode.OneShot, 0.1f, 7);
 		}
 
 		public static PlayerData Get(string name)

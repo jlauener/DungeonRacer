@@ -10,11 +10,10 @@ namespace DungeonRacer
 
 		private Vector2 velocity;
 
-		public Enemy(EntityData data, Dungeon dungeon, DungeonTile tile) : base(data, dungeon, tile)
+		public Enemy(EntityData data, EntityArguments args) : base(data, args)
 		{
-			var moveSpeed = 20.0f;
-			if (data.Name == "goblin_h") velocity = Vector2.UnitX * moveSpeed;
-			else velocity = Vector2.UnitY * moveSpeed;
+			velocity = DirectionUtils.GetNormal(Direction) * 20.0f;
+			UpdateSprite();
 		}
 
 		protected override void OnUpdate(float deltaTime)
@@ -23,38 +22,32 @@ namespace DungeonRacer
 
 			if (!Collidable) return;
 
+			MoveBy(velocity * deltaTime, Global.TypeMap, Global.TypeSolid);
+
 			if (dead)
 			{
-				MoveBy(velocity * deltaTime, Global.TypeMap);
-				velocity *= 0.9f;
-				if (velocity.Length() < 10.0f)
+				velocity *= 0.95f;
+				if (velocity.Length() < 5.0f)
 				{
-					Collidable = false;
-					Sprite.Play("poof", RemoveFromScene);
+					Poof();
 				}
 				return;
 			}
-
-			MoveBy(velocity * deltaTime, Global.TypeMap);
-
-			if (Data.Name == "goblin_h")
-			{
-				Sprite.Play("walk");
-				Sprite.FlipX = velocity.X < 0.0f;
-			}
-			else Sprite.Play(velocity.Y < 0.0f ? "walk_up" : "walk_down");
 		}
 
 		protected override bool OnHit(HitInfo info)
 		{
 			if(dead)
 			{
-				Collidable = false;
-				Sprite.Play("poof", RemoveFromScene);
+				//Poof();
+				if (info.IsHorizontalMovement) velocity.X *= -1;
+				else velocity.Y *= -1;
 				return true;
 			}
 
-			velocity = -velocity;
+			Direction = DirectionUtils.GetOpposite(Direction);
+			velocity *= -1;
+			UpdateSprite();
 			return true;
 		}
 
@@ -62,11 +55,44 @@ namespace DungeonRacer
 		{
 			if (dead) return false;
 
-			player.Damage(1);
 			Sprite.Play("die");
-			velocity = player.Velocity;
+			velocity = player.Velocity * 2.0f;
 			dead = true;
+			//Add(new Blinker(0.1f, Sprite));
+
+			//Scene.GetEntity<Shaker>().Shake(dx * 4.0f, dy * 4.0f);
+			Scene.GetEntity<Dungeon>().DrawGroundEffect(X, Y - 6, "blood" + Rand.NextInt(3));
+
 			return true;
+		}
+
+		private void Poof()
+		{
+			Collidable = false;
+			Sprite.Play("poof", RemoveFromScene);
+
+			Scene.Add(Create("coin", Position));
+		}
+
+		private void UpdateSprite()
+		{
+			switch (Direction)
+			{
+				case Direction.Left:
+					Sprite.Play("walk_horiz");
+					Sprite.FlipX = true;
+					break;
+				case Direction.Right:
+					Sprite.Play("walk_horiz");
+					Sprite.FlipX = false;
+					break;
+				case Direction.Up:
+					Sprite.Play("walk_up");
+					break;
+				case Direction.Down:
+					Sprite.Play("walk_down");
+					break;
+			}
 		}
 	}
 }

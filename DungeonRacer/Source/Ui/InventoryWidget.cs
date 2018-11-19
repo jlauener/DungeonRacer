@@ -84,7 +84,9 @@ namespace DungeonRacer
 		public static void LoadAssets()
 		{
 			var anim = new AnimatorData("entities_16_16");
-			anim.Add("Key", 24);
+			anim.Add("KeyA", 68);
+			anim.Add("KeyB", 72);
+			anim.Add("KeyC", 76);
 			Asset.AddAnimatorData("ui_item", anim);
 		}
 	}

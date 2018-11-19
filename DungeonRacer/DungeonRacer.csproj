@@ -43,6 +43,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Source\Boot.cs" />
+    <Compile Include="Source\Data\Direction.cs" />
     <Compile Include="Source\Data\EntityData.cs" />
     <Compile Include="Source\Data\PlayerData.cs" />
     <Compile Include="Source\Data\DungeonData.cs" />

@@ -3,37 +3,91 @@
  <image source="entities.png" width="128" height="128"/>
  <tile id="0">
   <properties>
+   <property name="direction" value="Left"/>
    <property name="entity" value="player"/>
+  </properties>
+ </tile>
+ <tile id="1">
+  <properties>
+   <property name="direction" value="Right"/>
+   <property name="entity" value="player"/>
+  </properties>
+ </tile>
+ <tile id="2">
+  <properties>
+   <property name="direction" value="Up"/>
+   <property name="entity" value="player"/>
+  </properties>
+ </tile>
+ <tile id="3">
+  <properties>
+   <property name="direction" value="Down"/>
+   <property name="entity" value="player"/>
+  </properties>
+ </tile>
+ <tile id="4">
+  <properties>
+   <property name="entity" value="door_c_right"/>
+  </properties>
+ </tile>
+ <tile id="5">
+  <properties>
+   <property name="entity" value="door_c_left"/>
+  </properties>
+ </tile>
+ <tile id="6">
+  <properties>
+   <property name="entity" value="door_c_up"/>
+  </properties>
+ </tile>
+ <tile id="7">
+  <properties>
+   <property name="entity" value="door_c_down"/>
   </properties>
  </tile>
  <tile id="8">
   <properties>
-   <property name="entity" value="door_left_normal"/>
+   <property name="entity" value="door_a_right"/>
   </properties>
  </tile>
  <tile id="9">
   <properties>
-   <property name="entity" value="door_right_normal"/>
+   <property name="entity" value="door_a_left"/>
   </properties>
  </tile>
  <tile id="10">
   <properties>
-   <property name="entity" value="door_up_normal"/>
+   <property name="entity" value="door_a_up"/>
   </properties>
  </tile>
  <tile id="11">
   <properties>
-   <property name="entity" value="door_down_normal"/>
+   <property name="entity" value="door_a_down"/>
+  </properties>
+ </tile>
+ <tile id="12">
+  <properties>
+   <property name="entity" value="door_b_right"/>
+  </properties>
+ </tile>
+ <tile id="13">
+  <properties>
+   <property name="entity" value="door_b_left"/>
+  </properties>
+ </tile>
+ <tile id="14">
+  <properties>
+   <property name="entity" value="door_b_up"/>
+  </properties>
+ </tile>
+ <tile id="15">
+  <properties>
+   <property name="entity" value="door_b_down"/>
   </properties>
  </tile>
  <tile id="16">
   <properties>
    <property name="entity" value="coin"/>
-  </properties>
- </tile>
- <tile id="17">
-  <properties>
-   <property name="entity" value="key"/>
   </properties>
  </tile>
  <tile id="18">
@@ -46,6 +100,21 @@
    <property name="entity" value="potion_mp"/>
   </properties>
  </tile>
+ <tile id="21">
+  <properties>
+   <property name="entity" value="key_a"/>
+  </properties>
+ </tile>
+ <tile id="22">
+  <properties>
+   <property name="entity" value="key_b"/>
+  </properties>
+ </tile>
+ <tile id="23">
+  <properties>
+   <property name="entity" value="key_c"/>
+  </properties>
+ </tile>
  <tile id="24">
   <properties>
    <property name="entity" value="block"/>
@@ -56,19 +125,28 @@
    <property name="entity" value="push_block"/>
   </properties>
  </tile>
- <tile id="32">
-  <properties>
-   <property name="entity" value="spike"/>
-  </properties>
- </tile>
  <tile id="40">
   <properties>
-   <property name="entity" value="goblin_h"/>
+   <property name="direction" value="Right"/>
+   <property name="entity" value="goblin"/>
   </properties>
  </tile>
  <tile id="41">
   <properties>
-   <property name="entity" value="goblin_v"/>
+   <property name="direction" value="Left"/>
+   <property name="entity" value="goblin"/>
+  </properties>
+ </tile>
+ <tile id="42">
+  <properties>
+   <property name="direction" value="Up"/>
+   <property name="entity" value="goblin"/>
+  </properties>
+ </tile>
+ <tile id="43">
+  <properties>
+   <property name="direction" value="Down"/>
+   <property name="entity" value="goblin"/>
   </properties>
  </tile>
  <tile id="48">

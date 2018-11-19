@@ -28,7 +28,7 @@ namespace DungeonRacer
 			dungeon = new Dungeon(dungeonData); ;
 			Add(dungeon);
 
-			player = new Player(PlayerData.Get("normal"), dungeonData.PlayerStartTile);
+			player = new Player(PlayerData.Get("normal"), dungeonData.PlayerStartTile, dungeon);
 			Add(player);
 
 			roomX = dungeonData.PlayerStartTile.X / Global.RoomWidth;
@@ -51,6 +51,8 @@ namespace DungeonRacer
 			Add(new InventoryWidget(player, Engine.Width - 80, 4));
 			Add(new CoinWidget(player, dungeon.Data.CoinCount, Engine.Width - 42, 4));
 
+			//Add(new Shaker(Camera));
+
 			Engine.Track(this, "roomX");
 			Engine.Track(this, "roomY");
 		}
@@ -71,11 +73,6 @@ namespace DungeonRacer
 				}
 
 				Time += deltaTime;
-
-				if (player.DriftPct > 0.0f)
-				{
-					dungeon.DrawDriftEffect(player.X, player.Y, player.DriftPct, player.Angle);
-				}
 			}
 
 			if (Input.WasPressed("back"))
@@ -91,7 +88,7 @@ namespace DungeonRacer
 			if (Input.WasPressed("debug_1"))
 			{
 				Global.ScrollingEnabled = !Global.ScrollingEnabled;
-				Engine.Scene = new GameScene(dungeon.Data);
+				Engine.Scene = new GameScene(DungeonData.Get(Global.ScrollingEnabled ? "dungeon_1" : "dungeon_room"));
 			}
 
 			if (Input.WasPressed("debug_2"))
@@ -175,13 +172,13 @@ namespace DungeonRacer
 			player.Paused = true;
 			state = State.Switch;
 			var target = GetCameraPosition(roomX, roomY);
-			Tween(Camera, new { Position = target }, 1.0f).Ease(Ease.QuadInOut).OnComplete(() =>
+			Tween(Camera, new { Position = target }, 0.5f).Ease(Ease.QuadInOut).OnComplete(() =>
 			 {
 				 player.Paused = false;
 				 state = State.Play;
 			 });
 
-			Asset.LoadSoundEffect("sfx/room_switch").Play();
+			//Asset.LoadSoundEffect("sfx/room_switch").Play();
 		}
 
 		private Vector2 GetCameraPosition(int roomX, int roomY)

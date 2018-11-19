@@ -1,17 +1,44 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 using MonoPunk;
 
 namespace DungeonRacer
 {
+	struct EntityArguments
+	{
+		public DungeonTile Tile { get; }
+		public Vector2 Position { get; set; }
+		public Direction Direction { get; }
+
+		public EntityArguments(DungeonTile tile, Vector2 position, Direction direction)
+		{
+			Tile = tile;
+			Position = position;
+			Direction = direction;
+		}
+	}
+
 	class GameEntity : Entity
 	{
 		protected EntityData Data { get; }
+		protected Direction Direction { get; set; }
 		protected Animator Sprite { get; }
 
-		public GameEntity(EntityData data, Dungeon dungeon, DungeonTile tile) : base(tile.X * Global.TileSize, tile.Y * Global.TileSize)
+		public GameEntity(EntityData data, EntityArguments args)
 		{
+			if (args.Tile != null)
+			{
+				X = data.TileOffset.X + args.Tile.X * Global.TileSize;
+				Y = data.TileOffset.Y + args.Tile.Y * Global.TileSize;
+			}
+			else
+			{
+				Position = args.Position;
+			}
+
 			Data = data;
-			Type = Global.TypeEntity;
+			Type = data.Type;
+			Direction = args.Direction;
 			Layer = data.Layer;
 			Width = data.Hitbox.Width;
 			Height = data.Hitbox.Height;
@@ -21,6 +48,8 @@ namespace DungeonRacer
 
 			Sprite = new Animator(data.Anim);
 			Sprite.Origin = data.SpriteOrigin;
+			Sprite.FlipX = data.SpriteFlipX;
+			Sprite.FlipY = data.SpriteFlipY;
 			Add(Sprite);
 
 			UpdateSortOrder();
@@ -39,7 +68,7 @@ namespace DungeonRacer
 		{
 			if (Data.Pushable)
 			{
-				if (!CollideAt(X + dx, Y + dy, Global.TypeMap, Global.TypeEntity))
+				if (!CollideAt(X + dx, Y + dy, Global.TypeMap, Global.TypeSolid))
 				{
 					X += dx;
 					Y += dy;
@@ -48,7 +77,7 @@ namespace DungeonRacer
 				}
 			}
 
-			return Data.Solid;
+			return Type == Global.TypeSolid;
 		}
 
 		private void UpdateSortOrder()
@@ -70,9 +99,19 @@ namespace DungeonRacer
 			}
 		}
 
-		public static GameEntity Create(EntityData data, Dungeon dungeon, DungeonTile tile)
+		public static GameEntity Create(EntityData data, EntityArguments args)
 		{
-			return (GameEntity) Activator.CreateInstance(data.Type, data, dungeon, tile);
+			return (GameEntity) Activator.CreateInstance(data.Class, data, args);
+		}
+
+		public static GameEntity Create(EntityData data, DungeonTile tile)
+		{
+			return Create(data, new EntityArguments(tile, Vector2.Zero, tile.Direction));
+		}
+
+		public static GameEntity Create(string name, Vector2 position, Direction direction = Direction.Down)
+		{
+			return Create(EntityData.Get(name), new EntityArguments(null, position, direction));
 		}
 	}
 }

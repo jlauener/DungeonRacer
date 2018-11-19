@@ -1,16 +1,36 @@
-﻿using System;
+﻿using MonoPunk;
+using System;
 
 namespace DungeonRacer
 {
 	class Collectible : GameEntity
-	{		
-		public Collectible(EntityData data, Dungeon dungeon, DungeonTile tile) : base(data, dungeon, tile)
+	{
+		private readonly bool bounce;
+
+		public Collectible(EntityData data, EntityArguments args) : base(data, args)
 		{
+			bounce = args.Tile == null;
+			Collidable = !bounce;
+		}
+
+		protected override void OnAdded()
+		{
+			base.OnAdded();
+
+			if (bounce)
+			{
+				var targetY = Y;
+				Y -= 8.0f;
+				Scene.Tween(this, new { Y = targetY}, 0.3f).Ease(Ease.BackIn).OnComplete(() =>
+				{
+					Collidable = true;
+				});
+			}
 		}
 
 		public override bool HandlePlayerHit(Player player, int dx, int dy)
 		{
-			Collidable = false;		
+			Collidable = false;
 			Data.OnCollect?.Invoke(player);
 
 			if (Data.CollectSfx != null) Data.CollectSfx.Play();
