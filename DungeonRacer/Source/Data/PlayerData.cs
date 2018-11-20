@@ -19,9 +19,10 @@ namespace DungeonRacer
 
 		public float Friction { get; private set; }
 		public float FrontGearForce { get; private set; }
-		public float EngineSpeed { get; private set; }
+		public float FrontGearSpeed { get; private set; }
+		public float RearGearForce { get; private set; }
+		public float RearGearSpeed { get; private set; }
 		public float EngineDecay { get; private set; }
-		public float RearGearForce { get; private set; }		
 		public float BreakFriction { get; private set; }
 		public float TurnSpeed { get; private set; }
 		public float AngularFriction { get; private set; }
@@ -55,11 +56,12 @@ namespace DungeonRacer
 			p.Hp = 5;
 			p.Mp = 5;
 			p.Friction = 0.92f;
-			p.FrontGearForce = 600.0f;
-			p.EngineSpeed = 1.75f;
-			p.EngineDecay = 0.95f;
-			p.BreakFriction = 0.98f;
+			p.FrontGearForce = 680.0f;
+			p.FrontGearSpeed = 1.75f;
 			p.RearGearForce = 280.0f;
+			p.RearGearSpeed = 1.25f;
+			p.EngineDecay = 0.98f;
+			p.BreakFriction = 0.98f;
 			p.TurnSpeed = 4.0f;
 			p.AngularFriction = 0.0f;
 			p.BoostForce = 1100.0f;

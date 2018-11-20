@@ -79,18 +79,6 @@
 /processorParam:TextureFormat=Color
 /build:gfx/game/fx_blood0.png
 
-#begin gfx/game/fx_blood0.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:gfx/game/fx_blood0.png
-
 #begin gfx/game/fx_blood1.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -250,17 +238,47 @@
 /processor:TiledMapProcessor
 /build:map/test.tmx
 
+#begin sfx/car_break.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/car_break.wav
+
+#begin sfx/car_drift.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/car_drift.wav
+
+#begin sfx/car_engine.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/car_engine.wav
+
+#begin sfx/car_room_switch.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/car_room_switch.wav
+
+#begin sfx/car_start.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/car_start.wav
+
 #begin sfx/coin.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:sfx/coin.wav
 
-#begin sfx/engine.wav
+#begin sfx/enemy_die.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
-/build:sfx/engine.wav
+/build:sfx/enemy_die.wav
 
 #begin sfx/hit.wav
 /importer:WavImporter
@@ -273,10 +291,4 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:sfx/key.wav
-
-#begin sfx/room_switch.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:sfx/room_switch.wav
 

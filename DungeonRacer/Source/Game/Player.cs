@@ -31,6 +31,15 @@ namespace DungeonRacer
 		private Vector2 velocity;
 		public Vector2 Velocity { get { return velocity; } }
 
+		private enum EngineState
+		{
+			Idle,
+			FrontGear,
+			ReadGear,
+			Break
+		}
+		private EngineState engineState = EngineState.Idle;
+
 		private float driftAngle;
 		private float angularVelocity;
 
@@ -45,8 +54,9 @@ namespace DungeonRacer
 		private readonly Blinker blinker;
 		private readonly Dungeon dungeon;
 
-		//private readonly SoundEffectInstance engineSound;
-		//private readonly SoundEffectInstance driftSound;
+		private readonly SoundEffectInstance engineSound;
+		private readonly SoundEffectInstance driftSound;
+		private readonly SoundEffectInstance breakSound;
 
 		public Player(PlayerData data, DungeonTile tile, Dungeon dungeon) : base()
 		{
@@ -77,18 +87,20 @@ namespace DungeonRacer
 			blinker.Enabled = false;
 			Add(blinker);
 
-			//engineSound = Asset.LoadSoundEffect("sfx/engine").CreateInstance();
-			//engineSound.Volume = 0.0f;
-			//engineSound.IsLooped = true;
-			//engineSound.Play();
+			engineSound = Asset.LoadSoundEffect("sfx/car_engine").CreateInstance();
+			engineSound.Volume = 0.0f;
+			engineSound.IsLooped = true;
+			engineSound.Play();
 
-			//driftSound = Asset.LoadSoundEffect("sfx/drift").CreateInstance();
-			//driftSound.Volume = 0.0f;
-			//driftSound.IsLooped = true;
-			//driftSound.Play();
+			driftSound = Asset.LoadSoundEffect("sfx/car_drift").CreateInstance();
+			driftSound.Volume = 0.7f;
+
+			breakSound = Asset.LoadSoundEffect("sfx/car_break").CreateInstance();
+			breakSound.Volume = 0.7f;
 
 			Engine.Track(this, "Speed");
 			Engine.Track(this, "Angle");
+			Engine.Track(this, "engineState");
 			Engine.Track(this, "enginePct");
 			Engine.Track(this, "driftPct");
 			Engine.Track(this, "bloodPct");
@@ -169,8 +181,8 @@ namespace DungeonRacer
 		{
 			if (Paused)
 			{
-				//engineSound.Volume = 0.0f;
-				//driftSound.Volume = 0.0f;
+				engineSound.Volume = 0.0f;
+				driftSound.Stop();
 				return;
 			}
 
@@ -185,6 +197,8 @@ namespace DungeonRacer
 				}
 			}
 
+			var forward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(Angle));
+
 			if (Mp > 0.0f && Input.IsDown("special"))
 			{
 				velocity += Vector2.UnitX.Rotate(Angle) * data.BoostForce * deltaTime;
@@ -193,30 +207,61 @@ namespace DungeonRacer
 			}
 			else if (Input.IsDown("move_front"))
 			{
-				// front gear
-				enginePct += deltaTime * (1.0f - enginePct) * data.EngineSpeed;
-				enginePct = Mathf.Clamp(enginePct, 0.1f, 1.0f);
-				velocity += Vector2.UnitX.Rotate(Angle) * data.FrontGearForce * deltaTime * enginePct;
-			}
-			else
-			{
-				enginePct *= data.EngineDecay;
-				if (enginePct < 0.1f) enginePct = 0.0f;
-			}
-
-			var goingForward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(Angle)) > 3.0f;
-
-			if (Input.IsDown("move_back"))
-			{
-				if (goingForward)
+				if (forward < -3.0f)
 				{
 					// break
-					velocity *= data.BreakFriction;
+					engineState = EngineState.Break;
+				}
+				else
+				{
+					// front gear
+					enginePct += deltaTime * (1.0f - enginePct) * data.FrontGearSpeed;
+					enginePct = Mathf.Clamp(enginePct, 0.1f, 1.0f);
+					engineState = EngineState.FrontGear;
+				}
+			}
+			else if (Input.IsDown("move_back"))
+			{
+				if (forward > 3.0f)
+				{
+					// break
+					engineState = EngineState.Break;
 				}
 				else
 				{
 					// rear gear
-					velocity -= Vector2.UnitX.Rotate(Angle) * data.RearGearForce * deltaTime;
+					enginePct += deltaTime * (1.0f - enginePct) * data.RearGearSpeed;
+					enginePct = Mathf.Clamp(enginePct, 0.1f, 1.0f);
+					engineState = EngineState.ReadGear;
+				}
+			}
+			else
+			{
+				enginePct *= data.EngineDecay;
+				if (enginePct < 0.1f)
+				{
+					enginePct = 0.0f;
+					engineState = EngineState.Idle;
+				}
+			}
+
+			if(engineState == EngineState.Break)
+			{
+				enginePct = 0.0f;
+				velocity *= data.BreakFriction;
+				breakSound.Play();
+			}
+			else
+			{
+				breakSound.Stop();
+
+				if(engineState == EngineState.FrontGear)
+				{
+					velocity += Vector2.UnitX.Rotate(Angle) * data.FrontGearForce * deltaTime * enginePct;
+				}
+				else if(engineState == EngineState.ReadGear)
+				{
+					velocity -= Vector2.UnitX.Rotate(Angle) * data.RearGearForce * deltaTime * enginePct;
 				}
 			}
 
@@ -236,7 +281,7 @@ namespace DungeonRacer
 			while (Angle > Mathf.Pi2) Angle -= Mathf.Pi2;
 			angularVelocity *= data.AngularFriction;
 
-			if (goingForward)
+			if (forward > 3.0f)
 			{
 				Speed = velocity.Length();
 				driftAngle = Velocity.AngleWith(Vector2.UnitX.Rotate(Angle));
@@ -251,7 +296,6 @@ namespace DungeonRacer
 
 			if (Speed > 80.0f && driftAngle > 0.25f)
 			{
-				//var speedPct = Mathf.Min(1.0f, (Speed - 80.0f) / 10.0f);
 				var anglePct = Mathf.Min(1.0f, (driftAngle - 0.25f) / 0.3f);
 				driftPct = speedPct * anglePct * 0.5f;
 			}
@@ -260,18 +304,17 @@ namespace DungeonRacer
 				driftPct = 0.0f;
 			}
 
-			//engineSound.Pitch = enginePct;
-			//engineSound.Volume = enginePct;
+			if (Speed > 80.0f && driftAngle > 0.7f)
+			{
+				driftSound.Play();
+			}
+			else if(driftAngle < 0.1f)
+			{
+				driftSound.Stop();
+			}
 
-			//if (DriftPct > 0.0f)
-			//{
-			//	driftSound.Pitch = 1.0f;
-			//	driftSound.Volume = DriftPct * 0.25f;
-			//}
-			//else
-			//{
-			//	driftSound.Volume = 0.0f;
-			//}
+			engineSound.Pitch = enginePct;
+			engineSound.Volume = enginePct * 0.5f;
 
 			if (bloodPct > 0.1f)
 			{
@@ -330,7 +373,6 @@ namespace DungeonRacer
 			{
 				Speed = 0.0f;
 				driftAngle = 0.0f;
-				enginePct = 0.0f;
 
 				if (info.IsVerticalMovement)
 				{

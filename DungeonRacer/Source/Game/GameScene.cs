@@ -178,7 +178,7 @@ namespace DungeonRacer
 				 state = State.Play;
 			 });
 
-			//Asset.LoadSoundEffect("sfx/room_switch").Play();
+			Asset.LoadSoundEffect("sfx/car_room_switch").Play();
 		}
 
 		private Vector2 GetCameraPosition(int roomX, int roomY)
