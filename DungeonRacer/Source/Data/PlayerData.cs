@@ -6,10 +6,14 @@ namespace DungeonRacer
 {
 	class PlayerData
 	{
-		public const float BounceRestitution = 1.0f;
+		public const float BounceRestitution = 1.5f;
+		public const float BounceFriction = 0.85f;
+
 		public const float AngleResolution = 32.0f;
 		public const float InvincibleDuration = 0.8f;
 		public const float InvincibleBlinkInterval = 0.15f;
+
+		public const float DamageThreshold = 0.6f;
 
 		public string Name { get; }
 		public int Hp { get; private set; }
@@ -18,6 +22,7 @@ namespace DungeonRacer
 		public AnimatorData Anim { get; private set; }
 
 		public float Friction { get; private set; }
+		public float MaxSpeed { get; private set; }
 		public float FrontGearForce { get; private set; }
 		public float FrontGearSpeed { get; private set; }
 		public float RearGearForce { get; private set; }
@@ -53,16 +58,17 @@ namespace DungeonRacer
 			PlayerData p;
 
 			p = Create("normal");
-			p.Hp = 5;
+			p.Hp = 100;
 			p.Mp = 5;
 			p.Friction = 0.92f;
-			p.FrontGearForce = 680.0f;
-			p.FrontGearSpeed = 1.75f;
-			p.RearGearForce = 280.0f;
-			p.RearGearSpeed = 1.25f;
-			p.EngineDecay = 0.98f;
+			p.MaxSpeed = 125.0f;
+			p.FrontGearForce = 650.0f;
+			p.FrontGearSpeed = 1.8f;
+			p.RearGearForce = 300.0f;
+			p.RearGearSpeed = 1.5f;
+			p.EngineDecay = 0.95f;
 			p.BreakFriction = 0.98f;
-			p.TurnSpeed = 4.0f;
+			p.TurnSpeed = 5.0f;
 			p.AngularFriction = 0.0f;
 			p.BoostForce = 1100.0f;
 			p.BoostManaPerSec = 30.0f;
@@ -72,7 +78,7 @@ namespace DungeonRacer
 			p.Anim.Add("blood1", 1);
 			p.Anim.Add("blood2", 2);
 			p.Anim.Add("blood3", 3);
-			p.Anim.Add("hurt", AnimatorMode.OneShot, 0.1f, 7);
+			p.Anim.Add("hurt", 7);
 		}
 
 		public static PlayerData Get(string name)

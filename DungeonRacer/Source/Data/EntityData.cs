@@ -149,7 +149,7 @@ namespace DungeonRacer
 			e.CollectSfx = new Sfx("sfx/key");
 
 			e = CreateItem("potion_hp");
-			e.OnCollect = (player) => player.Heal(1);
+			e.OnCollect = (player) => player.Heal(40);
 			e.AddAnim("idle", 84).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
 			e.CollectSfx = new Sfx("sfx/key"); // TODO sfx
 

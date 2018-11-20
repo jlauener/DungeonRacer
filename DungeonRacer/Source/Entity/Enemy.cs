@@ -27,7 +27,7 @@ namespace DungeonRacer
 			if (dead)
 			{
 				velocity *= 0.95f;
-				if (velocity.Length() < 5.0f)
+				if (velocity.Length() < 10.0f)
 				{
 					Poof();
 				}
@@ -37,12 +37,11 @@ namespace DungeonRacer
 
 		protected override bool OnHit(HitInfo info)
 		{
-			if(dead)
+			if (dead)
 			{
-				//Poof();
 				if (info.IsHorizontalMovement) velocity.X *= -1;
 				else velocity.Y *= -1;
-				Asset.LoadSoundEffect("sfx/hit").Play();
+				//Asset.LoadSoundEffect("sfx/hit").Play();
 				return true;
 			}
 
@@ -64,7 +63,7 @@ namespace DungeonRacer
 			//Scene.GetEntity<Shaker>().Shake(dx * 4.0f, dy * 4.0f);
 			Scene.GetEntity<Dungeon>().DrawGroundEffect(X, Y - 6, "blood" + Rand.NextInt(3));
 
-			Asset.LoadSoundEffect("sfx/hit").Play();
+			Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
 
 			return true;
 		}

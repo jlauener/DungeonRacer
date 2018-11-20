@@ -256,6 +256,18 @@
 /processorParam:Quality=Best
 /build:sfx/car_engine.wav
 
+#begin sfx/car_hit.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/car_hit.wav
+
+#begin sfx/car_hit_hurt.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/car_hit_hurt.wav
+
 #begin sfx/car_room_switch.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
@@ -280,11 +292,11 @@
 /processorParam:Quality=Best
 /build:sfx/enemy_die.wav
 
-#begin sfx/hit.wav
+#begin sfx/enemy_hurt.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
-/build:sfx/hit.wav
+/build:sfx/enemy_hurt.wav
 
 #begin sfx/key.wav
 /importer:WavImporter

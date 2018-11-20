@@ -12,7 +12,7 @@ namespace DungeonRacer
 	{
 		public event Action<Player, ItemType> OnCollect;
 		public event Action<Player, ItemType> OnUse;
-		public event Action<Player, int> OnModifyHp;
+		public event Action<Player, float> OnModifyHp;
 		public event Action<Player, float> OnModifyMp;
 
 		public float Hp { get; private set; }
@@ -31,11 +31,13 @@ namespace DungeonRacer
 		private Vector2 velocity;
 		public Vector2 Velocity { get { return velocity; } }
 
+		private Vector2 bounceVelocity;
+
 		private enum EngineState
 		{
 			Idle,
 			FrontGear,
-			ReadGear,
+			RearGear,
 			Break
 		}
 		private EngineState engineState = EngineState.Idle;
@@ -54,9 +56,9 @@ namespace DungeonRacer
 		private readonly Blinker blinker;
 		private readonly Dungeon dungeon;
 
-		private readonly SoundEffectInstance engineSound;
-		private readonly SoundEffectInstance driftSound;
-		private readonly SoundEffectInstance breakSound;
+		private static SoundEffectInstance engineSound;
+		private static SoundEffectInstance driftSound;
+		private static SoundEffectInstance breakSound;
 
 		public Player(PlayerData data, DungeonTile tile, Dungeon dungeon) : base()
 		{
@@ -87,15 +89,15 @@ namespace DungeonRacer
 			blinker.Enabled = false;
 			Add(blinker);
 
-			engineSound = Asset.LoadSoundEffect("sfx/car_engine").CreateInstance();
+			if (engineSound == null) engineSound = Asset.LoadSoundEffect("sfx/car_engine").CreateInstance();
 			engineSound.Volume = 0.0f;
 			engineSound.IsLooped = true;
 			engineSound.Play();
 
-			driftSound = Asset.LoadSoundEffect("sfx/car_drift").CreateInstance();
+			if (driftSound == null) driftSound = Asset.LoadSoundEffect("sfx/car_drift").CreateInstance();
 			driftSound.Volume = 0.7f;
 
-			breakSound = Asset.LoadSoundEffect("sfx/car_break").CreateInstance();
+			if (breakSound == null) breakSound = Asset.LoadSoundEffect("sfx/car_break").CreateInstance();
 			breakSound.Volume = 0.7f;
 
 			Engine.Track(this, "Speed");
@@ -105,10 +107,12 @@ namespace DungeonRacer
 			Engine.Track(this, "driftPct");
 			Engine.Track(this, "bloodPct");
 			Engine.Track(this, "velocity");
+			Engine.Track(this, "bounceVelocity");
 			Engine.Track(this, "driftAngle");
 		}
 
-		public void Damage(int value)
+		private Tween hurtFinishedCallback;
+		public void Damage(float value)
 		{
 			if (invincibleCounter > 0.0f) return;
 
@@ -116,18 +120,18 @@ namespace DungeonRacer
 			Hp = Mathf.Max(Hp, 0);
 
 			OnModifyHp?.Invoke(this, value);
-			invincibleCounter = PlayerData.InvincibleDuration;
-			sprite.Play("hurt", () =>
-			{
-				PlayIdleSprite();
-				blinker.Enabled = true;
-			});
-			enginePct = 0.0f;
+			//invincibleCounter = PlayerData.InvincibleDuration;
+			if (hurtFinishedCallback != null) hurtFinishedCallback.Cancel();
+			sprite.Play("hurt");
+			var damagePct = value / 10.0f; // FIXME
+			hurtFinishedCallback = Scene.Callback(damagePct * 0.05f, PlayIdleSprite);
 
 			if (Hp == 0)
 			{
 				// TODO die
 			}
+
+			Log.Debug("damage " + value + " hp=" + Hp);
 
 		}
 
@@ -199,13 +203,14 @@ namespace DungeonRacer
 
 			var forward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(Angle));
 
-			if (Mp > 0.0f && Input.IsDown("special"))
+			/*if (Mp > 0.0f && Input.IsDown("special"))
 			{
 				velocity += Vector2.UnitX.Rotate(Angle) * data.BoostForce * deltaTime;
 				enginePct = 1.0f;
 				LooseMp(data.BoostManaPerSec * deltaTime);
 			}
-			else if (Input.IsDown("move_front"))
+			else*/
+			if (Input.IsDown("move_front"))
 			{
 				if (forward < -3.0f)
 				{
@@ -232,11 +237,12 @@ namespace DungeonRacer
 					// rear gear
 					enginePct += deltaTime * (1.0f - enginePct) * data.RearGearSpeed;
 					enginePct = Mathf.Clamp(enginePct, 0.1f, 1.0f);
-					engineState = EngineState.ReadGear;
+					engineState = EngineState.RearGear;
 				}
 			}
 			else
 			{
+				// idle
 				enginePct *= data.EngineDecay;
 				if (enginePct < 0.1f)
 				{
@@ -245,54 +251,61 @@ namespace DungeonRacer
 				}
 			}
 
-			if(engineState == EngineState.Break)
-			{
-				enginePct = 0.0f;
-				velocity *= data.BreakFriction;
-				breakSound.Play();
-			}
-			else
-			{
-				breakSound.Stop();
+			var angleId = (int)((Angle / Mathf.Pi2) * PlayerData.AngleResolution);
+			var actualAngle = (angleId / PlayerData.AngleResolution) * Mathf.Pi2;
 
-				if(engineState == EngineState.FrontGear)
-				{
-					velocity += Vector2.UnitX.Rotate(Angle) * data.FrontGearForce * deltaTime * enginePct;
-				}
-				else if(engineState == EngineState.ReadGear)
-				{
-					velocity -= Vector2.UnitX.Rotate(Angle) * data.RearGearForce * deltaTime * enginePct;
-				}
-			}
-
-			var speedPct = Speed / 100.0f;
-			if (Input.IsDown("left"))
+			var turnDir = 0;
+			switch (engineState)
 			{
-				angularVelocity -= data.TurnSpeed * deltaTime * speedPct;
-			}
-			if (Input.IsDown("right"))
-			{
-				angularVelocity += data.TurnSpeed * deltaTime * speedPct;
+				case EngineState.Break:
+					enginePct = 0.0f;
+					velocity *= data.BreakFriction;
+					break;
+				case EngineState.FrontGear:
+					velocity += Vector2.UnitX.Rotate(actualAngle) * data.FrontGearForce * deltaTime * enginePct;
+					turnDir = 1;
+					break;
+				case EngineState.RearGear:
+					velocity -= Vector2.UnitX.Rotate(actualAngle) * data.RearGearForce * deltaTime * enginePct;
+					turnDir = -1;
+					break;
 			}
 
 			velocity *= data.Friction;
+
+			Speed = velocity.Length();
+			Speed = Mathf.Min(Speed, data.MaxSpeed);
+			var speedPct = Speed / data.MaxSpeed;
+
+			if (Input.IsDown("left"))
+			{
+				angularVelocity -= data.TurnSpeed * deltaTime * speedPct * turnDir;
+			}
+			if (Input.IsDown("right"))
+			{
+				angularVelocity += data.TurnSpeed * deltaTime * speedPct * turnDir;
+			}
+
 			Angle += angularVelocity;
 			while (Angle < 0.0f) Angle += Mathf.Pi2;
 			while (Angle > Mathf.Pi2) Angle -= Mathf.Pi2;
 			angularVelocity *= data.AngularFriction;
 
+			//velocity += bounceVelocity * deltaTime;
+			bounceVelocity *= PlayerData.BounceFriction;
+			if (bounceVelocity.Length() < 5.0f) bounceVelocity = Vector2.Zero;
+
+			MoveBy((velocity + bounceVelocity) * deltaTime, CollisionFlags.NonStop, Global.TypeEnemy, Global.TypeCollectible, Global.TypeSolid, Global.TypeMap);
+
+			// FIXME... all this is fuzzy..
 			if (forward > 3.0f)
 			{
-				Speed = velocity.Length();
 				driftAngle = Velocity.AngleWith(Vector2.UnitX.Rotate(Angle));
 			}
 			else
 			{
-				Speed = -velocity.Length();
 				driftAngle = 0.0f;
 			}
-
-			MoveBy(velocity * deltaTime, CollisionFlags.NonStop, Global.TypeEnemy, Global.TypeCollectible, Global.TypeSolid, Global.TypeMap);
 
 			if (Speed > 80.0f && driftAngle > 0.25f)
 			{
@@ -304,17 +317,19 @@ namespace DungeonRacer
 				driftPct = 0.0f;
 			}
 
-			if (Speed > 80.0f && driftAngle > 0.7f)
+			if (Speed > 80.0f && driftAngle > 0.6f)
 			{
 				driftSound.Play();
 			}
-			else if(driftAngle < 0.1f)
+			else if (driftAngle < 0.1f)
 			{
 				driftSound.Stop();
 			}
 
 			engineSound.Pitch = enginePct;
 			engineSound.Volume = enginePct * 0.5f;
+
+			if (engineState == EngineState.Break) breakSound.Play(); else breakSound.Stop();
 
 			if (bloodPct > 0.1f)
 			{
@@ -326,8 +341,7 @@ namespace DungeonRacer
 				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0x00, 0x00, 0x00), driftPct * 0.15f, Angle);
 			}
 
-			var angleId = (int)((Angle / Mathf.Pi2) * PlayerData.AngleResolution);
-			sprite.Rotation = (angleId / PlayerData.AngleResolution) * Mathf.Pi2;
+			sprite.Rotation = actualAngle;
 			sprite.SortOrder = Mathf.Floor(Bottom) * 10;
 		}
 
@@ -349,20 +363,19 @@ namespace DungeonRacer
 							blood++;
 							PlayIdleSprite();
 						}
-						else if(blood < 3 && Rand.NextFloat() < 0.33f)
+						else if (blood < 3 && Rand.NextFloat() < 0.33f)
 						{
 							blood++;
 							PlayIdleSprite();
 						}
 						stop = false; // FIXME
-						Log.Debug("hit enemy blood=" + blood);
 					}
 				}
 			}
 			else if (info.Tile != null)
 			{
-				var damage = info.Tile.GetInt("damageOnHit", -1);
-				if (damage != -1)
+				var damage = info.Tile.GetFloat("damageOnHit", 0);
+				if (damage > 0.0f)
 				{
 					Damage(damage);
 				}
@@ -371,19 +384,31 @@ namespace DungeonRacer
 
 			if (stop)
 			{
-				Speed = 0.0f;
-				driftAngle = 0.0f;
+				var speedPct = Speed / data.MaxSpeed;
+				if (speedPct > PlayerData.DamageThreshold)
+				{
+					var damagePct = (speedPct - PlayerData.DamageThreshold) * (1.0f / (1.0f - PlayerData.DamageThreshold));
+					Log.Debug("damagePct=" + damagePct);
+					// TODO player resistance
+					Damage(damagePct * 10.0f);
+				}
 
 				if (info.IsVerticalMovement)
 				{
-					velocity.Y = -velocity.Y * PlayerData.BounceRestitution;
+					bounceVelocity.Y = -velocity.Y * PlayerData.BounceRestitution;
+					velocity *= 0.2f;
 				}
 				else if (info.IsHorizontalMovement)
 				{
-					velocity.X = -velocity.X * PlayerData.BounceRestitution;
+					bounceVelocity.X = -velocity.X * PlayerData.BounceRestitution;
+					velocity.X *= 0.2f;
 				}
 
-				Asset.LoadSoundEffect("sfx/hit").Play();
+				// FIXME ?
+				driftAngle = 0.0f;
+
+				if (speedPct > PlayerData.DamageThreshold) Asset.LoadSoundEffect("sfx/car_hit_hurt").Play();
+				if (speedPct > 0.25f) Asset.LoadSoundEffect("sfx/car_hit").Play();
 			}
 
 			return stop;
