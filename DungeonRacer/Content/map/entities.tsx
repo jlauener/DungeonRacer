@@ -27,22 +27,22 @@
  </tile>
  <tile id="4">
   <properties>
-   <property name="entity" value="door_c_right"/>
+   <property name="entity" value="door_normal_right"/>
   </properties>
  </tile>
  <tile id="5">
   <properties>
-   <property name="entity" value="door_c_left"/>
+   <property name="entity" value="door_normal_left"/>
   </properties>
  </tile>
  <tile id="6">
   <properties>
-   <property name="entity" value="door_c_up"/>
+   <property name="entity" value="door_normal_up"/>
   </properties>
  </tile>
  <tile id="7">
   <properties>
-   <property name="entity" value="door_c_down"/>
+   <property name="entity" value="door_normal_down"/>
   </properties>
  </tile>
  <tile id="8">
@@ -123,6 +123,26 @@
  <tile id="25">
   <properties>
    <property name="entity" value="push_block"/>
+  </properties>
+ </tile>
+ <tile id="28">
+  <properties>
+   <property name="entity" value="door_c_right"/>
+  </properties>
+ </tile>
+ <tile id="29">
+  <properties>
+   <property name="entity" value="door_c_left"/>
+  </properties>
+ </tile>
+ <tile id="30">
+  <properties>
+   <property name="entity" value="door_c_up"/>
+  </properties>
+ </tile>
+ <tile id="31">
+  <properties>
+   <property name="entity" value="door_c_down"/>
   </properties>
  </tile>
  <tile id="40">

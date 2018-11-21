@@ -12,6 +12,8 @@ namespace DungeonRacer
 
 		public const int TileSize = 16;
 
+		public const int FloorWidth = 5;
+		public const int FloorHeight = 5;
 		public const int RoomWidth = 16;
 		public const int RoomHeight = 12;
 		public const int RoomWidthPx = RoomWidth * TileSize;
@@ -21,6 +23,7 @@ namespace DungeonRacer
 
 		// Prevents player car from being already visible on the next room when switching room.
 		public const int RoomSwitchMargin = 3;
+		public const int RoomEnterMargin = 16; // FIXME
 
 		public const int TypeMap = 1;
 		public const int TypePlayer = 2;
@@ -37,6 +40,6 @@ namespace DungeonRacer
 		public const int LayerTireEffect = 70;
 		public const int LayerMapGround = 80;
 
-		public const string Font = "font/04b03";
+		public const string Font = "font/04b_19";
 	}
 }

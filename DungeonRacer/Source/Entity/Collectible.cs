@@ -1,24 +1,22 @@
-﻿using MonoPunk;
+﻿using Microsoft.Xna.Framework;
+using MonoPunk;
 using System;
 
 namespace DungeonRacer
 {
 	class Collectible : GameEntity
 	{
-		private readonly bool bounce;
-
-		public Collectible(EntityData data, EntityArguments args) : base(data, args)
+		public Collectible(EntityArguments args) : base(args)
 		{
-			bounce = args.Tile == null;
-			Collidable = !bounce;
 		}
 
 		protected override void OnAdded()
 		{
 			base.OnAdded();
 
-			if (bounce)
+			if (Args.Position != Vector2.Zero)
 			{
+				Collidable = false;
 				var targetY = Y;
 				Y -= 8.0f;
 				Scene.Tween(this, new { Y = targetY}, 0.3f).Ease(Ease.BackIn).OnComplete(() =>

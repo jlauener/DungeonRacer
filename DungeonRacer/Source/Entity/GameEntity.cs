@@ -4,52 +4,66 @@ using MonoPunk;
 
 namespace DungeonRacer
 {
-	struct EntityArguments
+	class EntityArguments
 	{
-		public DungeonTile Tile { get; }
-		public Vector2 Position { get; set; }
+		public EntityData Data { get; }
+		public int TileX { get; }
+		public int TileY { get; }
+		public Vector2 Position { get; }
 		public Direction Direction { get; }
+		public bool Enter { get; }
 
-		public EntityArguments(DungeonTile tile, Vector2 position, Direction direction)
+		public EntityArguments(EntityData data, Vector2 position, Direction direction = Direction.Down)
 		{
-			Tile = tile;
+			Data = data;
 			Position = position;
+			Direction = direction;
+		}
+
+		public EntityArguments(EntityData data, int tileX, int tileY, Direction direction = Direction.Down)
+		{
+			Data = data;
+			TileX = tileX;
+			TileY = tileY;
 			Direction = direction;
 		}
 	}
 
 	class GameEntity : Entity
 	{
-		protected EntityData Data { get; }
+		protected EntityArguments Args { get; }
+		public EntityData Data { get { return Args.Data; } }
 		protected Direction Direction { get; set; }
+
 		protected Animator Sprite { get; }
 
-		public GameEntity(EntityData data, EntityArguments args)
+		public GameEntity(EntityArguments args)
 		{
-			if (args.Tile != null)
-			{
-				X = data.TileOffset.X + args.Tile.X * Global.TileSize;
-				Y = data.TileOffset.Y + args.Tile.Y * Global.TileSize;
-			}
-			else
+			Args = args;
+
+			if (args.Position != Vector2.Zero)
 			{
 				Position = args.Position;
 			}
+			else
+			{
+				X = Data.TileOffset.X + args.TileX * Global.TileSize;
+				Y = Data.TileOffset.Y + args.TileY * Global.TileSize;
+			}
 
-			Data = data;
-			Type = data.Type;
+			Type = Data.Type;
 			Direction = args.Direction;
-			Layer = data.Layer;
-			Width = data.Hitbox.Width;
-			Height = data.Hitbox.Height;
-			OriginX = data.Hitbox.X;
-			OriginY = data.Hitbox.Y;
-			Collider = data.PixelMask;
+			Layer = Data.Layer;
+			Width = Data.Hitbox.Width;
+			Height = Data.Hitbox.Height;
+			OriginX = Data.Hitbox.X;
+			OriginY = Data.Hitbox.Y;
+			Collider = Data.PixelMask;
 
-			Sprite = new Animator(data.Anim);
-			Sprite.Origin = data.SpriteOrigin;
-			Sprite.FlipX = data.SpriteFlipX;
-			Sprite.FlipY = data.SpriteFlipY;
+			Sprite = new Animator(Data.Anim);
+			Sprite.Origin = Data.SpriteOrigin;
+			Sprite.FlipX = Data.SpriteFlipX;
+			Sprite.FlipY = Data.SpriteFlipY;
 			Add(Sprite);
 
 			UpdateSortOrder();
@@ -59,8 +73,7 @@ namespace DungeonRacer
 		{
 			base.OnAdded();
 
-			Collidable = true;
-			if(Sprite.Contains("idle")) Sprite.Play("idle");
+			if (Sprite.Contains("idle")) Sprite.Play("idle");
 			UpdateSortOrder();
 		}
 
@@ -99,19 +112,19 @@ namespace DungeonRacer
 			}
 		}
 
-		public static GameEntity Create(EntityData data, EntityArguments args)
+		public static GameEntity Create(EntityArguments args)
 		{
-			return (GameEntity) Activator.CreateInstance(data.Class, data, args);
+			return (GameEntity)Activator.CreateInstance(args.Data.Class, args);
 		}
 
-		public static GameEntity Create(EntityData data, DungeonTile tile)
+		public static GameEntity Create(EntityData data, int tileX, int tileY, Direction direction = Direction.Down)
 		{
-			return Create(data, new EntityArguments(tile, Vector2.Zero, tile.Direction));
+			return Create(new EntityArguments(data, tileX, tileY, direction));
 		}
 
 		public static GameEntity Create(string name, Vector2 position, Direction direction = Direction.Down)
 		{
-			return Create(EntityData.Get(name), new EntityArguments(null, position, direction));
+			return Create(new EntityArguments(EntityData.Get(name), position, direction));
 		}
 	}
 }

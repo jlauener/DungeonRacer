@@ -38,6 +38,23 @@
 /processorParam:TextureFormat=Color
 /build:font/04b_0.png
 
+#begin font/04b_19.fnt
+/importer:
+/processor:
+/build:font/04b_19.fnt
+
+#begin font/04b_19_0.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:font/04b_19_0.png
+
 #begin font/04b03.fnt
 /importer:BitmapFontImporter
 /processor:BitmapFontProcessor
@@ -54,6 +71,40 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:font/04b03_0.png
+
+#begin font/joystix.fnt
+/importer:
+/processor:
+/build:font/joystix.fnt
+
+#begin font/joystix.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:font/joystix.png
+
+#begin font/press_start_2p.fnt
+/importer:
+/processor:
+/build:font/press_start_2p.fnt
+
+#begin font/press_start_2p_0.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:font/press_start_2p_0.png
 
 #begin gfx/game/entities.png
 /importer:TextureImporter
@@ -175,7 +226,7 @@
 /processorParam:TextureFormat=Color
 /build:gfx/mask/tileset_mask.png
 
-#begin gfx/ui/hp_bar_back.png
+#begin gfx/ui/background.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -185,9 +236,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:gfx/ui/hp_bar_back.png
+/build:gfx/ui/background.png
 
-#begin gfx/ui/hp_bar_front.png
+#begin gfx/ui/hp_bar.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -197,40 +248,11 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:gfx/ui/hp_bar_front.png
-
-#begin gfx/ui/mp_bar_back.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:gfx/ui/mp_bar_back.png
-
-#begin gfx/ui/mp_bar_front.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:gfx/ui/mp_bar_front.png
-
-#begin map/dungen_room.tmx
-/importer:
-/processor:
-/build:map/dungen_room.tmx
+/build:gfx/ui/hp_bar.png
 
 #begin map/dungeon1.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/dungeon1.tmx
 
 #begin map/test.tmx
@@ -268,23 +290,11 @@
 /processorParam:Quality=Best
 /build:sfx/car_hit_hurt.wav
 
-#begin sfx/car_room_switch.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:sfx/car_room_switch.wav
-
 #begin sfx/car_start.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:sfx/car_start.wav
-
-#begin sfx/coin.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:sfx/coin.wav
 
 #begin sfx/enemy_die.wav
 /importer:WavImporter
@@ -298,9 +308,33 @@
 /processorParam:Quality=Best
 /build:sfx/enemy_hurt.wav
 
-#begin sfx/key.wav
+#begin sfx/item_coin.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
-/build:sfx/key.wav
+/build:sfx/item_coin.wav
+
+#begin sfx/item_hp_potion.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/item_hp_potion.wav
+
+#begin sfx/item_key.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/item_key.wav
+
+#begin sfx/room_clear.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/room_clear.wav
+
+#begin sfx/room_switch.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/room_switch.wav
 

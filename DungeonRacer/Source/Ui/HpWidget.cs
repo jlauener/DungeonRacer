@@ -11,12 +11,9 @@ namespace DungeonRacer
 		{
 			Layer = Global.LayerUi;
 
-			var back = new Sprite("gfx/ui/hp_bar_back");
-			Add(back);
-
-			bar = new Bar("gfx/ui/hp_bar_front");
+			bar = new Bar("gfx/ui/hp_bar");
 			bar.Percent = player.Hp / player.MaxHp;
-			Add(bar, 2, 2);
+			Add(bar);
 
 			player.OnModifyHp += HandleModifyHp;
 		}

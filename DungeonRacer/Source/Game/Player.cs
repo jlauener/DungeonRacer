@@ -23,10 +23,26 @@ namespace DungeonRacer
 		public float Speed { get; private set; }
 		public float Angle { get; private set; }
 
+		public bool Alive { get { return state != State.GameOver; } }
+		public bool Paused
+		{
+			get { return state == State.Paused; }
+			set { state = value ? State.Paused : State.Active; }
+		}
+
 		private float enginePct;
 		private float driftPct;
 		private float bloodPct;
 		private int blood;
+
+		private enum State
+		{
+			Active,
+			Paused,
+			GameOver
+		}
+		private State state = State.Active;
+
 
 		private Vector2 velocity;
 		public Vector2 Velocity { get { return velocity; } }
@@ -42,30 +58,33 @@ namespace DungeonRacer
 		}
 		private EngineState engineState = EngineState.Idle;
 
+		private float actualAngle;
 		private float driftAngle;
+		private float forward;
 		private float angularVelocity;
 
 		private float invincibleCounter;
-
-		public bool Paused { get; set; } // FIXME
 
 		private PlayerData data;
 		private readonly Dictionary<ItemType, int> inventory = new Dictionary<ItemType, int>();
 
 		private readonly Animator sprite;
 		private readonly Blinker blinker;
-		private readonly Dungeon dungeon;
+		private readonly DungeonMap dungeon;
 
 		private static SoundEffectInstance engineSound;
 		private static SoundEffectInstance driftSound;
 		private static SoundEffectInstance breakSound;
 
-		public Player(PlayerData data, DungeonTile tile, Dungeon dungeon) : base()
+		public Player(PlayerData data, DungeonMap dungeon, int tileX, int tileY, Direction direction)
 		{
 			this.data = data;
 			this.dungeon = dungeon;
-			X = tile.X * Global.TileSize + Global.TileSize / 2;
-			Y = tile.Y * Global.TileSize + Global.TileSize / 2;
+
+			X = tileX * Global.TileSize + Global.TileSize / 2;
+			Y = tileY * Global.TileSize + Global.TileSize / 2;
+			Angle = DirectionUtils.GetAngle(direction);
+
 			Type = Global.TypePlayer;
 			Layer = Global.LayerMain;
 			Collider = data.PixelMask;
@@ -77,8 +96,6 @@ namespace DungeonRacer
 
 			Mp = data.Mp;
 			MaxMp = data.Mp;
-
-			Angle = ((int)tile.Direction) * Mathf.HalfPi;
 
 			sprite = new Animator(data.Anim);
 			sprite.CenterOrigin();
@@ -128,7 +145,8 @@ namespace DungeonRacer
 
 			if (Hp == 0)
 			{
-				// TODO die
+				// TODO
+				state = State.GameOver;
 			}
 
 			Log.Debug("damage " + value + " hp=" + Hp);
@@ -183,15 +201,90 @@ namespace DungeonRacer
 
 		protected override void OnUpdate(float deltaTime)
 		{
-			if (Paused)
+			forward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(Angle));
+
+			var angleId = (int)((Angle / Mathf.Pi2) * PlayerData.AngleResolution);
+			actualAngle = (angleId / PlayerData.AngleResolution) * Mathf.Pi2;
+
+			switch (state)
 			{
-				engineSound.Volume = 0.0f;
-				driftSound.Stop();
-				return;
+				case State.Active:
+					UpdateActive(deltaTime);
+					break;
+				case State.Paused:
+					UpdatePaused(deltaTime);
+					break;
+				case State.GameOver:
+					UpdateGameOver(deltaTime);
+					break;
 			}
+
+			// FIXME... all this is fuzzy..
+			if (forward > 3.0f)
+			{
+				driftAngle = Velocity.AngleWith(Vector2.UnitX.Rotate(Angle));
+			}
+			else
+			{
+				driftAngle = 0.0f;
+			}
+
+			if (Speed > 80.0f && driftAngle > 0.25f)
+			{
+				var anglePct = Mathf.Min(1.0f, (driftAngle - 0.25f) / 0.3f);
+				driftPct = (Speed / data.MaxSpeed) * anglePct * 0.5f;
+			}
+			else
+			{
+				driftPct = 0.0f;
+			}
+
+			if (Speed > 80.0f && driftAngle > 0.6f)
+			{
+				driftSound.Play();
+			}
+			else if (driftAngle < 0.1f)
+			{
+				driftSound.Stop();
+			}
+
+			engineSound.Pitch = enginePct;
+			engineSound.Volume = enginePct * 0.5f;
+
+			if (bloodPct > 0.1f)
+			{
+				bloodPct *= 0.9f;
+				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0xCF, 0x32, 0x32), bloodPct * 0.35f, Angle);
+			}
+			else if (driftPct > 0.1f)
+			{
+				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0x00, 0x00, 0x00), driftPct * 0.15f, Angle);
+			}
+
+			sprite.Rotation = actualAngle;
+			sprite.SortOrder = Mathf.Floor(Bottom) * 10;
 
 			base.OnUpdate(deltaTime);
 
+		}
+
+		private void UpdatePaused(float deltaTime)
+		{
+			breakSound.Stop();
+			driftSound.Stop();
+		}
+
+		private void UpdateGameOver(float deltaTime)
+		{
+			enginePct = 0.0f;
+			velocity *= data.Friction;
+			bounceVelocity *= PlayerData.BounceFriction;
+			if (bounceVelocity.Length() < 5.0f) bounceVelocity = Vector2.Zero;
+			MoveBy((velocity + bounceVelocity) * deltaTime, CollisionFlags.NonStop, Global.TypeSolid, Global.TypeMap);
+		}
+
+		private void UpdateActive(float deltaTime)
+		{
 			if (invincibleCounter > 0.0f)
 			{
 				invincibleCounter -= deltaTime;
@@ -251,9 +344,6 @@ namespace DungeonRacer
 				}
 			}
 
-			var angleId = (int)((Angle / Mathf.Pi2) * PlayerData.AngleResolution);
-			var actualAngle = (angleId / PlayerData.AngleResolution) * Mathf.Pi2;
-
 			var turnDir = 0;
 			switch (engineState)
 			{
@@ -297,56 +387,13 @@ namespace DungeonRacer
 
 			MoveBy((velocity + bounceVelocity) * deltaTime, CollisionFlags.NonStop, Global.TypeEnemy, Global.TypeCollectible, Global.TypeSolid, Global.TypeMap);
 
-			// FIXME... all this is fuzzy..
-			if (forward > 3.0f)
-			{
-				driftAngle = Velocity.AngleWith(Vector2.UnitX.Rotate(Angle));
-			}
-			else
-			{
-				driftAngle = 0.0f;
-			}
-
-			if (Speed > 80.0f && driftAngle > 0.25f)
-			{
-				var anglePct = Mathf.Min(1.0f, (driftAngle - 0.25f) / 0.3f);
-				driftPct = speedPct * anglePct * 0.5f;
-			}
-			else
-			{
-				driftPct = 0.0f;
-			}
-
-			if (Speed > 80.0f && driftAngle > 0.6f)
-			{
-				driftSound.Play();
-			}
-			else if (driftAngle < 0.1f)
-			{
-				driftSound.Stop();
-			}
-
-			engineSound.Pitch = enginePct;
-			engineSound.Volume = enginePct * 0.5f;
-
 			if (engineState == EngineState.Break) breakSound.Play(); else breakSound.Stop();
-
-			if (bloodPct > 0.1f)
-			{
-				bloodPct *= 0.9f;
-				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0xCF, 0x32, 0x32), bloodPct * 0.35f, Angle);
-			}
-			else if (driftPct > 0.1f)
-			{
-				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0x00, 0x00, 0x00), driftPct * 0.15f, Angle);
-			}
-
-			sprite.Rotation = actualAngle;
-			sprite.SortOrder = Mathf.Floor(Bottom) * 10;
 		}
 
 		protected override bool OnHit(HitInfo info)
 		{
+			if (!Alive) return true;
+
 			var stop = true;
 			if (info.Other is GameEntity)
 			{
@@ -388,7 +435,6 @@ namespace DungeonRacer
 				if (speedPct > PlayerData.DamageThreshold)
 				{
 					var damagePct = (speedPct - PlayerData.DamageThreshold) * (1.0f / (1.0f - PlayerData.DamageThreshold));
-					Log.Debug("damagePct=" + damagePct);
 					// TODO player resistance
 					Damage(damagePct * 10.0f);
 				}

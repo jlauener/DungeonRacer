@@ -20,11 +20,11 @@ namespace DungeonRacer
 
 		public int Id { get; set; } = -1;
 		public int DisplayTid { get; set; } = -1;
-		public Direction Direction { get; set; }
+		//public Direction Direction { get; set; }
 		public TileSolidType SolidType { get; set; } = TileSolidType.None;
 		public DungeonTileLayer Layer { get; set; } = DungeonTileLayer.Back;
 		public AnimatorData Anim { get; set; }
-		public EntityData Entity { get; set; }
+		//public EntityData Entity { get; set; }
 
 		public DungeonTile(int x, int y, Dictionary<string, string> properties)
 		{
@@ -44,36 +44,43 @@ namespace DungeonRacer
 		public string Name { get; }
 		public int Width { get; }
 		public int Height { get; }
+		public int WidthTiles { get; }
+		public int HeightTiles { get; }
 		public Tileset Tileset { get; private set; }
 
+		public RoomData StartingRoom { get; private set; }
 		public DungeonTile PlayerStartTile { get; private set; }
-
-		public int CoinCount { get; private set; }
-		public float TimeGold { get; private set; }
-		public float TimeSilver { get; private set; }
-		public float TimeBronze { get; private set; }
+		public Direction PlayerStartDirection { get; private set; }
 
 		private readonly DungeonTile[,] tiles;
+		private readonly RoomData[,] rooms;
 
 		private DungeonData(TiledMap map)
 		{
 			Name = map.Properties.GetString("name");
-			Width = map.Width;
-			Height = map.Height;
+			WidthTiles = map.Width;
+			HeightTiles = map.Height;
+			Width = WidthTiles / Global.RoomWidth;
+			Height = HeightTiles / Global.RoomHeight;
 			Tileset = new Tileset("gfx/game/" + map.Properties.GetString("tileset"), Global.TileSize, Global.TileSize);
 
-			TimeGold = map.Properties.GetFloat("timeGold");
-			TimeSilver = map.Properties.GetFloat("timeSilver");
-			TimeBronze = map.Properties.GetFloat("timeBronze");
+			rooms = new RoomData[Width, Height];
+			for (var ix = 0; ix < Width; ix++)
+			{
+				for(var iy = 0; iy < Height; iy++)
+				{
+					rooms[ix,iy] = new RoomData(ix, iy);
+				}
+			}
 
-			tiles = new DungeonTile[Width, Height];
+			tiles = new DungeonTile[WidthTiles, HeightTiles];
 
 			var tilesLayer = map.GetLayer<TiledMapTileLayer>("tiles");
 			var entitiesLayer = map.GetLayer<TiledMapTileLayer>("entities");
 
-			for (var ix = 0; ix < map.Width; ix++)
+			for (var ix = 0; ix < WidthTiles; ix++)
 			{
-				for (var iy = 0; iy < map.Height; iy++)
+				for (var iy = 0; iy < HeightTiles; iy++)
 				{
 					var tileProperties = map.GetTilePropertiesAt(tilesLayer, ix, iy);
 
@@ -105,7 +112,7 @@ namespace DungeonRacer
 				throw new Exception("Dungeon " + this + " has no starting player tile.");
 			}
 
-			Log.Debug("Created " + this + " with player start tile " + PlayerStartTile + ".");
+			Log.Debug("Created " + this + " of size " + Width + "x" + Height + " with player start tile " + PlayerStartTile + ".");
 		}
 
 		private void InitTile(DungeonTile tile, TiledMapProperties properties)
@@ -159,46 +166,65 @@ namespace DungeonRacer
 				return;
 			}
 
-			if (Enum.TryParse(properties.GetString("direction", "Down"), out Direction direction))
+			if (!Enum.TryParse(properties.GetString("direction", "Down"), out Direction direction))
 			{
-				tile.Direction = direction;
+				Log.Error("Unknown entity direction '" + properties.GetString("direction") + "' at " + tile);
 			}
-			else
-			{
-				Log.Error("Unknown tile direction '" + properties.GetString("direction") + "' at " + tile);
-			}
+
+			var roomX = tile.X / Global.RoomWidth;
+			var roomY = tile.Y / Global.RoomHeight;
+			var room = GetRoomAt(roomX, roomY);
 
 			var entityName = properties.GetString("entity");
 			if (entityName == "player")
 			{
+				StartingRoom = room;
 				PlayerStartTile = tile;
+				PlayerStartDirection = direction;
+				room.Type = RoomType.Start;
 			}
 			else
 			{
-				if (entityName == "coin")
-				{
-					CoinCount++;
-				}
-
-				tile.Entity = EntityData.Get(entityName);
-				if (tile.Entity == null)
+				var entity = EntityData.Get(entityName);
+				if (entity == null)
 				{
 					Log.Error("Unknown entity '" + entityName + "' at " + tile);
+				}
+				else
+				{
+					room.AddEntity(entity, tile.X, tile.Y, direction);
 				}
 			}
 		}
 
 		public DungeonTile GetTileAt(int x, int y)
 		{
-			if (x < 0 || x >= Width || y < 0 || y >= Height) return null;
+			if (x < 0 || x >= WidthTiles || y < 0 || y >= HeightTiles) return null;
 			return tiles[x, y];
 		}
 
-		public void Iterate(Action<DungeonTile> action)
+		public RoomData GetRoomAt(int x, int y)
+		{
+			if (x < 0 || x >= Width || y < 0 || y >= Height) return null;
+			return rooms[x, y];
+		}
+
+		public void IterateRooms(Action<RoomData> action)
 		{
 			for (var ix = 0; ix < Width; ix++)
 			{
 				for (var iy = 0; iy < Height; iy++)
+				{
+					action(rooms[ix, iy]);
+				}
+			}
+		}
+
+		public void IterateTiles(Action<DungeonTile> action)
+		{
+			for (var ix = 0; ix < WidthTiles; ix++)
+			{
+				for (var iy = 0; iy < HeightTiles; iy++)
 				{
 					action(tiles[ix, iy]);
 				}
@@ -207,7 +233,7 @@ namespace DungeonRacer
 
 		public override string ToString()
 		{
-			return "[DungeonData Name='" + Name + " Width=" + Width + " Height=" + Height + "]";
+			return "[DungeonData Name='" + Name + " Width=" + WidthTiles + " Height=" + HeightTiles + "]";
 		}
 
 		private static readonly Dictionary<string, DungeonData> dungeons = new Dictionary<string, DungeonData>();

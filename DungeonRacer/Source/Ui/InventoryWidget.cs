@@ -6,7 +6,7 @@ namespace DungeonRacer
 	class InventoryWidget : Entity
 	{
 		private const int ItemMax = 3;
-		private const int ItemPan = 12;
+		private const int ItemPan = 18;
 
 		private readonly ItemSlot[] slots = new ItemSlot[ItemMax];
 
@@ -17,7 +17,7 @@ namespace DungeonRacer
 			for (var i = 0; i < slots.Length; i++)
 			{
 				slots[i] = new ItemSlot();
-				Add(slots[i], -6 + i * ItemPan, -4);
+				Add(slots[i], + i * ItemPan, 0);
 			}
 			player.OnCollect += HandleCollect;
 			player.OnUse += HandleUse;

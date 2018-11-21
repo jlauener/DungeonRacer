@@ -4,36 +4,38 @@ using Microsoft.Xna.Framework;
 
 namespace DungeonRacer
 {
-	class Dungeon : Entity
+	class DungeonMap : Entity
 	{
 		public DungeonData Data { get; }
 
+		public Room StartingRoom { get; private set; }
+
 		private readonly DrawLayer tireLayer;
 
-		public Dungeon(DungeonData data)
+		public DungeonMap(DungeonData data)
 		{
 			Data = data;
 
 			Type = Global.TypeMap;
-			Width = data.Width * Global.TileSize;
-			Height = data.Height * Global.TileSize;
+			Width = data.WidthTiles * Global.TileSize;
+			Height = data.HeightTiles * Global.TileSize;
 
-			var grid = new GridCollider(data.Width, data.Height, Global.TileSize, Global.TileSize);
+			var grid = new GridCollider(data.WidthTiles, data.HeightTiles, Global.TileSize, Global.TileSize);
 			Collider = grid;
 
-			var groundMap = new Tilemap(data.Tileset, data.Width, data.Height);
+			var groundMap = new Tilemap(data.Tileset, data.WidthTiles, data.HeightTiles);
 			groundMap.Layer = Global.LayerMapGround;
 			Add(groundMap);
 
-			var backMap = new Tilemap(data.Tileset, data.Width, data.Height);
+			var backMap = new Tilemap(data.Tileset, data.WidthTiles, data.HeightTiles);
 			backMap.Layer = Global.LayerMapBack;
 			Add(backMap);
 
-			var frontMap = new Tilemap(data.Tileset, data.Width, data.Height);
+			var frontMap = new Tilemap(data.Tileset, data.WidthTiles, data.HeightTiles);
 			frontMap.Layer = Global.LayerMapFront;
 			Add(frontMap);
 
-			data.Iterate((tile) =>
+			data.IterateTiles((tile) =>
 			{
 				if (tile.SolidType == TileSolidType.PixelMask)
 				{
@@ -82,22 +84,9 @@ namespace DungeonRacer
 				}
 			});
 
-			tireLayer = new DrawLayer(data.Width * Global.TileSize, data.Height * Global.TileSize);
+			tireLayer = new DrawLayer(data.WidthTiles * Global.TileSize, data.HeightTiles * Global.TileSize);
 			tireLayer.Layer = Global.LayerTireEffect;
 			Add(tireLayer);
-		}
-
-		protected override void OnAdded()
-		{
-			base.OnAdded();
-
-			Data.Iterate((tile) =>
-			{
-				if (tile.Entity != null)
-				{
-					Scene.Add(GameEntity.Create(tile.Entity, tile));
-				}
-			});
 		}
 
 		public void DrawGroundEffect(float x, float y, string name, float alpha = 1.0f, float angle = 0.0f)

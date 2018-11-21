@@ -1,78 +1,112 @@
 ﻿using System;
 using MonoPunk;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Extended.Shapes;
 
 namespace DungeonRacer
 {
 	class GameScene : Scene
 	{
+		public event Action<GameScene, Room> OnEnterRoom;
+
 		private enum State
 		{
 			Start,
 			Play,
-			Switch
+			Switch,
+			Enter,
+			Finished
 		}
 		private State state = State.Play;
 
-		public bool Paused { get { return state != State.Play; } }
+		public bool TimePaused
+		{
+			get
+			{
+				return state != State.Play || currentRoom.Data.Type != RoomType.Normal;
+			}
+		}
 		public float Time { get; private set; }
 
-		private readonly Player player;
-		private readonly Dungeon dungeon;
+		public bool Finished
+		{
+			get { return state == State.Finished; }
+		}
 
-		private int roomX;
-		private int roomY;
+		private readonly Player player;
+		private readonly DungeonMap dungeon;
+
+		public Room currentRoom;
+		private readonly Room[,] rooms;
 
 		public GameScene(DungeonData dungeonData)
 		{
-			dungeon = new Dungeon(dungeonData); ;
+			dungeon = new DungeonMap(dungeonData); ;
 			Add(dungeon);
 
-			player = new Player(PlayerData.Get("normal"), dungeonData.PlayerStartTile, dungeon);
-			Add(player);
+			rooms = new Room[dungeonData.Width, dungeonData.Height];
+			dungeonData.IterateRooms((roomData) =>
+			{
+				var room = new Room(roomData, roomData.X, roomData.Y);
+				rooms[roomData.X, roomData.Y] = room;
+				Add(room);
+				if (roomData.Type == RoomType.Start)
+				{
+					currentRoom = room;
+				}
+			});
+			Camera.Position = GetCameraPosition(currentRoom);
 
-			roomX = dungeonData.PlayerStartTile.X / Global.RoomWidth;
-			roomY = dungeonData.PlayerStartTile.Y / Global.RoomHeight;
-			Camera.Position = GetCameraPosition(roomX, roomY);
+			player = new Player(PlayerData.Get("normal"), dungeon, dungeonData.PlayerStartTile.X, dungeonData.PlayerStartTile.Y, dungeonData.PlayerStartDirection);
+			Add(player);
 
 			var uiCamera = Engine.CreateCamera();
 			SetCamera(Global.LayerUi, uiCamera);
 
 			if (!Global.ScrollingEnabled)
 			{
-				var uiBack = new RectangleShape(Engine.Width, 32, Color.Black);
+				var uiBack = new Sprite("gfx/ui/background");
 				uiBack.Layer = Global.LayerUi;
 				Add(uiBack);
 			}
 
-			Add(new HpWidget(player, 1, 1));
-			Add(new MpWidget(player, 1, 12));
-			Add(new TimeWidget(this, Engine.HalfWidth, 2));
-			Add(new InventoryWidget(player, Engine.Width - 80, 4));
-			Add(new CoinWidget(player, dungeon.Data.CoinCount, Engine.Width - 42, 4));
+			Add(new TimeWidget(this, Engine.HalfWidth, 3));
+
+			Add(new CoinWidget(player, 2, 2));
+			Add(new HpWidget(player, 3, 19));
+
+			Add(new RoomWidget(this, Engine.Width - 2, 1));
+			Add(new InventoryWidget(player, 202, 14));
 
 			//Add(new Shaker(Camera));
+			Engine.Track(this, "state");
+			Engine.Track(this, "currentRoom");
+		}
 
-			Engine.Track(this, "roomX");
-			Engine.Track(this, "roomY");
+		protected override void OnBegin()
+		{
+			base.OnBegin();
+
+			OnEnterRoom?.Invoke(this, currentRoom);
+			currentRoom.Enter();
 		}
 
 		protected override void OnUpdate(float deltaTime)
 		{
 			base.OnUpdate(deltaTime);
 
-			if (state == State.Play)
+			switch (state)
 			{
-				if (Global.ScrollingEnabled)
-				{
-					UpdateScrollingCamera(deltaTime);
-				}
-				else
-				{
-					UpdateRoomCamera(deltaTime);
-				}
-
-				Time += deltaTime;
+				case State.Play:
+					UpdatePlay(deltaTime);
+					break;
+				case State.Enter:
+					UpdateEnter(deltaTime);
+					break;
+				case State.Finished:
+					UpdateFinished(deltaTime);
+					break;
 			}
 
 			if (Input.WasPressed("back"))
@@ -87,8 +121,8 @@ namespace DungeonRacer
 
 			if (Input.WasPressed("debug_1"))
 			{
-				Global.ScrollingEnabled = !Global.ScrollingEnabled;
-				Engine.Scene = new GameScene(DungeonData.Get(Global.ScrollingEnabled ? "dungeon_1" : "dungeon_room"));
+				//Global.ScrollingEnabled = !Global.ScrollingEnabled;
+				//Engine.Scene = new GameScene(DungeonData.Get(Global.ScrollingEnabled ? "dungeon_1" : "dungeon_room"));
 			}
 
 			if (Input.WasPressed("debug_2"))
@@ -147,48 +181,139 @@ namespace DungeonRacer
 
 		private void UpdateRoomCamera(float deltaTime)
 		{
-			if (player.Velocity.X < 0.0f && player.X < roomX * Global.RoomWidthPx + Global.TileSize / 2 + Global.RoomSwitchMargin)
+			if (player.Velocity.X < 0.0f && player.X < currentRoom.Left + Global.TileSize / 2 + Global.RoomSwitchMargin)
 			{
 				GotoRoom(-1, 0);
 			}
-			else if (player.Velocity.X > 0.0f && player.X > roomX * Global.RoomWidthPx + Global.RoomWidthPx + Global.TileSize / 2 - Global.RoomSwitchMargin)
+			else if (player.Velocity.X > 0.0f && player.X > currentRoom.Right + Global.TileSize / 2 - Global.RoomSwitchMargin)
 			{
 				GotoRoom(1, 0);
 			}
-			else if (player.Velocity.Y < 0.0f && player.Y < roomY * Global.RoomHeightPx + Global.TileSize / 2 + Global.RoomSwitchMargin)
+			else if (player.Velocity.Y < 0.0f && player.Y < currentRoom.Top + Global.TileSize / 2 + Global.RoomSwitchMargin)
 			{
 				GotoRoom(0, -1);
 			}
-			else if (player.Velocity.Y > 0.0f && player.Y > roomY * Global.RoomHeightPx + Global.RoomHeightPx + Global.TileSize / 2 - Global.RoomSwitchMargin)
+			else if (player.Velocity.Y > 0.0f && player.Y > currentRoom.Bottom + Global.TileSize / 2 - Global.RoomSwitchMargin)
 			{
 				GotoRoom(0, 1);
 			}
 		}
 
+		private void UpdateEnter(float deltaTime)
+		{
+			if (Global.ScrollingEnabled) UpdateScrollingCamera(deltaTime); else UpdateRoomCamera(deltaTime);
+
+			var x = currentRoom.Left + 2 * Global.TileSize;
+			var y = currentRoom.Top + 2 * Global.TileSize;
+			var width = Global.RoomWidthPx - 3 * Global.TileSize;
+			var height = Global.RoomHeightPx - 3 * Global.TileSize;
+
+			if (player.InsideRect(x, y, width, height))
+			{
+				currentRoom.Enter();
+				OnEnterRoom?.Invoke(this, currentRoom);
+				state = State.Play;
+			}
+
+			if (!player.Alive)
+			{
+				SetGameOver();
+			}
+		}
+
+		private void UpdatePlay(float deltaTime)
+		{
+			if (Global.ScrollingEnabled) UpdateScrollingCamera(deltaTime); else UpdateRoomCamera(deltaTime);
+			if(!TimePaused) Time += deltaTime;
+
+			if(!player.Alive)
+			{
+				SetGameOver();
+			}
+		}
+
 		private void GotoRoom(int dx, int dy)
 		{
-			roomX += dx;
-			roomY += dy;
+			if (currentRoom != null) currentRoom.Leave();
+
+			var x = currentRoom.RoomX + dx;
+			var y = currentRoom.RoomY + dy;
+			if (x < 0 || y < 0 || x >= rooms.GetLength(0) || y >= rooms.GetLength(1))
+			{
+				SetGameFinished();
+				return;
+			}
+
+			currentRoom = rooms[x, y];
+
 			player.Paused = true;
 			state = State.Switch;
-			var target = GetCameraPosition(roomX, roomY);
+			var target = GetCameraPosition(currentRoom);
 			Tween(Camera, new { Position = target }, 0.5f).Ease(Ease.QuadInOut).OnComplete(() =>
 			 {
 				 player.Paused = false;
-				 state = State.Play;
+				 state = State.Enter;
 			 });
 
-			Asset.LoadSoundEffect("sfx/car_room_switch").Play();
+			Asset.LoadSoundEffect("sfx/room_switch").Play();
 		}
 
-		private Vector2 GetCameraPosition(int roomX, int roomY)
+		private Vector2 GetCameraPosition(Room room)
 		{
-			var pos = new Vector2(roomX * Global.RoomWidthPx + Global.TileSize / 2, roomY * Global.RoomHeightPx);
+			var pos = new Vector2(room.X + Global.TileSize / 2, room.Y);
 			if (!Global.ScrollingEnabled)
 			{
 				pos.Y -= Global.UiHeight - Global.TileSize / 2;
 			}
 			return pos;
+		}
+
+		private void SetGameFinished()
+		{
+			state = State.Finished;
+
+			var label = new Label(Global.Font, "FINISHED");
+			label.Scale = 3.0f;
+			label.Layer = Global.LayerUi;
+			label.Center();
+			Add(label, Engine.HalfWidth, Engine.HalfHeight);
+
+			Input.Enabled = false;
+			Callback(1.0f, () => Input.Enabled = true);
+		}
+
+		private void SetGameOver()
+		{
+			state = State.Finished;
+
+			var label = new Label(Global.Font, "GAME OVER");
+			label.Scale = 3.0f;
+			label.Layer = Global.LayerUi;
+			label.Center();
+			Add(label, Engine.HalfWidth, Engine.HalfHeight);
+
+			Input.Enabled = false;
+			Callback(1.0f, () => Input.Enabled = true);
+		}
+
+		private void UpdateFinished(float deltaTime)
+		{
+			if (Input.WasPressed("start"))
+			{
+				Engine.Scene = new GameScene(DungeonData.Get("dungeon1"));
+			}
+		}
+
+		protected override void OnRenderDebug(SpriteBatch spriteBatch)
+		{
+			base.OnRenderDebug(spriteBatch);
+
+			var x = currentRoom.X * Global.RoomWidthPx + 2 * Global.TileSize;
+			var y = currentRoom.Y * Global.RoomHeightPx + 2 * Global.TileSize;
+			var width = Global.RoomWidthPx - 3 * Global.TileSize;
+			var height = Global.RoomHeightPx - 3 * Global.TileSize;
+			var rect = new RectangleF(x, y, width, height);
+			spriteBatch.DrawRectangle(rect, Color.White);
 		}
 	}
 }

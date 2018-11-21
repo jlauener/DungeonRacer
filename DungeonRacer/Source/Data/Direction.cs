@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using MonoPunk;
 using System;
 
 namespace DungeonRacer
@@ -59,6 +60,22 @@ namespace DungeonRacer
 					return Direction.Right;
 			}
 		}
+
+		public static float GetAngle(Direction direction)
+		{
+			switch (direction)
+			{
+				case Direction.Right:
+					return 0.0f;
+				case Direction.Down:
+					return Mathf.HalfPi;
+				case Direction.Left:
+					return Mathf.Pi;
+				default: //Direction.Up:
+					return Mathf.Pi + Mathf.HalfPi;
+			}
+		}
+
 
 		public static Vector2 GetNormal(Direction direction)
 		{

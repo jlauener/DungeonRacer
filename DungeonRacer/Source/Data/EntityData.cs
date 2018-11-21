@@ -8,6 +8,7 @@ namespace DungeonRacer
 	enum ItemType
 	{
 		Coin,
+		KeyNone,
 		KeyA,
 		KeyB,
 		KeyC,
@@ -30,7 +31,7 @@ namespace DungeonRacer
 
 		//public bool Solid { get; private set; } = true;
 		public bool Pushable { get; private set; }
-		public int DamageOnTouch { get; private set; }
+		public float DamageOnTouch { get; private set; }
 
 		public ItemType ItemType { get; private set; }
 
@@ -131,32 +132,32 @@ namespace DungeonRacer
 			e = CreateItem("coin");
 			e.OnCollect = (player) => player.AddItem(ItemType.Coin);
 			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 64, 65, 66, 67).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
-			e.CollectSfx = new Sfx("sfx/coin");
+			e.CollectSfx = new Sfx("sfx/item_coin");
 
 			e = CreateItem("key_a");
 			e.OnCollect = (player) => player.AddItem(ItemType.KeyA);
 			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 68, 69, 70, 71).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
-			e.CollectSfx = new Sfx("sfx/key");
+			e.CollectSfx = new Sfx("sfx/item_key");
 
 			e = CreateItem("key_b");
 			e.OnCollect = (player) => player.AddItem(ItemType.KeyB);
 			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 72, 73, 74, 75).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
-			e.CollectSfx = new Sfx("sfx/key");
+			e.CollectSfx = new Sfx("sfx/item_key");
 
 			e = CreateItem("key_c");
 			e.OnCollect = (player) => player.AddItem(ItemType.KeyC);
 			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 76, 77, 78, 79).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
-			e.CollectSfx = new Sfx("sfx/key");
+			e.CollectSfx = new Sfx("sfx/item_key");
 
 			e = CreateItem("potion_hp");
 			e.OnCollect = (player) => player.Heal(40);
 			e.AddAnim("idle", 84).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
-			e.CollectSfx = new Sfx("sfx/key"); // TODO sfx
+			e.CollectSfx = new Sfx("sfx/item_hp_potion");
 
-			e = CreateItem("potion_mp");
-			e.OnCollect = (player) => player.GainMp(1);
-			e.AddAnim("idle", 81).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
-			e.CollectSfx = new Sfx("sfx/key"); // TODO sfx
+			//e = CreateItem("potion_mp");
+			//e.OnCollect = (player) => player.GainMp(1);
+			//e.AddAnim("idle", 81).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
+			//e.CollectSfx = new Sfx("sfx/key"); // TODO sfx
 
 			e = Create("goblin", Global.TypeEnemy, typeof(Enemy));
 			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
@@ -166,43 +167,63 @@ namespace DungeonRacer
 			e.AddAnim("walk_down", AnimatorMode.Loop, 0.25f, 192, 193);
 			e.AddAnim("walk_up", AnimatorMode.Loop, 0.25f, 194, 195);
 			e.AddAnim("walk_horiz", AnimatorMode.Loop, 0.25f, 196, 197);
-			e.AddAnim("die", 198);
-			e.AddAnim("poof", AnimatorMode.OneShot, 0.1f, 34, 35, 36);
+			e.AddAnim("dead_bouncing", 198);
+			e.AddAnim("dead", 199);
+			e.AddAnim("enter", AnimatorMode.OneShot, 0.1f, 34, 35, 36);
 
-			CreateDoor("door_a", ItemType.KeyA, 64, 80);
-			CreateDoor("door_b", ItemType.KeyB, 66, 81);
-			CreateDoor("door_c", ItemType.KeyC, 68, 82);
+			e = Create("ghost", Global.TypeEnemy, typeof(Ghost));
+			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
+			e.SetHitbox(8, 8, 4, 8);
+			e.SpriteOrigin = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
+			e.AddAnim("idle", AnimatorMode.Loop, 0.25f, 208, 209);
+
+			CreateDoor("door_normal", typeof(Door), 64, 80);
+			CreateDoor("door_a", typeof(LockedDoor), 66, 81, ItemType.KeyA);
+			CreateDoor("door_b", typeof(LockedDoor), 68, 82, ItemType.KeyB);
+			CreateDoor("door_c", typeof(LockedDoor), 70, 83, ItemType.KeyC);
 		}
 
-		private static void CreateDoor(string name, ItemType keyType, int idVert, int idHoriz)
+		private static void CreateDoor(string name, Type type, int idVert, int idHoriz, ItemType keyType = ItemType.KeyA)
 		{
-			var e = Create(name + "_left", typeof(Door)).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSize / 2);
+			var e = Create(name + "_left", type).SetLayer(Global.LayerBack).SetHitbox(Global.TileSize, Global.TileSize * 3);
+			e.TileOffset = new Vector2(0, -Global.TileSize);
 			e.ItemType = keyType;
-			e.CreateAnimator("entities_16_32").AddAnim("idle", idVert).AddAnim("open", AnimatorMode.OneShot, 0.1f, idVert + 1);
-			e.SpriteOrigin = new Vector2(0, Global.TileSize / 2);
+			e.CreateAnimator("entities_16_32").AddAnim("idle", idVert);
+			e.AddAnim("open", AnimatorMode.OneShot, 0.1f, idVert + 1);
+			e.AddAnim("close", AnimatorMode.OneShot, 0.1f, idVert + 1);
+			e.SpriteOrigin = new Vector2(0, -Global.TileSize / 2);
 
-			e = Create(name + "_right", typeof(Door)).SetLayer(Global.LayerBack).SetHitbox(16, 32, 0, Global.TileSize / 2);
+			e = Create(name + "_right", type).SetLayer(Global.LayerBack).SetHitbox(Global.TileSize, Global.TileSize * 3);
+			e.TileOffset = new Vector2(0, -Global.TileSize);
 			e.ItemType = keyType;
-			e.CreateAnimator("entities_16_32").AddAnim("idle", idVert).AddAnim("open", AnimatorMode.OneShot, 0.1f, idVert + 1);
-			e.SpriteOrigin = new Vector2(0, Global.TileSize / 2);
+			e.CreateAnimator("entities_16_32").AddAnim("idle", idVert);
+			e.AddAnim("open", AnimatorMode.OneShot, 0.1f, idVert + 1);
+			e.AddAnim("close", AnimatorMode.OneShot, 0.1f, idVert + 1);
+			e.SpriteOrigin = new Vector2(0, -Global.TileSize / 2);
 			e.SpriteFlipX = true;
 
-			e = Create(name + "_up", typeof(Door)).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSize / 2, 0);
+			e = Create(name + "_up", type).SetLayer(Global.LayerBack).SetHitbox(Global.TileSize * 3, Global.TileSize);
+			e.TileOffset = new Vector2(-Global.TileSize, 0);
 			e.ItemType = keyType;
-			e.CreateAnimator("entities_32_16").AddAnim("idle", idHoriz).AddAnim("open", AnimatorMode.OneShot, 0.1f, idHoriz + 8);
-			e.SpriteOrigin = new Vector2(Global.TileSize / 2, 0);
+			e.CreateAnimator("entities_32_16").AddAnim("idle", idHoriz);
+			e.AddAnim("open", AnimatorMode.OneShot, 0.1f, idHoriz + 8);
+			e.AddAnim("close", AnimatorMode.OneShot, 0.1f, idHoriz + 8);
+			e.SpriteOrigin = new Vector2(-Global.TileSize / 2, 0);
 
-			e = Create(name + "_down", typeof(Door)).SetLayer(Global.LayerBack).SetHitbox(32, 16, Global.TileSize / 2, 0);
+			e = Create(name + "_down", type).SetLayer(Global.LayerBack).SetHitbox(Global.TileSize * 3, Global.TileSize);
+			e.TileOffset = new Vector2(-Global.TileSize, 0);
 			e.ItemType = keyType;
-			e.CreateAnimator("entities_32_16").AddAnim("idle", idHoriz).AddAnim("open", AnimatorMode.OneShot, 0.1f, idHoriz + 8);
-			e.SpriteOrigin = new Vector2(Global.TileSize / 2, 0);
+			e.CreateAnimator("entities_32_16").AddAnim("idle", idHoriz);
+			e.AddAnim("open", AnimatorMode.OneShot, 0.1f, idHoriz + 8);
+			e.AddAnim("close", AnimatorMode.OneShot, 0.1f, idHoriz + 8);
+			e.SpriteOrigin = new Vector2(-Global.TileSize / 2, 0);
 			e.SpriteFlipY = true;
 		}
 
 		private static EntityData CreateItem(string name)
 		{
 			var e = Create(name, Global.TypeCollectible, typeof(Collectible));
-			e.SetHitbox(8, 8, 4, 8);
+			e.SetHitbox(12, 12, 6, 12);
 			e.Layer = Global.LayerFront;
 			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
 			e.SpriteOrigin = new Vector2(Global.TileSize / 2, Global.TileSize - 2);

@@ -15,7 +15,8 @@ namespace DungeonRacer
 			this.gameScene = gameScene;
 			Layer = Global.LayerUi;
 
-			label = new Label("font/04b");
+			label = new Label(Global.Font);
+			label.Scale = 2.0f;
 			label.HAlign = TextAlign.Center;
 			Add(label);
 
@@ -27,7 +28,7 @@ namespace DungeonRacer
 		{
 			base.OnUpdate(deltaTime);
 			label.Text = gameScene.Time.ToString("0.00");
-			blinker.Enabled = gameScene.Paused;
+			blinker.Enabled = gameScene.TimePaused && !gameScene.Finished;
 		}
 	}
 }

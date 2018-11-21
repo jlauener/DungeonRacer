@@ -6,14 +6,29 @@ namespace DungeonRacer
 {
 	class Enemy : GameEntity
 	{
-		private bool dead;
+		public bool Alive { get { return state == State.Alive || state == State.Enter; } }
+
+		private enum State
+		{
+			Enter,
+			Alive,
+			DeadBouncing,
+			Dead
+		}
+		private State state = State.Enter;
 
 		private Vector2 velocity;
 
-		public Enemy(EntityData data, EntityArguments args) : base(data, args)
+		public Enemy(EntityArguments args) : base(args)
 		{
 			velocity = DirectionUtils.GetNormal(Direction) * 20.0f;
-			UpdateSprite();
+
+			Sprite.Play("enter", () =>
+			{
+				Collidable = true;
+				state = State.Alive;
+				UpdateSprite();
+			});
 		}
 
 		protected override void OnUpdate(float deltaTime)
@@ -22,25 +37,28 @@ namespace DungeonRacer
 
 			if (!Collidable) return;
 
-			MoveBy(velocity * deltaTime, Global.TypeMap, Global.TypeSolid);
-
-			if (dead)
+			switch (state)
 			{
-				velocity *= 0.95f;
-				if (velocity.Length() < 10.0f)
-				{
-					Poof();
-				}
-				return;
+				case State.Alive:
+					MoveBy(velocity * deltaTime, Global.TypeMap, Global.TypeSolid);
+					break;
+				case State.DeadBouncing:
+					MoveBy(velocity * deltaTime, Global.TypeMap, Global.TypeSolid);
+					velocity *= 0.95f;
+					if (velocity.Length() < 10.0f)
+					{
+						state = State.Dead;
+						Sprite.Play("dead");
+					}
+					break;
 			}
 		}
 
 		protected override bool OnHit(HitInfo info)
 		{
-			if (dead)
+			if (state == State.DeadBouncing)
 			{
-				if (info.IsHorizontalMovement) velocity.X *= -1;
-				else velocity.Y *= -1;
+				if (info.IsHorizontalMovement) velocity.X *= -1; else velocity.Y *= -1;
 				//Asset.LoadSoundEffect("sfx/hit").Play();
 				return true;
 			}
@@ -53,28 +71,28 @@ namespace DungeonRacer
 
 		public override bool HandlePlayerHit(Player player, int dx, int dy)
 		{
-			if (dead) return false;
+			if (state == State.Alive)
+			{
+				Sprite.Play("dead_bouncing");
+				velocity = player.Velocity * 2.0f;
+				state = State.DeadBouncing;
+				//Add(new Blinker(0.1f, Sprite));
 
-			Sprite.Play("die");
-			velocity = player.Velocity * 2.0f;
-			dead = true;
-			//Add(new Blinker(0.1f, Sprite));
+				//Scene.GetEntity<Shaker>().Shake(dx * 4.0f, dy * 4.0f);
+				Scene.GetEntity<DungeonMap>().DrawGroundEffect(X, Y - 6, "blood" + Rand.NextInt(3));
 
-			//Scene.GetEntity<Shaker>().Shake(dx * 4.0f, dy * 4.0f);
-			Scene.GetEntity<Dungeon>().DrawGroundEffect(X, Y - 6, "blood" + Rand.NextInt(3));
+				Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
+				return true; // FIXME
+			}
 
-			Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
 
-			return true;
-		}
+			if (state == State.Dead)
+			{
+				// TODO blood marks
+				//Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
+			}
 
-		private void Poof()
-		{
-			Collidable = false;
-			Sprite.Play("poof", RemoveFromScene);
-
-			Scene.Add(Create("coin", Position));
-			Asset.LoadSoundEffect("sfx/enemy_die").Play();
+			return false;
 		}
 
 		private void UpdateSprite()

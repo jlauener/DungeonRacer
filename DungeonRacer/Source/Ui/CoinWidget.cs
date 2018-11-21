@@ -5,21 +5,15 @@ namespace DungeonRacer
 {
 	class CoinWidget : Entity
 	{
-		private readonly int maxCoin;
 		private readonly Label label;
 
-		public CoinWidget(Player player, int maxCoin, float x, float y) : base(x, y)
+		public CoinWidget(Player player, float x, float y) : base(x, y)
 		{
 			Layer = Global.LayerUi;
 
-			this.maxCoin = maxCoin;
-
-			var icon = new TileSprite(Asset.GetTileset("entities_16_16"), 64);
-			Add(icon, -6, -4);
-
-			label = new Label(Global.Font, player.GetItemCount(ItemType.Coin) + "/" + maxCoin);
+			label = new Label(Global.Font, "$ " + player.GetItemCount(ItemType.Coin));
 			label.HAlign = TextAlign.Left;
-			Add(label, 10, 2);
+			Add(label);
 
 			player.OnCollect += HandleCollect;
 		}
@@ -28,7 +22,7 @@ namespace DungeonRacer
 		{
 			if (item != ItemType.Coin) return;
 
-			label.Text = player.GetItemCount(ItemType.Coin) + "/" + maxCoin;
+			label.Text = "$ " + player.GetItemCount(ItemType.Coin);
 		}
 	}
 }
