@@ -6,7 +6,7 @@ namespace DungeonRacer
 {
 	class Collectible : GameEntity
 	{
-		public Collectible(EntityArguments args) : base(args)
+		public Collectible(Room room, EntityArguments args) : base(room, args)
 		{
 		}
 

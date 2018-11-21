@@ -10,6 +10,8 @@ namespace DungeonRacer
 {
 	class Player : Entity
 	{
+		public static Player Instance { get; private set; } // A very useful bad practice ;)
+
 		public event Action<Player, ItemType> OnCollect;
 		public event Action<Player, ItemType> OnUse;
 		public event Action<Player, float> OnModifyHp;
@@ -32,7 +34,7 @@ namespace DungeonRacer
 
 		private float enginePct;
 		private float driftPct;
-		private float bloodPct;
+		private float tireBloodPct;
 		private int blood;
 
 		private enum State
@@ -78,6 +80,8 @@ namespace DungeonRacer
 
 		public Player(PlayerData data, DungeonMap dungeon, int tileX, int tileY, Direction direction)
 		{
+			Instance = this;
+
 			this.data = data;
 			this.dungeon = dungeon;
 
@@ -122,7 +126,7 @@ namespace DungeonRacer
 			Engine.Track(this, "engineState");
 			Engine.Track(this, "enginePct");
 			Engine.Track(this, "driftPct");
-			Engine.Track(this, "bloodPct");
+			Engine.Track(this, "tireBloodPct");
 			Engine.Track(this, "velocity");
 			Engine.Track(this, "bounceVelocity");
 			Engine.Track(this, "driftAngle");
@@ -199,6 +203,11 @@ namespace DungeonRacer
 			return count;
 		}
 
+		public void AddTireBlood(float pct)
+		{
+			tireBloodPct += pct;
+		}
+
 		protected override void OnUpdate(float deltaTime)
 		{
 			forward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(Angle));
@@ -251,10 +260,10 @@ namespace DungeonRacer
 			engineSound.Pitch = enginePct;
 			engineSound.Volume = enginePct * 0.5f;
 
-			if (bloodPct > 0.1f)
+			if (tireBloodPct > 0.05f)
 			{
-				bloodPct *= 0.9f;
-				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0xCF, 0x32, 0x32), bloodPct * 0.35f, Angle);
+				tireBloodPct *= 0.9f;
+				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0xCF, 0x32, 0x32), tireBloodPct * 0.35f, Angle);
 			}
 			else if (driftPct > 0.1f)
 			{
@@ -404,7 +413,7 @@ namespace DungeonRacer
 					// FIXME
 					if (stop)
 					{
-						bloodPct = 1.0f;
+						AddTireBlood(1.0f);
 						if (blood == 0)
 						{
 							blood++;

@@ -118,6 +118,30 @@
 /processorParam:TextureFormat=Color
 /build:gfx/game/entities.png
 
+#begin gfx/game/fx_blood_small0.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:gfx/game/fx_blood_small0.png
+
+#begin gfx/game/fx_blood_small1.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:gfx/game/fx_blood_small1.png
+
 #begin gfx/game/fx_blood0.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -307,6 +331,12 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:sfx/enemy_hurt.wav
+
+#begin sfx/ghost_attack.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/ghost_attack.wav
 
 #begin sfx/item_coin.wav
 /importer:WavImporter

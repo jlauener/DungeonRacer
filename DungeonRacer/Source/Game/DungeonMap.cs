@@ -6,6 +6,8 @@ namespace DungeonRacer
 {
 	class DungeonMap : Entity
 	{
+		public static DungeonMap Instance { get; private set; } // A very useful bad practice ;)
+
 		public DungeonData Data { get; }
 
 		public Room StartingRoom { get; private set; }
@@ -14,6 +16,7 @@ namespace DungeonRacer
 
 		public DungeonMap(DungeonData data)
 		{
+			Instance = this;
 			Data = data;
 
 			Type = Global.TypeMap;

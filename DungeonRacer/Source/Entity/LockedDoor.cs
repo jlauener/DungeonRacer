@@ -5,7 +5,7 @@ namespace DungeonRacer
 {
 	class LockedDoor : GameEntity
 	{
-		public LockedDoor(EntityArguments args) : base(args)
+		public LockedDoor(Room room, EntityArguments args) : base(room, args)
 		{
 		}
 

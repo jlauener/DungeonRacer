@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using MonoPunk;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 
 namespace DungeonRacer
 {
@@ -29,9 +30,11 @@ namespace DungeonRacer
 		public bool SpriteFlipX { get; private set; }
 		public bool SpriteFlipY { get; private set; }
 
-		//public bool Solid { get; private set; } = true;
 		public bool Pushable { get; private set; }
-		public float DamageOnTouch { get; private set; }
+
+		public int DamageOnHit { get; private set; }
+		public float DamageOnHitCooldown { get; private set; }
+		public SoundEffect DamageOnHitSfx { get; private set; }
 
 		public ItemType ItemType { get; private set; }
 
@@ -167,15 +170,20 @@ namespace DungeonRacer
 			e.AddAnim("walk_down", AnimatorMode.Loop, 0.25f, 192, 193);
 			e.AddAnim("walk_up", AnimatorMode.Loop, 0.25f, 194, 195);
 			e.AddAnim("walk_horiz", AnimatorMode.Loop, 0.25f, 196, 197);
-			e.AddAnim("dead_bouncing", 198);
+			e.AddAnim("dead_bouncing", AnimatorMode.Loop, 0.15f, 210, 211, 212, 213);
 			e.AddAnim("dead", 199);
 			e.AddAnim("enter", AnimatorMode.OneShot, 0.1f, 34, 35, 36);
 
 			e = Create("ghost", Global.TypeEnemy, typeof(Ghost));
+			e.Layer = Global.LayerFront;
 			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
 			e.SetHitbox(8, 8, 4, 8);
+			e.DamageOnHit = 10;
+			e.DamageOnHitCooldown = 1.0f;
+			e.DamageOnHitSfx = Asset.LoadSoundEffect("sfx/ghost_attack");
 			e.SpriteOrigin = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
 			e.AddAnim("idle", AnimatorMode.Loop, 0.25f, 208, 209);
+			e.AddAnim("die", AnimatorMode.OneShot, 0.1f, 34, 35, 36);
 
 			CreateDoor("door_normal", typeof(Door), 64, 80);
 			CreateDoor("door_a", typeof(LockedDoor), 66, 81, ItemType.KeyA);

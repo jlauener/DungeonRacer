@@ -5,12 +5,12 @@ namespace DungeonRacer
 	static class Global
 	{
 		public static bool CrtEnabled = false;
-		public static bool ScrollingEnabled = false;
 
 		public static int ScreenWidth = 256;
 		public static int ScreenHeight = 224;
 
 		public const int TileSize = 16;
+		public const int HalfTileSize = TileSize / 2;
 
 		public const int FloorWidth = 5;
 		public const int FloorHeight = 5;

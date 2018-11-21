@@ -64,12 +64,9 @@ namespace DungeonRacer
 			var uiCamera = Engine.CreateCamera();
 			SetCamera(Global.LayerUi, uiCamera);
 
-			if (!Global.ScrollingEnabled)
-			{
 				var uiBack = new Sprite("gfx/ui/background");
 				uiBack.Layer = Global.LayerUi;
 				Add(uiBack);
-			}
 
 			Add(new TimeWidget(this, Engine.HalfWidth, 3));
 
@@ -165,35 +162,21 @@ namespace DungeonRacer
 			}
 		}
 
-		private void UpdateScrollingCamera(float deltaTime)
+		private void CheckRoomSwitch()
 		{
-			var cameraEdge = new Vector2(96.0f, 96.0f);
-
-			if (player.X < Camera.X + cameraEdge.X) Camera.X = player.X - cameraEdge.X;
-			else if (player.X > Camera.X + Engine.Width - cameraEdge.X) Camera.X = player.X - Engine.Width + cameraEdge.X;
-
-			if (player.Y < Camera.Y + cameraEdge.Y) Camera.Y = player.Y - cameraEdge.Y;
-			else if (player.Y > Camera.Y + Engine.Height - cameraEdge.Y) Camera.Y = player.Y - Engine.Height + cameraEdge.Y;
-
-			Camera.X = Mathf.Clamp(Camera.X, 0.0f, dungeon.Width - Engine.Width);
-			Camera.Y = Mathf.Clamp(Camera.Y, 0.0f, dungeon.Height - Engine.Height);
-		}
-
-		private void UpdateRoomCamera(float deltaTime)
-		{
-			if (player.Velocity.X < 0.0f && player.X < currentRoom.Left + Global.TileSize / 2 + Global.RoomSwitchMargin)
+			if (player.Velocity.X < 0.0f && player.X < currentRoom.Left + Global.RoomSwitchMargin)
 			{
 				GotoRoom(-1, 0);
 			}
-			else if (player.Velocity.X > 0.0f && player.X > currentRoom.Right + Global.TileSize / 2 - Global.RoomSwitchMargin)
+			else if (player.Velocity.X > 0.0f && player.X > currentRoom.Right - Global.RoomSwitchMargin)
 			{
 				GotoRoom(1, 0);
 			}
-			else if (player.Velocity.Y < 0.0f && player.Y < currentRoom.Top + Global.TileSize / 2 + Global.RoomSwitchMargin)
+			else if (player.Velocity.Y < 0.0f && player.Y < currentRoom.Top + Global.RoomSwitchMargin)
 			{
 				GotoRoom(0, -1);
 			}
-			else if (player.Velocity.Y > 0.0f && player.Y > currentRoom.Bottom + Global.TileSize / 2 - Global.RoomSwitchMargin)
+			else if (player.Velocity.Y > 0.0f && player.Y > currentRoom.Bottom - Global.RoomSwitchMargin)
 			{
 				GotoRoom(0, 1);
 			}
@@ -201,10 +184,10 @@ namespace DungeonRacer
 
 		private void UpdateEnter(float deltaTime)
 		{
-			if (Global.ScrollingEnabled) UpdateScrollingCamera(deltaTime); else UpdateRoomCamera(deltaTime);
+			CheckRoomSwitch();
 
-			var x = currentRoom.Left + 2 * Global.TileSize;
-			var y = currentRoom.Top + 2 * Global.TileSize;
+			var x = currentRoom.Left + Global.TileSize + Global.HalfTileSize;
+			var y = currentRoom.Top + Global.TileSize + Global.HalfTileSize;
 			var width = Global.RoomWidthPx - 3 * Global.TileSize;
 			var height = Global.RoomHeightPx - 3 * Global.TileSize;
 
@@ -223,7 +206,7 @@ namespace DungeonRacer
 
 		private void UpdatePlay(float deltaTime)
 		{
-			if (Global.ScrollingEnabled) UpdateScrollingCamera(deltaTime); else UpdateRoomCamera(deltaTime);
+			CheckRoomSwitch();
 			if(!TimePaused) Time += deltaTime;
 
 			if(!player.Alive)
@@ -260,12 +243,7 @@ namespace DungeonRacer
 
 		private Vector2 GetCameraPosition(Room room)
 		{
-			var pos = new Vector2(room.X + Global.TileSize / 2, room.Y);
-			if (!Global.ScrollingEnabled)
-			{
-				pos.Y -= Global.UiHeight - Global.TileSize / 2;
-			}
-			return pos;
+			return new Vector2(room.X, room.Y - Global.UiHeight);
 		}
 
 		private void SetGameFinished()

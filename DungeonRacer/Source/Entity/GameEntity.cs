@@ -33,12 +33,16 @@ namespace DungeonRacer
 	{
 		protected EntityArguments Args { get; }
 		public EntityData Data { get { return Args.Data; } }
+		protected Room Room { get; private set; }
 		protected Direction Direction { get; set; }
 
 		protected Animator Sprite { get; }
 
-		public GameEntity(EntityArguments args)
+		private float damageOnHitCooldown;
+
+		public GameEntity(Room room, EntityArguments args)
 		{
+			Room = room;
 			Args = args;
 
 			if (args.Position != Vector2.Zero)
@@ -90,6 +94,13 @@ namespace DungeonRacer
 				}
 			}
 
+			if (Data.DamageOnHit > 0.0f && damageOnHitCooldown <= 0.0f)
+			{
+				player.Damage(Data.DamageOnHit);
+				damageOnHitCooldown = Data.DamageOnHitCooldown;
+				if (Data.DamageOnHitSfx != null) Data.DamageOnHitSfx.Play();
+			}
+
 			return Type == Global.TypeSolid;
 		}
 
@@ -102,29 +113,22 @@ namespace DungeonRacer
 		{
 			base.OnUpdate(deltaTime);
 
-			if (Data.DamageOnTouch > 0.0f)
-			{
-				var info = CollideAt(X, Y, Global.TypePlayer);
-				if (info.Other != null)
-				{
-					((Player)info.Other).Damage(Data.DamageOnTouch);
-				}
-			}
+			if (damageOnHitCooldown > 0.0f) damageOnHitCooldown -= deltaTime;
 		}
 
-		public static GameEntity Create(EntityArguments args)
+		public static GameEntity Create(Room room, EntityArguments args)
 		{
-			return (GameEntity)Activator.CreateInstance(args.Data.Class, args);
+			return (GameEntity)Activator.CreateInstance(args.Data.Class, room, args);
 		}
 
-		public static GameEntity Create(EntityData data, int tileX, int tileY, Direction direction = Direction.Down)
+		public static GameEntity Create(Room room, EntityData data, int tileX, int tileY, Direction direction = Direction.Down)
 		{
-			return Create(new EntityArguments(data, tileX, tileY, direction));
+			return Create(room, new EntityArguments(data, tileX, tileY, direction));
 		}
 
-		public static GameEntity Create(string name, Vector2 position, Direction direction = Direction.Down)
+		public static GameEntity Create(Room room, string name, Vector2 position, Direction direction = Direction.Down)
 		{
-			return Create(new EntityArguments(EntityData.Get(name), position, direction));
+			return Create(room, new EntityArguments(EntityData.Get(name), position, direction));
 		}
 	}
 }
