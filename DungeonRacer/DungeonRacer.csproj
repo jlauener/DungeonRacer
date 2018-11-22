@@ -62,7 +62,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Source\Ui\RoomWidget.cs" />
     <Compile Include="Source\Ui\CoinWidget.cs" />
-    <Compile Include="Source\Ui\MpWidget.cs" />
     <Compile Include="Source\Ui\HpWidget.cs" />
     <Compile Include="Source\Ui\InventoryWidget.cs" />
     <Compile Include="Source\Ui\TimeWidget.cs" />

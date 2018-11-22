@@ -12,6 +12,12 @@ namespace DungeonRacer
 		Front
 	}
 
+	enum TriggerType
+	{
+		None,
+		Spike
+	}
+
 	class DungeonTile
 	{
 		public int X { get; }
@@ -20,11 +26,10 @@ namespace DungeonRacer
 
 		public int Id { get; set; } = -1;
 		public int DisplayTid { get; set; } = -1;
-		//public Direction Direction { get; set; }
 		public TileSolidType SolidType { get; set; } = TileSolidType.None;
+		public TriggerType Trigger { get; set; } = TriggerType.None;
 		public DungeonTileLayer Layer { get; set; } = DungeonTileLayer.Back;
 		public AnimatorData Anim { get; set; }
-		//public EntityData Entity { get; set; }
 
 		public DungeonTile(int x, int y, Dictionary<string, string> properties)
 		{
@@ -138,6 +143,18 @@ namespace DungeonRacer
 				else
 				{
 					Log.Error("Unknown tile layer '" + properties.GetString("layer") + "' at " + tile);
+				}
+			}
+
+			if (properties.ContainsKey("trigger"))
+			{
+				if (Enum.TryParse(properties.GetString("trigger"), out TriggerType trigger))
+				{
+					tile.Trigger = trigger;
+				}
+				else
+				{
+					Log.Error("Unknown tile trigger '" + properties.GetString("trigger") + "' at " + tile);
 				}
 			}
 

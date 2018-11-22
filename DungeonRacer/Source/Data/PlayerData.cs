@@ -17,7 +17,6 @@ namespace DungeonRacer
 
 		public string Name { get; }
 		public int Hp { get; private set; }
-		public int Mp { get; private set; }
 		public PixelMask PixelMask { get; private set; }
 		public AnimatorData Anim { get; private set; }
 
@@ -31,8 +30,9 @@ namespace DungeonRacer
 		public float BreakFriction { get; private set; }
 		public float TurnSpeed { get; private set; }
 		public float AngularFriction { get; private set; }
-		public float BoostForce { get; private set; }
-		public float BoostManaPerSec { get; private set; }
+
+		public float SpikeDamage { get; private set; }
+		public float SpikeImmuneDuration { get; private set; }
 
 		private PlayerData(string name)
 		{
@@ -59,7 +59,6 @@ namespace DungeonRacer
 
 			p = Create("normal");
 			p.Hp = 100;
-			p.Mp = 5;
 			p.Friction = 0.92f;
 			p.MaxSpeed = 125.0f;
 			p.FrontGearForce = 650.0f;
@@ -70,8 +69,9 @@ namespace DungeonRacer
 			p.BreakFriction = 0.98f;
 			p.TurnSpeed = 5.0f;
 			p.AngularFriction = 0.0f;
-			p.BoostForce = 1100.0f;
-			p.BoostManaPerSec = 30.0f;
+			p.SpikeDamage = 5.0f;
+			p.SpikeImmuneDuration = 0.5f;
+
 			p.PixelMask = new PixelMask("gfx/mask/player_mask");
 			p.Anim = new AnimatorData("gfx/game/player", 16, 16);
 			p.Anim.Add("idle", 0);

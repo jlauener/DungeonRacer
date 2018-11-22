@@ -111,9 +111,20 @@ namespace DungeonRacer
 
 		protected override void OnUpdate(float deltaTime)
 		{
-			base.OnUpdate(deltaTime);
+			if (Room.Active)
+			{
+				OnUpdateActive(deltaTime);
+				base.OnUpdate(deltaTime);
+				if (damageOnHitCooldown > 0.0f) damageOnHitCooldown -= deltaTime;
+			}
+			else
+			{
+				damageOnHitCooldown = 0.0f;
+			}
+		}
 
-			if (damageOnHitCooldown > 0.0f) damageOnHitCooldown -= deltaTime;
+		protected virtual void OnUpdateActive(float deltaTime)
+		{
 		}
 
 		public static GameEntity Create(Room room, EntityArguments args)

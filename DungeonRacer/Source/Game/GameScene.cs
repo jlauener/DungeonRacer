@@ -37,7 +37,8 @@ namespace DungeonRacer
 		private readonly Player player;
 		private readonly DungeonMap dungeon;
 
-		public Room currentRoom;
+		private Room previousRoom;
+		private Room currentRoom;
 		private readonly Room[,] rooms;
 
 		public GameScene(DungeonData dungeonData)
@@ -64,9 +65,9 @@ namespace DungeonRacer
 			var uiCamera = Engine.CreateCamera();
 			SetCamera(Global.LayerUi, uiCamera);
 
-				var uiBack = new Sprite("gfx/ui/background");
-				uiBack.Layer = Global.LayerUi;
-				Add(uiBack);
+			var uiBack = new Sprite("gfx/ui/background");
+			uiBack.Layer = Global.LayerUi;
+			Add(uiBack);
 
 			Add(new TimeWidget(this, Engine.HalfWidth, 3));
 
@@ -193,6 +194,7 @@ namespace DungeonRacer
 
 			if (player.InsideRect(x, y, width, height))
 			{
+				if (previousRoom != null) previousRoom.Leave();
 				currentRoom.Enter();
 				OnEnterRoom?.Invoke(this, currentRoom);
 				state = State.Play;
@@ -207,9 +209,9 @@ namespace DungeonRacer
 		private void UpdatePlay(float deltaTime)
 		{
 			CheckRoomSwitch();
-			if(!TimePaused) Time += deltaTime;
+			if (!TimePaused) Time += deltaTime;
 
-			if(!player.Alive)
+			if (!player.Alive)
 			{
 				SetGameOver();
 			}
@@ -217,7 +219,7 @@ namespace DungeonRacer
 
 		private void GotoRoom(int dx, int dy)
 		{
-			if (currentRoom != null) currentRoom.Leave();
+			previousRoom = currentRoom;
 
 			var x = currentRoom.RoomX + dx;
 			var y = currentRoom.RoomY + dy;

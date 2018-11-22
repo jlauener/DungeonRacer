@@ -23,8 +23,8 @@ namespace DungeonRacer
 			Width = data.WidthTiles * Global.TileSize;
 			Height = data.HeightTiles * Global.TileSize;
 
-			var grid = new GridCollider(data.WidthTiles, data.HeightTiles, Global.TileSize, Global.TileSize);
-			Collider = grid;
+			var solidGrid = new GridCollider(data.WidthTiles, data.HeightTiles, Global.TileSize, Global.TileSize);
+			Collider = solidGrid;
 
 			var groundMap = new Tilemap(data.Tileset, data.WidthTiles, data.HeightTiles);
 			groundMap.Layer = Global.LayerMapGround;
@@ -38,15 +38,18 @@ namespace DungeonRacer
 			frontMap.Layer = Global.LayerMapFront;
 			Add(frontMap);
 
-			data.IterateTiles((tile) =>
+			Data.IterateTiles((tile) =>
 			{
-				if (tile.SolidType == TileSolidType.PixelMask)
+				if (tile.Trigger == TriggerType.None)
 				{
-					grid.SetPixelMaskAt(tile.X, tile.Y, Asset.GetPixelMaskSet("dungeon").GetMask(tile.Id), tile.Properties);
-				}
-				else
-				{
-					grid.SetTileAt(tile.X, tile.Y, tile.SolidType, tile.Properties);
+					if (tile.SolidType == TileSolidType.PixelMask)
+					{
+						solidGrid.SetPixelMaskAt(tile.X, tile.Y, Asset.GetPixelMaskSet("dungeon").GetMask(tile.Id), tile.Properties);
+					}
+					else
+					{
+						solidGrid.SetTileAt(tile.X, tile.Y, tile.SolidType, tile.Properties);
+					}
 				}
 
 				if (tile.Anim != null)
@@ -90,6 +93,32 @@ namespace DungeonRacer
 			tireLayer = new DrawLayer(data.WidthTiles * Global.TileSize, data.HeightTiles * Global.TileSize);
 			tireLayer.Layer = Global.LayerTireEffect;
 			Add(tireLayer);
+		}
+
+		protected override void OnAdded()
+		{
+			base.OnAdded();
+
+			var triggerGrid = new GridCollider(Data.WidthTiles, Data.HeightTiles, Global.TileSize, Global.TileSize);
+			Data.IterateTiles((tile) =>
+			{
+				if (tile.Trigger != TriggerType.None)
+				{
+					if (tile.SolidType == TileSolidType.PixelMask)
+					{
+						triggerGrid.SetPixelMaskAt(tile.X, tile.Y, Asset.GetPixelMaskSet("dungeon").GetMask(tile.Id), tile.Properties);
+					}
+					else
+					{
+						triggerGrid.SetTileAt(tile.X, tile.Y, tile.SolidType, tile.Properties);
+					}
+				}
+			});
+
+			var triggerEntity = new Entity();
+			triggerEntity.Type = Global.TypeTrigger;
+			triggerEntity.Collider = triggerGrid;
+			Scene.Add(triggerEntity);
 		}
 
 		public void DrawGroundEffect(float x, float y, string name, float alpha = 1.0f, float angle = 0.0f)

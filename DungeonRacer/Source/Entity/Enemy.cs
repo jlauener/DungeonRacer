@@ -25,21 +25,11 @@ namespace DungeonRacer
 		{
 			velocity = DirectionUtils.GetNormal(Direction) * 20.0f;
 			Collidable = false;
-
-			//Sprite.Play("enter", () =>
-			//{
-			//	Collidable = true;
-			//	state = State.Alive;
-			//	UpdateSprite();
-			//});
 			UpdateSprite();
 		}
 
-		protected override void OnUpdate(float deltaTime)
+		protected override void OnUpdateActive(float deltaTime)
 		{
-			base.OnUpdate(deltaTime);
-			if (!Room.Active) return;
-
 			Collidable = true;
 			switch (state)
 			{

@@ -40,15 +40,6 @@ namespace DungeonRacer
 			Input.Define("b", Keys.X, Keys.M);
 			Input.Define("b", Buttons.B);
 
-			Input.Define("move_front", Keys.Z, Keys.N);
-			Input.Define("move_front", Buttons.A);
-
-			Input.Define("move_back", Keys.X, Keys.M);
-			Input.Define("move_back", Buttons.B);
-
-			Input.Define("special", Keys.Up, Keys.W);
-			Input.Define("special", Buttons.DPadUp);
-
 			Input.Define("start", Keys.Enter, Keys.Space);
 			Input.Define("start", Buttons.Start);
 
@@ -83,7 +74,7 @@ namespace DungeonRacer
 
 		protected override void OnStart()
 		{
-			//Scene = new GameScene(DungeonData.Get("test"));
+		//	Scene = new GameScene(DungeonData.Get("test"));
 			Scene = new GameScene(DungeonData.Get("dungeon1"));
 		}
 

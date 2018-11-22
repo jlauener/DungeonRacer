@@ -30,6 +30,7 @@ namespace DungeonRacer
 		public const int TypeSolid = 3;
 		public const int TypeCollectible = 4;
 		public const int TypeEnemy = 5;
+		public const int TypeTrigger = 6;
 
 		public const int LayerUi = 20;
 		public const int LayerMapFront = 30;

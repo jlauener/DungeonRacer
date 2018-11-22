@@ -231,9 +231,8 @@
  </tile>
  <tile id="113">
   <properties>
-   <property name="damageOnHit" type="float" value="0.05"/>
    <property name="solidType" value="PixelMask"/>
-   <property name="trigger" type="bool" value="true"/>
+   <property name="trigger" value="Spike"/>
   </properties>
  </tile>
  <tile id="144">

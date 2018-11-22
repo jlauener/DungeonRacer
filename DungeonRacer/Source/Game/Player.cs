@@ -15,12 +15,9 @@ namespace DungeonRacer
 		public event Action<Player, ItemType> OnCollect;
 		public event Action<Player, ItemType> OnUse;
 		public event Action<Player, float> OnModifyHp;
-		public event Action<Player, float> OnModifyMp;
 
 		public float Hp { get; private set; }
 		public int MaxHp { get; private set; }
-		public float Mp { get; private set; }
-		public int MaxMp { get; private set; }
 
 		public float Speed { get; private set; }
 		public float Angle { get; private set; }
@@ -45,11 +42,12 @@ namespace DungeonRacer
 		}
 		private State state = State.Active;
 
-
 		private Vector2 velocity;
 		public Vector2 Velocity { get { return velocity; } }
 
 		private Vector2 bounceVelocity;
+
+		private float spikeImmuneCounter;
 
 		private enum EngineState
 		{
@@ -97,9 +95,6 @@ namespace DungeonRacer
 
 			Hp = data.Hp;
 			MaxHp = data.Hp;
-
-			Mp = data.Mp;
-			MaxMp = data.Mp;
 
 			sprite = new Animator(data.Anim);
 			sprite.CenterOrigin();
@@ -154,7 +149,6 @@ namespace DungeonRacer
 			}
 
 			Log.Debug("damage " + value + " hp=" + Hp);
-
 		}
 
 		public void Heal(int value)
@@ -162,20 +156,6 @@ namespace DungeonRacer
 			Hp += value;
 			Hp = Mathf.Min(Hp, MaxHp);
 			OnModifyHp?.Invoke(this, value);
-		}
-
-		public void GainMp(float value)
-		{
-			Mp += value;
-			if (Mp > MaxMp) Mp = MaxMp;
-			OnModifyMp?.Invoke(this, value);
-		}
-
-		public void LooseMp(float value)
-		{
-			Mp -= value;
-			if (Mp < 0.0f) Mp = 0.0f;
-			OnModifyMp?.Invoke(this, -value);
 		}
 
 		public void AddItem(ItemType item)
@@ -303,16 +283,11 @@ namespace DungeonRacer
 				}
 			}
 
+			if (spikeImmuneCounter > 0.0f) spikeImmuneCounter -= deltaTime;
+
 			var forward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(Angle));
 
-			/*if (Mp > 0.0f && Input.IsDown("special"))
-			{
-				velocity += Vector2.UnitX.Rotate(Angle) * data.BoostForce * deltaTime;
-				enginePct = 1.0f;
-				LooseMp(data.BoostManaPerSec * deltaTime);
-			}
-			else*/
-			if (Input.IsDown("move_front"))
+			if (Input.IsDown("a"))
 			{
 				if (forward < -3.0f)
 				{
@@ -327,7 +302,7 @@ namespace DungeonRacer
 					engineState = EngineState.FrontGear;
 				}
 			}
-			else if (Input.IsDown("move_back"))
+			else if (Input.IsDown("b"))
 			{
 				if (forward > 3.0f)
 				{
@@ -394,7 +369,8 @@ namespace DungeonRacer
 			bounceVelocity *= PlayerData.BounceFriction;
 			if (bounceVelocity.Length() < 5.0f) bounceVelocity = Vector2.Zero;
 
-			MoveBy((velocity + bounceVelocity) * deltaTime, CollisionFlags.NonStop, Global.TypeEnemy, Global.TypeCollectible, Global.TypeSolid, Global.TypeMap);
+			MoveBy((velocity + bounceVelocity) * deltaTime, CollisionFlags.NonStop, Global.TypeCollectible, Global.TypeTrigger, Global.TypeEnemy, Global.TypeSolid, Global.TypeMap);
+			TriggerCollisionDetection(Global.TypeTrigger);
 
 			if (engineState == EngineState.Break) breakSound.Play(); else breakSound.Stop();
 		}
@@ -428,14 +404,9 @@ namespace DungeonRacer
 					}
 				}
 			}
-			else if (info.Tile != null)
+			else if (info.Other.Type == Global.TypeTrigger)
 			{
-				var damage = info.Tile.GetFloat("damageOnHit", 0);
-				if (damage > 0.0f)
-				{
-					Damage(damage);
-				}
-				stop = !info.Tile.GetBool("trigger");
+				stop = HandleTriggerCollision(info);
 			}
 
 			if (stop)
@@ -467,6 +438,20 @@ namespace DungeonRacer
 			}
 
 			return stop;
+		}
+
+		private bool HandleTriggerCollision(HitInfo info)
+		{
+			if (info.Tile.GetString("trigger") == "Spike")
+			{
+				if (spikeImmuneCounter <= 0.0f)
+				{
+					Damage(data.SpikeDamage);
+					spikeImmuneCounter += data.SpikeImmuneDuration;
+				}
+			}
+
+			return false;
 		}
 
 		private void PlayIdleSprite()

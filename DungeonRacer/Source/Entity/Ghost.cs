@@ -17,11 +17,8 @@ namespace DungeonRacer
 			Sprite.Alpha = 0.3f;
 		}
 
-		protected override void OnUpdate(float deltaTime)
+		protected override void OnUpdateActive(float deltaTime)
 		{
-			base.OnUpdate(deltaTime);
-			if (!Room.Active) return;
-
 			if (Player.Instance.Alive)
 			{
 				var delta = Player.Instance.Position - Position;
