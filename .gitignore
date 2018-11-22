@@ -2,7 +2,8 @@ DungeonRacer/bin/
 DungeonRacer/obj/
 DungeonRacer/Content/obj/
 DungeonRacer/Content/bin/
-DungeonRacer/release
+DungeonRacer/Build/release_win
+DungeonRacer/Build/release_mac
 packages/
 .vs/
 DungeonRacer/temp/
