@@ -90,13 +90,18 @@ namespace DungeonRacer
 					X += dx;
 					Y += dy;
 					UpdateSortOrder();
-					return false;
 				}
+				else
+				{
+					Collidable = false;
+					Sprite.Play("die", RemoveFromScene);
+				}
+				return false;
 			}
 
 			if (Data.DamageOnHit > 0.0f && damageOnHitCooldown <= 0.0f)
 			{
-				player.Damage(Data.DamageOnHit);
+				player.Damage(Data.DamageOnHit, DamageType.Entity);
 				damageOnHitCooldown = Data.DamageOnHitCooldown;
 				if (Data.DamageOnHitSfx != null) Data.DamageOnHitSfx.Play();
 			}
@@ -104,9 +109,9 @@ namespace DungeonRacer
 			return Type == Global.TypeSolid;
 		}
 
-		private void UpdateSortOrder()
+		protected void UpdateSortOrder(int offset = 1)
 		{
-			Sprite.SortOrder = Mathf.Floor(Bottom) * 10 + 1;
+			Sprite.SortOrder = Mathf.Floor(Bottom) * 10 + offset;
 		}
 
 		protected override void OnUpdate(float deltaTime)

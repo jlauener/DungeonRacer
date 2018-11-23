@@ -30,6 +30,7 @@ namespace DungeonRacer
 		public bool SpriteFlipX { get; private set; }
 		public bool SpriteFlipY { get; private set; }
 
+		public int Hp { get; private set; }
 		public bool Pushable { get; private set; }
 
 		public int DamageOnHit { get; private set; }
@@ -127,6 +128,7 @@ namespace DungeonRacer
 			e = Create("push_block").SetHitbox(Global.TileSize, Global.TileSize);			
 			e.Pushable = true;
 			e.AddAnim("idle", 16);
+			e.AddAnim("die", AnimatorMode.OneShot, 0.1f, 34, 35, 36);
 
 			e = Create("pillar").SetPixelMask("edged_square");
 			e.CreateAnimator("entities_16_32").AddAnim("idle", 1);
@@ -162,7 +164,8 @@ namespace DungeonRacer
 			//e.AddAnim("idle", 81).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
 			//e.CollectSfx = new Sfx("sfx/key"); // TODO sfx
 
-			e = Create("goblin", Global.TypeEnemy, typeof(Enemy));
+			e = Create("goblin", Global.TypeEnemy, typeof(Goblin));
+			e.Hp = 1;
 			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
 			e.SetHitbox(8, 8, 4, 8);
 
@@ -172,7 +175,17 @@ namespace DungeonRacer
 			e.AddAnim("walk_horiz", AnimatorMode.Loop, 0.25f, 196, 197);
 			e.AddAnim("dead_bouncing", AnimatorMode.Loop, 0.15f, 210, 211, 212, 213);
 			e.AddAnim("dead", 199);
-			e.AddAnim("enter", AnimatorMode.OneShot, 0.1f, 34, 35, 36);
+
+			e = Create("ogre", Global.TypeEnemy, typeof(Ogre));
+			e.Hp = 3;
+			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
+			e.SetHitbox(8, 8, 4, 8);
+
+			e.SpriteOrigin = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
+			e.AddAnim("walk", AnimatorMode.Loop, 0.25f, 226, 227);
+			e.AddAnim("hurt", 225);
+			e.AddAnim("dead_bouncing", 225);
+			e.AddAnim("dead", 230);
 
 			e = Create("ghost", Global.TypeEnemy, typeof(Ghost));
 			e.Layer = Global.LayerFront;

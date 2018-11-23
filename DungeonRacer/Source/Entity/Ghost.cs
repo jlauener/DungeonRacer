@@ -6,9 +6,9 @@ namespace DungeonRacer
 {
 	class Ghost : GameEntity
 	{
-		public const float MaxSpeed = 6.0f;
-		public const float SteerForce = 10.0f;
-		public const float DistanceToPlayerMin = 10.0f;
+		private const float MaxSpeed = 6.0f;
+		private const float SteerForce = 10.0f;
+		private const float DistanceToPlayerMin = 10.0f;
 		
 		private Vector2 velocity;
 
@@ -19,9 +19,9 @@ namespace DungeonRacer
 
 		protected override void OnUpdateActive(float deltaTime)
 		{
-			if (Player.Instance.Alive)
+			if (GameScene.Player.Alive)
 			{
-				var delta = Player.Instance.Position - Position;
+				var delta = GameScene.Player.Position - Position;
 				if (delta.Length() > DistanceToPlayerMin)
 				{
 					delta.Normalize();

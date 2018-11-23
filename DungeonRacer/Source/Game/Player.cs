@@ -8,15 +8,22 @@ using System.Collections.Generic;
 
 namespace DungeonRacer
 {
+	enum DamageType
+	{
+		Wall,
+		Spike,
+		Lava,
+		Entity
+	}
+
 	class Player : Entity
 	{
-		public static Player Instance { get; private set; } // A very useful bad practice ;)
-
 		public event Action<Player, ItemType> OnCollect;
 		public event Action<Player, ItemType> OnUse;
-		public event Action<Player, float> OnModifyHp;
+		public event Action<Player, int, DamageType> OnDamage;
+		public event Action<Player, int> OnHeal;
 
-		public float Hp { get; private set; }
+		public int Hp { get; private set; }
 		public int MaxHp { get; private set; }
 
 		public float Speed { get; private set; }
@@ -48,6 +55,7 @@ namespace DungeonRacer
 		private Vector2 bounceVelocity;
 
 		private float spikeImmuneCounter;
+		private float lavaImmuneCounter;
 
 		private enum EngineState
 		{
@@ -78,8 +86,6 @@ namespace DungeonRacer
 
 		public Player(PlayerData data, DungeonMap dungeon, int tileX, int tileY, Direction direction)
 		{
-			Instance = this;
-
 			this.data = data;
 			this.dungeon = dungeon;
 
@@ -127,35 +133,72 @@ namespace DungeonRacer
 			Engine.Track(this, "driftAngle");
 		}
 
-		private Tween hurtFinishedCallback;
-		public void Damage(float value)
+		public void Damage(int value, DamageType damageType)
 		{
 			if (invincibleCounter > 0.0f) return;
+
+			switch (damageType)
+			{
+				case DamageType.Spike:
+					if (Speed < PlayerData.SpikeDamageSpeedMin || spikeImmuneCounter > 0.0f) return;
+					break;
+				case DamageType.Lava:
+					if (lavaImmuneCounter > 0.0f) return;
+					break;
+			}
 
 			Hp -= value;
 			Hp = Mathf.Max(Hp, 0);
 
-			OnModifyHp?.Invoke(this, value);
-			//invincibleCounter = PlayerData.InvincibleDuration;
-			if (hurtFinishedCallback != null) hurtFinishedCallback.Cancel();
-			sprite.Play("hurt");
-			var damagePct = value / 10.0f; // FIXME
-			hurtFinishedCallback = Scene.Callback(damagePct * 0.05f, PlayIdleSprite);
+			OnDamage?.Invoke(this, value, damageType);
+
+			switch (damageType)
+			{
+				case DamageType.Wall:
+					{
+						break;
+					}
+				case DamageType.Spike:
+					spikeImmuneCounter += data.SpikeImmuneDuration;
+					ShowHurtFrame(0.15f);
+					GameScene.Shaker.Shake(Vector2.Normalize(velocity) * 4.0f);
+					break;
+				case DamageType.Lava:
+					lavaImmuneCounter += data.LavaImmuneDuration;
+					ShowHurtFrame(0.1f);
+					GameScene.Shaker.Shake(Vector2.Normalize(velocity) * 3.0f);
+					break;
+				case DamageType.Entity:
+					{
+						var pct = value / (float)PlayerData.EntityDamageFeedbackMax;
+						ShowHurtFrame(0.1f + pct * 0.2f);
+						GameScene.Shaker.Shake(Vector2.Normalize(velocity) * (4.0f + pct * 12.0f));
+						break;
+					}
+			}
+
+			Log.Debug("damage " + value + " hp=" + Hp);
 
 			if (Hp == 0)
 			{
 				// TODO
 				state = State.GameOver;
 			}
+		}
 
-			Log.Debug("damage " + value + " hp=" + Hp);
+		private Tween hurtFrameCallback;
+		private void ShowHurtFrame(float duration)
+		{
+			if (hurtFrameCallback != null) hurtFrameCallback.Cancel();
+			sprite.Play("hurt");
+			hurtFrameCallback = Scene.Callback(duration, PlayIdleSprite);
 		}
 
 		public void Heal(int value)
 		{
 			Hp += value;
 			Hp = Mathf.Min(Hp, MaxHp);
-			OnModifyHp?.Invoke(this, value);
+			OnHeal?.Invoke(this, value);
 		}
 
 		public void AddItem(ItemType item)
@@ -284,10 +327,11 @@ namespace DungeonRacer
 			}
 
 			if (spikeImmuneCounter > 0.0f) spikeImmuneCounter -= deltaTime;
+			if (lavaImmuneCounter > 0.0f) lavaImmuneCounter -= deltaTime;
 
 			var forward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(Angle));
 
-			if (Input.IsDown("a"))
+			if (Input.IsDown("a") || Input.IsDown("up"))
 			{
 				if (forward < -3.0f)
 				{
@@ -302,7 +346,7 @@ namespace DungeonRacer
 					engineState = EngineState.FrontGear;
 				}
 			}
-			else if (Input.IsDown("b"))
+			else if (Input.IsDown("b") || Input.IsDown("down"))
 			{
 				if (forward > 3.0f)
 				{
@@ -365,7 +409,6 @@ namespace DungeonRacer
 			while (Angle > Mathf.Pi2) Angle -= Mathf.Pi2;
 			angularVelocity *= data.AngularFriction;
 
-			//velocity += bounceVelocity * deltaTime;
 			bounceVelocity *= PlayerData.BounceFriction;
 			if (bounceVelocity.Length() < 5.0f) bounceVelocity = Vector2.Zero;
 
@@ -375,83 +418,104 @@ namespace DungeonRacer
 			if (engineState == EngineState.Break) breakSound.Play(); else breakSound.Stop();
 		}
 
-		protected override bool OnHit(HitInfo info)
+		protected override bool OnHit(HitInfo hit)
 		{
 			if (!Alive) return true;
 
-			var stop = true;
-			if (info.Other is GameEntity)
+			var bounce = PlayerData.BounceRestitution;
+			var stop = false;
+			if (hit.Other.Type == Global.TypeMap)
 			{
-				stop = ((GameEntity)info.Other).HandlePlayerHit(this, info.DeltaX, info.DeltaY);
-
-				if (info.Other is Enemy)
-				{
-					// FIXME
-					if (stop)
-					{
-						AddTireBlood(1.0f);
-						if (blood == 0)
-						{
-							blood++;
-							PlayIdleSprite();
-						}
-						else if (blood < 3 && Rand.NextFloat() < 0.33f)
-						{
-							blood++;
-							PlayIdleSprite();
-						}
-						stop = false; // FIXME
-					}
-				}
+				HandleWallCollision();
+				stop = true;
 			}
-			else if (info.Other.Type == Global.TypeTrigger)
+			else if (hit.Other.Type == Global.TypeTrigger)
 			{
-				stop = HandleTriggerCollision(info);
+				stop = HandleTriggerCollision(hit);
+			}
+			else if (hit.Other is GameEntity)
+			{
+				stop = HandleEntityCollision(hit);
+				if (hit.Other is Enemy) bounce = 2.2f; // FIXME
 			}
 
 			if (stop)
 			{
-				var speedPct = Speed / data.MaxSpeed;
-				if (speedPct > PlayerData.DamageThreshold)
+				if (hit.IsVerticalMovement)
 				{
-					var damagePct = (speedPct - PlayerData.DamageThreshold) * (1.0f / (1.0f - PlayerData.DamageThreshold));
-					// TODO player resistance
-					Damage(damagePct * 10.0f);
-				}
-
-				if (info.IsVerticalMovement)
-				{
-					bounceVelocity.Y = -velocity.Y * PlayerData.BounceRestitution;
+					bounceVelocity.Y = -velocity.Y * bounce;
 					velocity *= 0.2f;
 				}
-				else if (info.IsHorizontalMovement)
+				else if (hit.IsHorizontalMovement)
 				{
-					bounceVelocity.X = -velocity.X * PlayerData.BounceRestitution;
+					bounceVelocity.X = -velocity.X * bounce;
 					velocity.X *= 0.2f;
 				}
 
 				// FIXME ?
 				driftAngle = 0.0f;
-
-				if (speedPct > PlayerData.DamageThreshold) Asset.LoadSoundEffect("sfx/car_hit_hurt").Play();
-				if (speedPct > 0.25f) Asset.LoadSoundEffect("sfx/car_hit").Play();
 			}
 
 			return stop;
 		}
 
-		private bool HandleTriggerCollision(HitInfo info)
+		private void HandleWallCollision()
 		{
-			if (info.Tile.GetString("trigger") == "Spike")
+			var speedPct = Speed / data.MaxSpeed;
+			if (speedPct > PlayerData.WallDamageSpeedMin)
 			{
-				if (spikeImmuneCounter <= 0.0f)
-				{
-					Damage(data.SpikeDamage);
-					spikeImmuneCounter += data.SpikeImmuneDuration;
-				}
+				var damagePct = (speedPct - PlayerData.WallDamageSpeedMin) * (1.0f / (1.0f - PlayerData.WallDamageSpeedMin));
+				var damage = data.WallDamageMin + (int)(damagePct * (data.WallDamageMax - data.WallDamageMin));
+				Damage(damage, DamageType.Wall);
+
+				GameScene.Shaker.Bounce(Vector2.Normalize(-velocity) * 2.0f, 0.07f);
+				ShowHurtFrame(0.07f);
+				Asset.LoadSoundEffect("sfx/car_hit_hurt").Play();
+			}
+			else if (speedPct > 0.25f)
+			{
+				GameScene.Shaker.Bounce(Vector2.Normalize(-velocity) * 1.0f, 0.04f);
+				Asset.LoadSoundEffect("sfx/car_hit").Play();
+			}
+		}
+
+		private bool HandleTriggerCollision(HitInfo hit)
+		{
+			var trigger = hit.Tile.GetString("trigger");
+			if (trigger == "Spike")
+			{
+				Damage(data.SpikeDamage, DamageType.Spike);
+			}
+			else if (trigger == "Lava")
+			{
+				Damage(data.LavaDamage, DamageType.Lava);
 			}
 
 			return false;
+		}
+
+		private bool HandleEntityCollision(HitInfo hit)
+		{
+			var entity = (GameEntity)hit.Other;
+
+			var stop = entity.HandlePlayerHit(this, hit.DeltaX, hit.DeltaY);
+
+			if (entity is Enemy)
+			{
+				if (blood == 0)
+				{
+					blood++;
+					PlayIdleSprite();
+				}
+				else if (blood < 3 && Rand.NextFloat() < 0.33f)
+				{
+					blood++;
+					PlayIdleSprite();
+				}
+			}
+			else if (stop) HandleWallCollision();
+
+			return stop;
 		}
 
 		private void PlayIdleSprite()

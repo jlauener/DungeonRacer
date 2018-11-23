@@ -12,15 +12,23 @@ namespace DungeonRacer
 			Layer = Global.LayerUi;
 
 			bar = new Bar("gfx/ui/hp_bar");
-			bar.Percent = player.Hp / player.MaxHp;
+			bar.Percent = player.Hp / (float)player.MaxHp;
 			Add(bar);
 
-			player.OnModifyHp += HandleModifyHp;
+			player.OnDamage += HandleDamage;
+			player.OnHeal += HandleHeal;
 		}
 
-		private void HandleModifyHp(Player player, float delta)
+		private void HandleDamage(Player player, int value, DamageType damageType)
 		{
-			bar.Percent = player.Hp / player.MaxHp;
+			bar.Percent = player.Hp / (float)player.MaxHp;
 		}
+
+		private void HandleHeal(Player player, int value)
+		{
+			bar.Percent = player.Hp / (float)player.MaxHp;
+		}
+
+
 	}
 }

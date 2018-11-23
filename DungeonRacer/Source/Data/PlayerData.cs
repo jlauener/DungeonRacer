@@ -13,7 +13,11 @@ namespace DungeonRacer
 		public const float InvincibleDuration = 0.8f;
 		public const float InvincibleBlinkInterval = 0.15f;
 
-		public const float DamageThreshold = 0.6f;
+		public const float WallDamageSpeedMin = 0.6f;
+
+		public const float SpikeDamageSpeedMin = 10.0f;
+
+		public const int EntityDamageFeedbackMax = 30;
 
 		public string Name { get; }
 		public int Hp { get; private set; }
@@ -31,8 +35,14 @@ namespace DungeonRacer
 		public float TurnSpeed { get; private set; }
 		public float AngularFriction { get; private set; }
 
-		public float SpikeDamage { get; private set; }
+		public int WallDamageMin { get; private set; }
+		public int WallDamageMax { get; private set; }
+
+		public int SpikeDamage { get; private set; }
 		public float SpikeImmuneDuration { get; private set; }
+
+		public int LavaDamage { get; private set; }
+		public float LavaImmuneDuration { get; private set; }
 
 		private PlayerData(string name)
 		{
@@ -69,8 +79,15 @@ namespace DungeonRacer
 			p.BreakFriction = 0.98f;
 			p.TurnSpeed = 5.0f;
 			p.AngularFriction = 0.0f;
-			p.SpikeDamage = 5.0f;
+
+			p.WallDamageMin = 1;
+			p.WallDamageMax = 10;
+
+			p.SpikeDamage = 5;
 			p.SpikeImmuneDuration = 0.5f;
+
+			p.LavaDamage = 3;
+			p.LavaImmuneDuration = 0.25f;
 
 			p.PixelMask = new PixelMask("gfx/mask/player_mask");
 			p.Anim = new AnimatorData("gfx/game/player", 16, 16);

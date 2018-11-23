@@ -169,6 +169,16 @@
    <property name="entity" value="goblin"/>
   </properties>
  </tile>
+ <tile id="44">
+  <properties>
+   <property name="entity" value="minotaur"/>
+  </properties>
+ </tile>
+ <tile id="45">
+  <properties>
+   <property name="entity" value="ogre"/>
+  </properties>
+ </tile>
  <tile id="48">
   <properties>
    <property name="entity" value="pillar"/>

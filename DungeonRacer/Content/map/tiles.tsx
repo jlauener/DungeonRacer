@@ -235,6 +235,12 @@
    <property name="trigger" value="Spike"/>
   </properties>
  </tile>
+ <tile id="114">
+  <properties>
+   <property name="solidType" value="Full"/>
+   <property name="trigger" value="Lava"/>
+  </properties>
+ </tile>
  <tile id="144">
   <properties>
    <property name="solidType" value="PixelMask"/>

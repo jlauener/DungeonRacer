@@ -49,6 +49,8 @@
     <Compile Include="Source\Data\DungeonData.cs" />
     <Compile Include="Source\Data\RoomData.cs" />
     <Compile Include="Source\Entity\Ghost.cs" />
+    <Compile Include="Source\Entity\Ogre.cs" />
+    <Compile Include="Source\Entity\Goblin.cs" />
     <Compile Include="Source\Entity\LockedDoor.cs" />
     <Compile Include="Source\Entity\Enemy.cs" />
     <Compile Include="Source\Entity\Door.cs" />

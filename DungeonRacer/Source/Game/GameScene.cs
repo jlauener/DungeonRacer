@@ -34,8 +34,9 @@ namespace DungeonRacer
 			get { return state == State.Finished; }
 		}
 
-		private readonly Player player;
-		private readonly DungeonMap dungeon;
+		public static Player Player { get; private set; }
+		public static DungeonMap Map { get; private set;  }
+		public static Shaker Shaker { get; private set; }
 
 		private Room previousRoom;
 		private Room currentRoom;
@@ -43,8 +44,8 @@ namespace DungeonRacer
 
 		public GameScene(DungeonData dungeonData)
 		{
-			dungeon = new DungeonMap(dungeonData); ;
-			Add(dungeon);
+			Map = new DungeonMap(dungeonData); ;
+			Add(Map);
 
 			rooms = new Room[dungeonData.Width, dungeonData.Height];
 			dungeonData.IterateRooms((roomData) =>
@@ -59,8 +60,8 @@ namespace DungeonRacer
 			});
 			Camera.Position = GetCameraPosition(currentRoom);
 
-			player = new Player(PlayerData.Get("normal"), dungeon, dungeonData.PlayerStartTile.X, dungeonData.PlayerStartTile.Y, dungeonData.PlayerStartDirection);
-			Add(player);
+			Player = new Player(PlayerData.Get("normal"), Map, dungeonData.PlayerStartTile.X, dungeonData.PlayerStartTile.Y, dungeonData.PlayerStartDirection);
+			Add(Player);
 
 			var uiCamera = Engine.CreateCamera();
 			SetCamera(Global.LayerUi, uiCamera);
@@ -71,13 +72,15 @@ namespace DungeonRacer
 
 			Add(new TimeWidget(this, Engine.HalfWidth, 3));
 
-			Add(new CoinWidget(player, 2, 2));
-			Add(new HpWidget(player, 3, 19));
+			Add(new CoinWidget(Player, 2, 2));
+			Add(new HpWidget(Player, 3, 19));
 
 			Add(new RoomWidget(this, Engine.Width - 2, 1));
-			Add(new InventoryWidget(player, 202, 14));
+			Add(new InventoryWidget(Player, 202, 14));
 
-			//Add(new Shaker(Camera));
+			Shaker = new Shaker(Camera);
+			Add(Shaker);
+
 			Engine.Track(this, "state");
 			Engine.Track(this, "currentRoom");
 		}
@@ -114,7 +117,7 @@ namespace DungeonRacer
 
 			if (Input.WasPressed("reset"))
 			{
-				Engine.Scene = new GameScene(dungeon.Data);
+				Engine.Scene = new GameScene(Map.Data);
 			}
 
 			if (Input.WasPressed("debug_1"))
@@ -165,19 +168,19 @@ namespace DungeonRacer
 
 		private void CheckRoomSwitch()
 		{
-			if (player.Velocity.X < 0.0f && player.X < currentRoom.Left + Global.RoomSwitchMargin)
+			if (Player.Velocity.X < 0.0f && Player.X < currentRoom.Left + Global.RoomSwitchMargin)
 			{
 				GotoRoom(-1, 0);
 			}
-			else if (player.Velocity.X > 0.0f && player.X > currentRoom.Right - Global.RoomSwitchMargin)
+			else if (Player.Velocity.X > 0.0f && Player.X > currentRoom.Right - Global.RoomSwitchMargin)
 			{
 				GotoRoom(1, 0);
 			}
-			else if (player.Velocity.Y < 0.0f && player.Y < currentRoom.Top + Global.RoomSwitchMargin)
+			else if (Player.Velocity.Y < 0.0f && Player.Y < currentRoom.Top + Global.RoomSwitchMargin)
 			{
 				GotoRoom(0, -1);
 			}
-			else if (player.Velocity.Y > 0.0f && player.Y > currentRoom.Bottom - Global.RoomSwitchMargin)
+			else if (Player.Velocity.Y > 0.0f && Player.Y > currentRoom.Bottom - Global.RoomSwitchMargin)
 			{
 				GotoRoom(0, 1);
 			}
@@ -192,7 +195,7 @@ namespace DungeonRacer
 			var width = Global.RoomWidthPx - 3 * Global.TileSize;
 			var height = Global.RoomHeightPx - 3 * Global.TileSize;
 
-			if (player.InsideRect(x, y, width, height))
+			if (Player.InsideRect(x, y, width, height))
 			{
 				if (previousRoom != null) previousRoom.Leave();
 				currentRoom.Enter();
@@ -200,7 +203,7 @@ namespace DungeonRacer
 				state = State.Play;
 			}
 
-			if (!player.Alive)
+			if (!Player.Alive)
 			{
 				SetGameOver();
 			}
@@ -211,7 +214,7 @@ namespace DungeonRacer
 			CheckRoomSwitch();
 			if (!TimePaused) Time += deltaTime;
 
-			if (!player.Alive)
+			if (!Player.Alive)
 			{
 				SetGameOver();
 			}
@@ -231,13 +234,17 @@ namespace DungeonRacer
 
 			currentRoom = rooms[x, y];
 
-			player.Paused = true;
+			Player.Paused = true;
 			state = State.Switch;
 			var target = GetCameraPosition(currentRoom);
+			Shaker.StopAll();
+			Shaker.Enabled = false;
 			Tween(Camera, new { Position = target }, 0.5f).Ease(Ease.QuadInOut).OnComplete(() =>
 			 {
-				 player.Paused = false;
+				 Player.Paused = false;
 				 state = State.Enter;
+				 Shaker.ResetCameraOrigin();
+				 Shaker.Enabled = true;
 			 });
 
 			Asset.LoadSoundEffect("sfx/room_switch").Play();

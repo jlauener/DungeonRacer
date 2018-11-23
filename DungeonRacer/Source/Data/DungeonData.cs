@@ -15,7 +15,8 @@ namespace DungeonRacer
 	enum TriggerType
 	{
 		None,
-		Spike
+		Spike,
+		Lava
 	}
 
 	class DungeonTile
@@ -294,7 +295,7 @@ namespace DungeonRacer
 	//	Down = 0x08
 	//}
 
-	//private void RenderFlatTile(Tilemap tilemap, DungeonTile tile, int tid)
+	//private void RenderGroupTile(Tilemap tilemap, DungeonTile tile, int tid)
 	//{
 	//	var neighbors = GetNeighbors(tile);
 
