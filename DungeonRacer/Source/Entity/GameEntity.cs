@@ -33,16 +33,16 @@ namespace DungeonRacer
 	{
 		protected EntityArguments Args { get; }
 		public EntityData Data { get { return Args.Data; } }
-		protected Room Room { get; private set; }
+		//protected Room Room { get; private set; }
 		protected Direction Direction { get; set; }
+		protected int Hp;
 
 		protected Animator Sprite { get; }
 
 		private float damageOnHitCooldown;
 
-		public GameEntity(Room room, EntityArguments args)
+		public GameEntity(EntityArguments args)
 		{
-			Room = room;
 			Args = args;
 
 			if (args.Position != Vector2.Zero)
@@ -57,13 +57,14 @@ namespace DungeonRacer
 
 			Type = Data.Type;
 			Direction = args.Direction;
-			Layer = Data.Layer;
+			Hp = args.Data.Hp;
 			Width = Data.Hitbox.Width;
 			Height = Data.Hitbox.Height;
 			OriginX = Data.Hitbox.X;
 			OriginY = Data.Hitbox.Y;
 			Collider = Data.PixelMask;
 
+			Layer = Data.Layer;
 			Sprite = new Animator(Data.Anim);
 			Sprite.Origin = Data.SpriteOrigin;
 			Sprite.FlipX = Data.SpriteFlipX;
@@ -106,6 +107,25 @@ namespace DungeonRacer
 				if (Data.DamageOnHitSfx != null) Data.DamageOnHitSfx.Play();
 			}
 
+			if(Hp > 0)
+			{
+				if(--Hp == 0)
+				{
+					Collidable = false;
+					Sprite.Play("die", RemoveFromScene);
+
+					if (Data.Loot != null)
+					{
+						Scene.Add(Create(Data.Loot, Position + new Vector2(8.0f, 6.0f)));
+					}
+
+					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 4.0f);
+					Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
+
+					return false;
+				}
+			}
+
 			return Type == Global.TypeSolid;
 		}
 
@@ -116,35 +136,28 @@ namespace DungeonRacer
 
 		protected override void OnUpdate(float deltaTime)
 		{
-			if (Room.Active)
-			{
-				OnUpdateActive(deltaTime);
-				base.OnUpdate(deltaTime);
-				if (damageOnHitCooldown > 0.0f) damageOnHitCooldown -= deltaTime;
-			}
-			else
-			{
-				damageOnHitCooldown = 0.0f;
-			}
+			OnUpdateActive(deltaTime);
+			base.OnUpdate(deltaTime);
+			if (damageOnHitCooldown > 0.0f) damageOnHitCooldown -= deltaTime;
 		}
 
 		protected virtual void OnUpdateActive(float deltaTime)
 		{
 		}
 
-		public static GameEntity Create(Room room, EntityArguments args)
+		public static GameEntity Create(EntityArguments args)
 		{
-			return (GameEntity)Activator.CreateInstance(args.Data.Class, room, args);
+			return (GameEntity)Activator.CreateInstance(args.Data.Class, args);
 		}
 
-		public static GameEntity Create(Room room, EntityData data, int tileX, int tileY, Direction direction = Direction.Down)
+		public static GameEntity Create(EntityData data, int tileX, int tileY, Direction direction = Direction.Down)
 		{
-			return Create(room, new EntityArguments(data, tileX, tileY, direction));
+			return Create(new EntityArguments(data, tileX, tileY, direction));
 		}
 
-		public static GameEntity Create(Room room, string name, Vector2 position, Direction direction = Direction.Down)
+		public static GameEntity Create(EntityData data, Vector2 position, Direction direction = Direction.Down)
 		{
-			return Create(room, new EntityArguments(EntityData.Get(name), position, direction));
+			return Create(new EntityArguments(data, position, direction));
 		}
 	}
 }

@@ -203,6 +203,10 @@ namespace DungeonRacer
 
 		public void AddItem(ItemType item)
 		{
+			if(item == ItemType.Coin)
+			{
+				((GameScene)Scene).AddTime(1.0f);
+			}
 			inventory.TryGetValue(item, out int count);
 			inventory[item] = count + 1;
 			OnCollect?.Invoke(this, item);

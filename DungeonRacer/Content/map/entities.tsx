@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset name="entities" tilewidth="16" tileheight="16" tilecount="64" columns="8">
- <image source="entities.png" width="128" height="128"/>
+<tileset name="entities" tilewidth="16" tileheight="16" tilecount="128" columns="8">
+ <image source="entities.png" width="128" height="256"/>
  <tile id="0">
   <properties>
    <property name="direction" value="Left"/>
@@ -182,6 +182,50 @@
  <tile id="48">
   <properties>
    <property name="entity" value="pillar"/>
+  </properties>
+ </tile>
+ <tile id="64">
+  <properties>
+   <property name="solidType" value="Full"/>
+   <property name="tile" value="Wall"/>
+  </properties>
+ </tile>
+ <tile id="65">
+  <properties>
+   <property name="solidType" value="Full"/>
+   <property name="tile" value="Roof"/>
+  </properties>
+ </tile>
+ <tile id="72">
+  <properties>
+   <property name="tile" value="Roof"/>
+  </properties>
+ </tile>
+ <tile id="73">
+  <properties>
+   <property name="tile" value="Roof"/>
+  </properties>
+ </tile>
+ <tile id="74">
+  <properties>
+   <property name="solidType" value="None"/>
+   <property name="tile" value="Roof"/>
+  </properties>
+ </tile>
+ <tile id="75">
+  <properties>
+   <property name="tile" value="Roof"/>
+  </properties>
+ </tile>
+ <tile id="80">
+  <properties>
+   <property name="solidType" value="None"/>
+   <property name="tile" value="Roof"/>
+  </properties>
+ </tile>
+ <tile id="88">
+  <properties>
+   <property name="tile" value="Roof"/>
   </properties>
  </tile>
 </tileset>

@@ -8,14 +8,14 @@ namespace DungeonRacer
 {
 	class GameScene : Scene
 	{
-		public event Action<GameScene, Room> OnEnterRoom;
+		//public event Action<GameScene, Room> OnEnterRoom;
 
 		private enum State
 		{
 			Start,
 			Play,
-			Switch,
-			Enter,
+			//Switch,
+			//Enter,
 			Finished
 		}
 		private State state = State.Play;
@@ -24,10 +24,10 @@ namespace DungeonRacer
 		{
 			get
 			{
-				return state != State.Play || currentRoom.Data.Type != RoomType.Normal;
+				return state != State.Play; // || currentRoom.Data.Type != RoomType.Normal;
 			}
 		}
-		public float Time { get; private set; }
+		public float Time { get; private set; } = 30.0f;
 
 		public bool Finished
 		{
@@ -38,42 +38,51 @@ namespace DungeonRacer
 		public static DungeonMap Map { get; private set;  }
 		public static Shaker Shaker { get; private set; }
 
-		private Room previousRoom;
-		private Room currentRoom;
-		private readonly Room[,] rooms;
+		private Vector2 cameraPosition;
+
+		//private Room previousRoom;
+		//private Room currentRoom;
+		//private readonly Room[,] rooms;
 
 		public GameScene(DungeonData dungeonData)
 		{
 			Map = new DungeonMap(dungeonData); ;
 			Add(Map);
 
-			rooms = new Room[dungeonData.Width, dungeonData.Height];
-			dungeonData.IterateRooms((roomData) =>
+			dungeonData.IterateEntities((args) =>
 			{
-				var room = new Room(roomData, roomData.X, roomData.Y);
-				rooms[roomData.X, roomData.Y] = room;
-				Add(room);
-				if (roomData.Type == RoomType.Start)
-				{
-					currentRoom = room;
-				}
+				Add(GameEntity.Create(args));
 			});
-			Camera.Position = GetCameraPosition(currentRoom);
+
+			//rooms = new Room[dungeonData.Width, dungeonData.Height];
+			//dungeonData.IterateRooms((roomData) =>
+			//{
+			//	var room = new Room(roomData, roomData.X, roomData.Y);
+			//	rooms[roomData.X, roomData.Y] = room;
+			//	Add(room);
+			//	if (roomData.Type == RoomType.Start)
+			//	{
+			//		currentRoom = room;
+			//	}
+			//});
+			//Camera.Position = GetCameraPosition(currentRoom);
 
 			Player = new Player(PlayerData.Get("normal"), Map, dungeonData.PlayerStartTile.X, dungeonData.PlayerStartTile.Y, dungeonData.PlayerStartDirection);
 			Add(Player);
 
+			cameraPosition = Player.Position - new Vector2(Engine.HalfWidth, Engine.HalfHeight);
+
 			var uiCamera = Engine.CreateCamera();
 			SetCamera(Global.LayerUi, uiCamera);
 
-			var uiBack = new Sprite("gfx/ui/background");
-			uiBack.Layer = Global.LayerUi;
-			Add(uiBack);
+			//var uiBack = new Sprite("gfx/ui/background");
+			//uiBack.Layer = Global.LayerUi;
+			//Add(uiBack);
 
-			Add(new TimeWidget(this, Engine.HalfWidth, 3));
+			Add(new TimeWidget(this, Engine.HalfWidth, 0));
 
-			Add(new CoinWidget(Player, 2, 2));
-			Add(new HpWidget(Player, 3, 19));
+			Add(new CoinWidget(Player, Engine.Width - 2, 1));
+			Add(new HpWidget(Player, 2, 2));
 
 			Add(new RoomWidget(this, Engine.Width - 2, 1));
 			Add(new InventoryWidget(Player, 202, 14));
@@ -82,15 +91,15 @@ namespace DungeonRacer
 			Add(Shaker);
 
 			Engine.Track(this, "state");
-			Engine.Track(this, "currentRoom");
+			//Engine.Track(this, "currentRoom");
 		}
 
 		protected override void OnBegin()
 		{
 			base.OnBegin();
 
-			OnEnterRoom?.Invoke(this, currentRoom);
-			currentRoom.Enter();
+			//OnEnterRoom?.Invoke(this, currentRoom);
+			//currentRoom.Enter();
 		}
 
 		protected override void OnUpdate(float deltaTime)
@@ -102,13 +111,15 @@ namespace DungeonRacer
 				case State.Play:
 					UpdatePlay(deltaTime);
 					break;
-				case State.Enter:
-					UpdateEnter(deltaTime);
-					break;
-				case State.Finished:
-					UpdateFinished(deltaTime);
-					break;
+				//case State.Enter:
+				//	UpdateEnter(deltaTime);
+				//	break;
+				//case State.Finished:
+				//	UpdateFinished(deltaTime);
+				//	break;
 			}
+
+			Camera.Position = cameraPosition + Shaker.Offset;
 
 			if (Input.WasPressed("back"))
 			{
@@ -166,53 +177,74 @@ namespace DungeonRacer
 			}
 		}
 
-		private void CheckRoomSwitch()
+		public void AddTime(float value)
 		{
-			if (Player.Velocity.X < 0.0f && Player.X < currentRoom.Left + Global.RoomSwitchMargin)
-			{
-				GotoRoom(-1, 0);
-			}
-			else if (Player.Velocity.X > 0.0f && Player.X > currentRoom.Right - Global.RoomSwitchMargin)
-			{
-				GotoRoom(1, 0);
-			}
-			else if (Player.Velocity.Y < 0.0f && Player.Y < currentRoom.Top + Global.RoomSwitchMargin)
-			{
-				GotoRoom(0, -1);
-			}
-			else if (Player.Velocity.Y > 0.0f && Player.Y > currentRoom.Bottom - Global.RoomSwitchMargin)
-			{
-				GotoRoom(0, 1);
-			}
+			Time += value;
 		}
 
-		private void UpdateEnter(float deltaTime)
-		{
-			CheckRoomSwitch();
+		//private void CheckRoomSwitch()
+		//{
+		//	if (Player.Velocity.X < 0.0f && Player.X < currentRoom.Left + Global.RoomSwitchMargin)
+		//	{
+		//		GotoRoom(-1, 0);
+		//	}
+		//	else if (Player.Velocity.X > 0.0f && Player.X > currentRoom.Right - Global.RoomSwitchMargin)
+		//	{
+		//		GotoRoom(1, 0);
+		//	}
+		//	else if (Player.Velocity.Y < 0.0f && Player.Y < currentRoom.Top + Global.RoomSwitchMargin)
+		//	{
+		//		GotoRoom(0, -1);
+		//	}
+		//	else if (Player.Velocity.Y > 0.0f && Player.Y > currentRoom.Bottom - Global.RoomSwitchMargin)
+		//	{
+		//		GotoRoom(0, 1);
+		//	}
+		//}
 
-			var x = currentRoom.Left + Global.TileSize + Global.HalfTileSize;
-			var y = currentRoom.Top + Global.TileSize + Global.HalfTileSize;
-			var width = Global.RoomWidthPx - 3 * Global.TileSize;
-			var height = Global.RoomHeightPx - 3 * Global.TileSize;
+		//private void UpdateEnter(float deltaTime)
+		//{
+		//	CheckRoomSwitch();
 
-			if (Player.InsideRect(x, y, width, height))
-			{
-				if (previousRoom != null) previousRoom.Leave();
-				currentRoom.Enter();
-				OnEnterRoom?.Invoke(this, currentRoom);
-				state = State.Play;
-			}
+		//	var x = currentRoom.Left + Global.TileSize + Global.HalfTileSize;
+		//	var y = currentRoom.Top + Global.TileSize + Global.HalfTileSize;
+		//	var width = Global.RoomWidthPx - 3 * Global.TileSize;
+		//	var height = Global.RoomHeightPx - 3 * Global.TileSize;
 
-			if (!Player.Alive)
-			{
-				SetGameOver();
-			}
-		}
+		//	if (Player.InsideRect(x, y, width, height))
+		//	{
+		//		if (previousRoom != null) previousRoom.Leave();
+		//		currentRoom.Enter();
+		//		OnEnterRoom?.Invoke(this, currentRoom);
+		//		state = State.Play;
+		//	}
+
+		//	if (!Player.Alive)
+		//	{
+		//		SetGameOver();
+		//	}
+		//}
 
 		private void UpdatePlay(float deltaTime)
 		{
-			CheckRoomSwitch();
-			if (!TimePaused) Time += deltaTime;
+			var cameraEdge = new Vector2(96.0f, 96.0f); // Engine.Height / 2);
+
+			if (Player.X < cameraPosition.X + cameraEdge.X) cameraPosition.X = Player.X - cameraEdge.X;
+			else if (Player.X > cameraPosition.X + Engine.Width - cameraEdge.X) cameraPosition.X = Player.X - Engine.Width + cameraEdge.X;
+
+			if (Player.Y < cameraPosition.Y + cameraEdge.Y) cameraPosition.Y = Player.Y - cameraEdge.Y;
+			else if (Player.Y > cameraPosition.Y + Engine.Height - cameraEdge.Y) cameraPosition.Y = Player.Y - Engine.Height + cameraEdge.Y;
+
+			cameraPosition.X = Mathf.Clamp(cameraPosition.X, 0.0f, Map.Width - Engine.Width);
+			cameraPosition.Y = Mathf.Clamp(cameraPosition.Y, 0.0f, Map.Height - Engine.Height);
+
+			//cameraPosition.X = 8.0f;
+
+			//Shaker.Origin = position;
+			//Camera.Position = cameraPosition;
+
+			//CheckRoomSwitch();
+			if (!TimePaused) Time -= deltaTime;
 
 			if (!Player.Alive)
 			{
@@ -220,40 +252,40 @@ namespace DungeonRacer
 			}
 		}
 
-		private void GotoRoom(int dx, int dy)
-		{
-			previousRoom = currentRoom;
+		//private void GotoRoom(int dx, int dy)
+		//{
+		//	previousRoom = currentRoom;
 
-			var x = currentRoom.RoomX + dx;
-			var y = currentRoom.RoomY + dy;
-			if (x < 0 || y < 0 || x >= rooms.GetLength(0) || y >= rooms.GetLength(1))
-			{
-				SetGameFinished();
-				return;
-			}
+		//	var x = currentRoom.RoomX + dx;
+		//	var y = currentRoom.RoomY + dy;
+		//	if (x < 0 || y < 0 || x >= rooms.GetLength(0) || y >= rooms.GetLength(1))
+		//	{
+		//		SetGameFinished();
+		//		return;
+		//	}
 
-			currentRoom = rooms[x, y];
+		//	currentRoom = rooms[x, y];
 
-			Player.Paused = true;
-			state = State.Switch;
-			var target = GetCameraPosition(currentRoom);
-			Shaker.StopAll();
-			Shaker.Enabled = false;
-			Tween(Camera, new { Position = target }, 0.5f).Ease(Ease.QuadInOut).OnComplete(() =>
-			 {
-				 Player.Paused = false;
-				 state = State.Enter;
-				 Shaker.ResetCameraOrigin();
-				 Shaker.Enabled = true;
-			 });
+		//	Player.Paused = true;
+		//	state = State.Switch;
+		//	var target = GetCameraPosition(currentRoom);
+		//	Shaker.StopAll();
+		//	Shaker.Enabled = false;
+		//	Tween(Camera, new { Position = target }, 0.5f).Ease(Ease.QuadInOut).OnComplete(() =>
+		//	 {
+		//		 Player.Paused = false;
+		//		 state = State.Enter;
+		//		 Shaker.ResetCameraOrigin();
+		//		 Shaker.Enabled = true;
+		//	 });
 
-			Asset.LoadSoundEffect("sfx/room_switch").Play();
-		}
+		//	Asset.LoadSoundEffect("sfx/room_switch").Play();
+		//}
 
-		private Vector2 GetCameraPosition(Room room)
-		{
-			return new Vector2(room.X, room.Y - Global.UiHeight);
-		}
+		//private Vector2 GetCameraPosition(Room room)
+		//{
+		//	return new Vector2(room.X, room.Y - Global.UiHeight);
+		//}
 
 		private void SetGameFinished()
 		{
@@ -291,16 +323,16 @@ namespace DungeonRacer
 			}
 		}
 
-		protected override void OnRenderDebug(SpriteBatch spriteBatch)
-		{
-			base.OnRenderDebug(spriteBatch);
+		//protected override void OnRenderDebug(SpriteBatch spriteBatch)
+		//{
+		//	base.OnRenderDebug(spriteBatch);
 
-			var x = currentRoom.X * Global.RoomWidthPx + 2 * Global.TileSize;
-			var y = currentRoom.Y * Global.RoomHeightPx + 2 * Global.TileSize;
-			var width = Global.RoomWidthPx - 3 * Global.TileSize;
-			var height = Global.RoomHeightPx - 3 * Global.TileSize;
-			var rect = new RectangleF(x, y, width, height);
-			spriteBatch.DrawRectangle(rect, Color.White);
-		}
+		//	var x = currentRoom.X * Global.RoomWidthPx + 2 * Global.TileSize;
+		//	var y = currentRoom.Y * Global.RoomHeightPx + 2 * Global.TileSize;
+		//	var width = Global.RoomWidthPx - 3 * Global.TileSize;
+		//	var height = Global.RoomHeightPx - 3 * Global.TileSize;
+		//	var rect = new RectangleF(x, y, width, height);
+		//	spriteBatch.DrawRectangle(rect, Color.White);
+		//}
 	}
 }

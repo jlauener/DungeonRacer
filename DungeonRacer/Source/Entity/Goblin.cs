@@ -5,7 +5,7 @@ namespace DungeonRacer
 {
 	class Goblin : Enemy
 	{
-		public Goblin(Room room, EntityArguments args) : base(room, args)
+		public Goblin(EntityArguments args) : base(args)
 		{
 			velocity = DirectionUtils.GetNormal(Direction) * 20.0f;
 			UpdateSprite();

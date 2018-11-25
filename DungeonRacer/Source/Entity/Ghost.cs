@@ -12,7 +12,7 @@ namespace DungeonRacer
 		
 		private Vector2 velocity;
 
-		public Ghost(Room room, Vector2 position) : base(room, new EntityArguments(EntityData.Get("ghost"), position))
+		public Ghost(Vector2 position) : base(new EntityArguments(EntityData.Get("ghost"), position))
 		{
 			Sprite.Alpha = 0.3f;
 		}
@@ -36,11 +36,11 @@ namespace DungeonRacer
 
 			MoveBy(velocity * deltaTime);
 
-			if (velocity.X > 0.0f && Right > Room.Right - Global.TileSize) velocity.X = -velocity.X;
-			else if(velocity.X < 0.0f && Left < Room.Left + Global.TileSize) velocity.X = -velocity.X;
+			//if (velocity.X > 0.0f && Right > Room.Right - Global.TileSize) velocity.X = -velocity.X;
+			//else if(velocity.X < 0.0f && Left < Room.Left + Global.TileSize) velocity.X = -velocity.X;
 
-			if (velocity.Y > 0.0f && Bottom > Room.Bottom - Global.TileSize) velocity.Y = -velocity.Y;
-			else if (velocity.Y < 0.0f && Top < Room.Top + Global.TileSize) velocity.Y = -velocity.Y;
+			//if (velocity.Y > 0.0f && Bottom > Room.Bottom - Global.TileSize) velocity.Y = -velocity.Y;
+			//else if (velocity.Y < 0.0f && Top < Room.Top + Global.TileSize) velocity.Y = -velocity.Y;
 
 			Sprite.FlipX = velocity.X < 0.0f;
 		}

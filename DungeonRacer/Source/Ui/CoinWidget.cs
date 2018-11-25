@@ -11,8 +11,8 @@ namespace DungeonRacer
 		{
 			Layer = Global.LayerUi;
 
-			label = new Label(Global.Font, "$ " + player.GetItemCount(ItemType.Coin));
-			label.HAlign = TextAlign.Left;
+			label = new Label(Global.Font, player.GetItemCount(ItemType.Coin) + "$");
+			label.HAlign = TextAlign.Right;
 			Add(label);
 
 			player.OnCollect += HandleCollect;
@@ -22,7 +22,7 @@ namespace DungeonRacer
 		{
 			if (item != ItemType.Coin) return;
 
-			label.Text = "$ " + player.GetItemCount(ItemType.Coin);
+			label.Text = player.GetItemCount(ItemType.Coin) + "$";
 		}
 	}
 }

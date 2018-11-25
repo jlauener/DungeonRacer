@@ -5,11 +5,18 @@ using System.Collections.Generic;
 
 namespace DungeonRacer
 {
-	enum DungeonTileLayer
+	//enum DungeonTileLayer
+	//{
+	//	Ground,
+	//	Back,
+	//	Front
+	//}
+
+	enum DungeonTileType
 	{
 		Ground,
-		Back,
-		Front
+		Wall,
+		Roof
 	}
 
 	enum TriggerType
@@ -27,9 +34,10 @@ namespace DungeonRacer
 
 		public int Id { get; set; } = -1;
 		public int DisplayTid { get; set; } = -1;
+		public DungeonTileType Type { get; set; }
 		public TileSolidType SolidType { get; set; } = TileSolidType.None;
 		public TriggerType Trigger { get; set; } = TriggerType.None;
-		public DungeonTileLayer Layer { get; set; } = DungeonTileLayer.Back;
+		//public DungeonTileLayer Layer { get; set; } = DungeonTileLayer.Back;
 		public AnimatorData Anim { get; set; }
 
 		public DungeonTile(int x, int y, Dictionary<string, string> properties)
@@ -54,12 +62,13 @@ namespace DungeonRacer
 		public int HeightTiles { get; }
 		public Tileset Tileset { get; private set; }
 
-		public RoomData StartingRoom { get; private set; }
+		//public RoomData StartingRoom { get; private set; }
 		public DungeonTile PlayerStartTile { get; private set; }
 		public Direction PlayerStartDirection { get; private set; }
 
 		private readonly DungeonTile[,] tiles;
-		private readonly RoomData[,] rooms;
+		private readonly List<EntityArguments> entities = new List<EntityArguments>();
+		//private readonly RoomData[,] rooms;
 
 		private DungeonData(TiledMap map)
 		{
@@ -70,45 +79,44 @@ namespace DungeonRacer
 			Height = HeightTiles / Global.RoomHeight;
 			Tileset = new Tileset("gfx/game/" + map.Properties.GetString("tileset"), Global.TileSize, Global.TileSize);
 
-			rooms = new RoomData[Width, Height];
-			for (var ix = 0; ix < Width; ix++)
-			{
-				for(var iy = 0; iy < Height; iy++)
-				{
-					rooms[ix,iy] = new RoomData(ix, iy);
-				}
-			}
+			//rooms = new RoomData[Width, Height];
+			//for (var ix = 0; ix < Width; ix++)
+			//{
+			//	for(var iy = 0; iy < Height; iy++)
+			//	{
+			//		rooms[ix,iy] = new RoomData(ix, iy);
+			//	}
+			//}
 
 			tiles = new DungeonTile[WidthTiles, HeightTiles];
 
-			var tilesLayer = map.GetLayer<TiledMapTileLayer>("tiles");
-			var entitiesLayer = map.GetLayer<TiledMapTileLayer>("entities");
+			var layer = map.GetLayer<TiledMapTileLayer>("main");
 
 			for (var ix = 0; ix < WidthTiles; ix++)
 			{
 				for (var iy = 0; iy < HeightTiles; iy++)
 				{
-					var tileProperties = map.GetTilePropertiesAt(tilesLayer, ix, iy);
+					var tileProperties = map.GetTilePropertiesAt(layer, ix, iy);
 
 					var tile = new DungeonTile(ix, iy, tileProperties);
 					tiles[ix, iy] = tile;
 
-					var tiledTile = map.GetTileAt(tilesLayer, ix, iy);
-					if (tiledTile != null)
+					if (tileProperties == null)
 					{
-						tile.Id = tiledTile.Id;
-						tile.DisplayTid = tiledTile.Id;
+						continue;
 					}
 
-					if (tileProperties != null)
+					if (tileProperties.ContainsKey("tile"))
 					{
 						InitTile(tile, tileProperties);
 					}
-
-					var entityProperties = map.GetTilePropertiesAt(entitiesLayer, ix, iy);
-					if (entityProperties != null)
+					else if (tileProperties.ContainsKey("entity"))
 					{
-						InitEntity(tile, entityProperties);
+						InitEntity(tile, tileProperties);
+					}
+					else
+					{
+						Log.Error("Unknown tile type (no 'tile' or 'entity' property) at " + tile);
 					}
 				}
 			}
@@ -123,28 +131,22 @@ namespace DungeonRacer
 
 		private void InitTile(DungeonTile tile, TiledMapProperties properties)
 		{
-			if (properties.ContainsKey("solidType"))
+			if (Enum.TryParse(properties.GetString("tile"), out DungeonTileType type))
 			{
-				if (Enum.TryParse(properties.GetString("solidType"), out TileSolidType solidType))
-				{
-					tile.SolidType = solidType;
-				}
-				else
-				{
-					Log.Error("Unknown tile solid type '" + properties.GetString("solidType") + "' at " + tile);
-				}
+				tile.Type = type;
+			}
+			else
+			{
+				Log.Error("Unknown tile type '" + properties.GetString("type") + "' at " + tile);
 			}
 
-			if (properties.ContainsKey("layer"))
+			if (Enum.TryParse(properties.GetString("solidType"), out TileSolidType solidType))
 			{
-				if (Enum.TryParse(properties.GetString("layer"), out DungeonTileLayer layer))
-				{
-					tile.Layer = layer;
-				}
-				else
-				{
-					Log.Error("Unknown tile layer '" + properties.GetString("layer") + "' at " + tile);
-				}
+				tile.SolidType = solidType;
+			}
+			else
+			{
+				Log.Error("Unknown tile solid type '" + properties.GetString("solidType") + "' at " + tile);
 			}
 
 			if (properties.ContainsKey("trigger"))
@@ -189,17 +191,17 @@ namespace DungeonRacer
 				Log.Error("Unknown entity direction '" + properties.GetString("direction") + "' at " + tile);
 			}
 
-			var roomX = tile.X / Global.RoomWidth;
-			var roomY = tile.Y / Global.RoomHeight;
-			var room = GetRoomAt(roomX, roomY);
+			//var roomX = tile.X / Global.RoomWidth;
+			//var roomY = tile.Y / Global.RoomHeight;
+			//var room = GetRoomAt(roomX, roomY);
 
 			var entityName = properties.GetString("entity");
 			if (entityName == "player")
 			{
-				StartingRoom = room;
+				//StartingRoom = room;
 				PlayerStartTile = tile;
 				PlayerStartDirection = direction;
-				room.Type = RoomType.Start;
+				//room.Type = RoomType.Start;
 			}
 			else
 			{
@@ -210,7 +212,8 @@ namespace DungeonRacer
 				}
 				else
 				{
-					room.AddEntity(entity, tile.X, tile.Y, direction);
+					//room.AddEntity(entity, tile.X, tile.Y, direction);
+					entities.Add(new EntityArguments(entity, tile.X, tile.Y, direction));
 				}
 			}
 		}
@@ -221,20 +224,28 @@ namespace DungeonRacer
 			return tiles[x, y];
 		}
 
-		public RoomData GetRoomAt(int x, int y)
-		{
-			if (x < 0 || x >= Width || y < 0 || y >= Height) return null;
-			return rooms[x, y];
-		}
+		//public RoomData GetRoomAt(int x, int y)
+		//{
+		//	if (x < 0 || x >= Width || y < 0 || y >= Height) return null;
+		//	return rooms[x, y];
+		//}
 
-		public void IterateRooms(Action<RoomData> action)
+		//public void IterateRooms(Action<RoomData> action)
+		//{
+		//	for (var ix = 0; ix < Width; ix++)
+		//	{
+		//		for (var iy = 0; iy < Height; iy++)
+		//		{
+		//			action(rooms[ix, iy]);
+		//		}
+		//	}
+		//}
+
+		public void IterateEntities(Action<EntityArguments> action)
 		{
-			for (var ix = 0; ix < Width; ix++)
+			foreach (var entity in entities)
 			{
-				for (var iy = 0; iy < Height; iy++)
-				{
-					action(rooms[ix, iy]);
-				}
+				action(entity);
 			}
 		}
 
@@ -282,73 +293,4 @@ namespace DungeonRacer
 			return dungeons[name];
 		}
 	}
-
-	// some auto tile algo prototype... might be useful one day, or not...
-
-	//[Flags]
-	//enum TilePositions
-	//{
-	//	None = 0x00,
-	//	Left = 0x01,
-	//	Right = 0x02,
-	//	Up = 0x04,
-	//	Down = 0x08
-	//}
-
-	//private void RenderGroupTile(Tilemap tilemap, DungeonTile tile, int tid)
-	//{
-	//	var neighbors = GetNeighbors(tile);
-
-	//	// straight edges
-	//	if (SetTile(tilemap, tile, tid + 18, TilePositions.Up | TilePositions.Down | TilePositions.Left)) return;
-	//	if (SetTile(tilemap, tile, tid + 16, TilePositions.Up | TilePositions.Down | TilePositions.Right)) return;
-	//	if (SetTile(tilemap, tile, tid + 33, TilePositions.Left | TilePositions.Right | TilePositions.Up)) return;
-	//	if (SetTile(tilemap, tile, tid + 1, TilePositions.Left | TilePositions.Right | TilePositions.Down)) return;
-
-	//	// corners
-	//	if (SetTile(tilemap, tile, tid + 0, TilePositions.Right | TilePositions.Down)) return;
-	//	if (SetTile(tilemap, tile, tid + 2, TilePositions.Left | TilePositions.Down)) return;
-	//	if (SetTile(tilemap, tile, tid + 32, TilePositions.Right | TilePositions.Up)) return;
-	//	if (SetTile(tilemap, tile, tid + 34, TilePositions.Left | TilePositions.Up)) return;
-
-	//	// straight
-	//	if (SetTile(tilemap, tile, tid + 49, TilePositions.Up | TilePositions.Down)) return;
-	//	if (SetTile(tilemap, tile, tid + 48, TilePositions.Left | TilePositions.Right)) return;
-
-	//	tilemap.SetTileAt(tile.X, tile.Y, tid + 17);
-	//}
-
-	//private void RenderWallTile(Tilemap tilemap, DungeonTile tile, int tid)
-	//{
-	//	var neighbors = GetNeighbors(tile);
-
-	//	// corners
-	//	if (SetTile(tilemap, tile, tid + 0, TilePositions.Right | TilePositions.Down)) return;
-	//	if (SetTile(tilemap, tile, tid + 2, TilePositions.Left | TilePositions.Down)) return;
-	//	if (SetTile(tilemap, tile, tid + 32, TilePositions.Right | TilePositions.Up)) return;
-	//	if (SetTile(tilemap, tile, tid + 34, TilePositions.Left | TilePositions.Up)) return;
-
-	//	tilemap.SetTileAt(tile.X, tile.Y, tid + 17);
-	//}
-
-	//private bool SetTile(Tilemap tilemap, DungeonTile tile, int tid, TilePositions neighbors)
-	//{
-	//	if (GetNeighbors(tile) != neighbors)
-	//	{
-	//		return false;
-	//	}
-
-	//	tilemap.SetTileAt(tile.X, tile.Y, tid);
-	//	return true;
-	//}
-
-	//private TilePositions GetNeighbors(DungeonTile tile)
-	//{
-	//	TilePositions result = TilePositions.None;
-	//	if (GetTileTypeAt(tile.X - 1, tile.Y) == tile.Type) result |= TilePositions.Left;
-	//	if (GetTileTypeAt(tile.X + 1, tile.Y) == tile.Type) result |= TilePositions.Right;
-	//	if (GetTileTypeAt(tile.X, tile.Y - 1) == tile.Type) result |= TilePositions.Up;
-	//	if (GetTileTypeAt(tile.X, tile.Y + 1) == tile.Type) result |= TilePositions.Down;
-	//	return result;
-	//}
 }

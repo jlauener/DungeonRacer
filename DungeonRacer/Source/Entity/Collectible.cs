@@ -6,7 +6,7 @@ namespace DungeonRacer
 {
 	class Collectible : GameEntity
 	{
-		public Collectible(Room room, EntityArguments args) : base(room, args)
+		public Collectible(EntityArguments args) : base(args)
 		{
 		}
 
@@ -17,22 +17,27 @@ namespace DungeonRacer
 			if (Args.Position != Vector2.Zero)
 			{
 				Collidable = false;
-				var targetY = Y;
-				Y -= 8.0f;
-				Scene.Tween(this, new { Y = targetY}, 0.3f).Ease(Ease.BackIn).OnComplete(() =>
+				var targetY = Y - 16.0f;
+				//Y -= 8.0f;
+				Scene.Tween(this, new { Y = Y - 32.0f}, 0.3f).Ease(Ease.QuadOut).OnComplete(() =>
 				{
-					Collidable = true;
+					Collect(GameScene.Player);
 				});
 			}
 		}
 
-		public override bool HandlePlayerHit(Player player, int dx, int dy)
+		private void Collect(Player player)
 		{
 			Collidable = false;
 			Data.OnCollect?.Invoke(player);
 
 			if (Data.CollectSfx != null) Data.CollectSfx.Play();
 			Sprite.Play("collect", RemoveFromScene);
+		}
+
+		public override bool HandlePlayerHit(Player player, int dx, int dy)
+		{
+			Collect(player);
 			return false;
 		}
 	}

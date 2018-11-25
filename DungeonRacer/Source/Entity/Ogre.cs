@@ -9,7 +9,7 @@ namespace DungeonRacer
 		private const float SteerForce = 10.0f;
 		private const float DistanceToPlayerMin = 10.0f;
 
-		public Ogre(Room room, EntityArguments args) : base(room, args)
+		public Ogre(EntityArguments args) : base(args)
 		{
 		}
 

@@ -274,14 +274,14 @@
 /processorParam:TextureFormat=Color
 /build:gfx/ui/hp_bar.png
 
-#begin map/dungeon1.tmx
+#begin map/big_room.tmx
 /importer:
 /processor:
-/build:map/dungeon1.tmx
+/build:map/big_room.tmx
 
 #begin map/test.tmx
-/importer:TiledMapImporter
-/processor:TiledMapProcessor
+/importer:
+/processor:
 /build:map/test.tmx
 
 #begin sfx/car_break.wav

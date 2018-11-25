@@ -18,13 +18,11 @@ namespace DungeonRacer
 		private State state = State.Alive;
 
 		protected Vector2 velocity;
-		protected int hp;
 
 		private bool hasBlood = true;
 
-		public Enemy(Room room, EntityArguments args) : base(room, args)
+		public Enemy(EntityArguments args) : base(args)
 		{
-			hp = args.Data.Hp;
 			Collidable = false;
 			OnStartAlive();
 		}
@@ -43,7 +41,7 @@ namespace DungeonRacer
 					if (velocity.Length() < 8.0f)
 					{
 						velocity = Vector2.Zero;
-						if (hp == 0)
+						if (Hp == 0)
 						{
 							state = State.Dead;
 							Sprite.Play("dead");
@@ -95,29 +93,36 @@ namespace DungeonRacer
 		{
 			if (state == State.Alive)
 			{
-				hp--;
-				if (hp == 0)
+				Hp--;
+				if (Hp == 0)
 				{
+					if (Data.Loot != null)
+					{
+						Scene.Add(Create(Data.Loot, Position + new Vector2(0.0f, -4.0f)));
+					}
+
 					velocity = player.Velocity * 2.0f;
 
 					Sprite.Play("dead_bouncing");
 					player.AddTireBlood(1.0f);
 					GameScene.Map.DrawGroundEffect(X + dx * 6, Y + dy * 6, "blood" + Rand.NextInt(3), 1.0f, Rand.NextFloat(Mathf.Pi2));
-					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 4.0f);
+					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 7.0f);
 					Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
 				}
 				else
 				{
 					velocity = player.Velocity * 1.25f;
 
+					Sprite.Play("hurt");
 					player.AddTireBlood(0.25f);
-					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 2.0f);
+					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 4.0f);
 					GameScene.Map.DrawGroundEffect(X + dx * 4, Y + dy * 4, "blood_small" + Rand.NextInt(2), 1.0f, Rand.NextFloat(Mathf.Pi2));
+					Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
 				}
 
 				state = State.Bouncing;
 
-				return hp > 0;
+				return Hp > 0;
 			}
 
 			if (state == State.Dead)

@@ -15,10 +15,10 @@ namespace DungeonRacer
 			label.HAlign = TextAlign.Right;
 			Add(label);
 
-			gameScene.OnEnterRoom += (scene, room) =>
-			{
-				label.Text = room.RoomX + "-" + room.RoomY;
-			};
+			//gameScene.OnEnterRoom += (scene, room) =>
+			//{
+			//	label.Text = room.RoomX + "-" + room.RoomY;
+			//};
 		}
 	}
 }

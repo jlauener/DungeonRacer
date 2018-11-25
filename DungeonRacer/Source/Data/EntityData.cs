@@ -42,6 +42,8 @@ namespace DungeonRacer
 		public Action<Player> OnCollect { get; private set; }
 		public Sfx CollectSfx { get; private set; }
 
+		public EntityData Loot { get; private set; }
+
 		private EntityData(string name, int type, Type clazz)
 		{
 			Name = name;
@@ -122,21 +124,9 @@ namespace DungeonRacer
 
 			EntityData e;
 
-			e = Create("block").SetHitbox(Global.TileSize, Global.TileSize);
-			e.AddAnim("idle", 0);
-
-			e = Create("push_block").SetHitbox(Global.TileSize, Global.TileSize);			
-			e.Pushable = true;
-			e.AddAnim("idle", 16);
-			e.AddAnim("die", AnimatorMode.OneShot, 0.1f, 34, 35, 36);
-
-			e = Create("pillar").SetPixelMask("edged_square");
-			e.CreateAnimator("entities_16_32").AddAnim("idle", 1);
-			e.SpriteOrigin = new Vector2(0.0f, Global.TileSize);
-
 			e = CreateItem("coin");
 			e.OnCollect = (player) => player.AddItem(ItemType.Coin);
-			e.AddAnim("idle", AnimatorMode.Loop, 0.2f, 64, 65, 66, 67).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
+			e.AddAnim("idle", AnimatorMode.Loop, 0.03f, 64, 65, 66, 67).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
 			e.CollectSfx = new Sfx("sfx/item_coin");
 
 			e = CreateItem("key_a");
@@ -164,8 +154,23 @@ namespace DungeonRacer
 			//e.AddAnim("idle", 81).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
 			//e.CollectSfx = new Sfx("sfx/key"); // TODO sfx
 
+			e = Create("block").SetHitbox(Global.TileSize, Global.TileSize);
+			e.AddAnim("idle", 0);
+
+			e = Create("push_block").SetHitbox(Global.TileSize, Global.TileSize);
+			//e.Pushable = true;
+			e.Hp = 1;
+			e.Loot = Get("coin");
+			e.AddAnim("idle", 16);
+			e.AddAnim("die", AnimatorMode.OneShot, 0.1f, 34, 35, 36);
+
+			e = Create("pillar").SetPixelMask("edged_square");
+			e.CreateAnimator("entities_16_32").AddAnim("idle", 1);
+			e.SpriteOrigin = new Vector2(0.0f, Global.TileSize);
+
 			e = Create("goblin", Global.TypeEnemy, typeof(Goblin));
 			e.Hp = 1;
+			e.Loot = Get("coin");
 			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
 			e.SetHitbox(8, 8, 4, 8);
 
@@ -173,11 +178,26 @@ namespace DungeonRacer
 			e.AddAnim("walk_down", AnimatorMode.Loop, 0.25f, 192, 193);
 			e.AddAnim("walk_up", AnimatorMode.Loop, 0.25f, 194, 195);
 			e.AddAnim("walk_horiz", AnimatorMode.Loop, 0.25f, 196, 197);
+			e.AddAnim("hurt", 210);
 			e.AddAnim("dead_bouncing", AnimatorMode.Loop, 0.15f, 210, 211, 212, 213);
 			e.AddAnim("dead", 199);
 
-			e = Create("ogre", Global.TypeEnemy, typeof(Ogre));
+			e = Create("minotaur", Global.TypeEnemy, typeof(Minotaur));
 			e.Hp = 3;
+			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
+			e.SetHitbox(8, 8, 4, 8);
+			e.Loot = Get("key_a");
+
+			e.SpriteOrigin = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
+			e.AddAnim("walk", AnimatorMode.Loop, 0.25f, 226, 227);
+			e.AddAnim("shoot_warning", 228);
+			e.AddAnim("shoot", AnimatorMode.OneShot, 0.4f, 229);
+			e.AddAnim("hurt", 231);
+			e.AddAnim("dead_bouncing", AnimatorMode.Loop, 0.15f, 231, 232, 233, 234);
+			e.AddAnim("dead", 230);
+
+			e = Create("ogre", Global.TypeEnemy, typeof(Ogre));
+			e.Hp = 10;
 			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
 			e.SetHitbox(8, 8, 4, 8);
 

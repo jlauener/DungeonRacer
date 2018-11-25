@@ -74,8 +74,8 @@ namespace DungeonRacer
 
 		protected override void OnStart()
 		{
-		//	Scene = new GameScene(DungeonData.Get("test"));
-			Scene = new GameScene(DungeonData.Get("dungeon1"));
+			//Scene = new GameScene(DungeonData.Get("test"));
+			Scene = new GameScene(DungeonData.Get("big_room"));
 		}
 
 		private void HandleViewportChanged(int width, int height, bool fullscreen)
