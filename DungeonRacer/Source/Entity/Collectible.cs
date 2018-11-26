@@ -35,10 +35,10 @@ namespace DungeonRacer
 			Sprite.Play("collect", RemoveFromScene);
 		}
 
-		public override bool HandlePlayerHit(Player player, int dx, int dy)
+		public override HitFlags HandlePlayerHit(Player player, int dx, int dy)
 		{
 			Collect(player);
-			return false;
+			return HitFlags.Nothing;
 		}
 	}
 }

@@ -15,9 +15,9 @@ namespace DungeonRacer
 			Sprite.Play("close", () => Sprite.Play("idle"));
 		}
 
-		public override bool HandlePlayerHit(Player player, int dx, int dy)
+		public override HitFlags HandlePlayerHit(Player player, int dx, int dy)
 		{
-			return true;
+			return HitFlags.Stop;
 		}
 
 		public void Open()

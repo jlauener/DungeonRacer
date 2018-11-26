@@ -29,6 +29,14 @@ namespace DungeonRacer
 		}
 	}
 
+	[Flags]
+	enum HitFlags
+	{
+		Nothing = 0x00,
+		Stop = 0x01,
+		Blood = 0x02
+	}
+
 	class GameEntity : Entity
 	{
 		protected EntityArguments Args { get; }
@@ -82,7 +90,7 @@ namespace DungeonRacer
 			UpdateSortOrder();
 		}
 
-		public virtual bool HandlePlayerHit(Player player, int dx, int dy)
+		public virtual HitFlags HandlePlayerHit(Player player, int dx, int dy)
 		{
 			if (Data.Pushable)
 			{
@@ -97,7 +105,7 @@ namespace DungeonRacer
 					Collidable = false;
 					Sprite.Play("die", RemoveFromScene);
 				}
-				return false;
+				return HitFlags.Nothing;
 			}
 
 			if (Data.DamageOnHit > 0.0f && damageOnHitCooldown <= 0.0f)
@@ -109,7 +117,9 @@ namespace DungeonRacer
 
 			if(Hp > 0)
 			{
-				if(--Hp == 0)
+				if (player.Speed < PlayerData.MinimumHitSpeed) return HitFlags.Stop;
+
+				if (--Hp == 0)
 				{
 					Collidable = false;
 					Sprite.Play("die", RemoveFromScene);
@@ -122,11 +132,11 @@ namespace DungeonRacer
 					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 4.0f);
 					Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
 
-					return false;
+					return HitFlags.Nothing;
 				}
 			}
 
-			return Type == Global.TypeSolid;
+			return Type == Global.TypeSolid ? HitFlags.Stop : HitFlags.Nothing;
 		}
 
 		protected void UpdateSortOrder(int offset = 1)

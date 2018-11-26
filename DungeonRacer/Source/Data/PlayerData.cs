@@ -19,6 +19,11 @@ namespace DungeonRacer
 
 		public const int EntityDamageFeedbackMax = 30;
 
+		public const float MinimumHitSpeed = 20.0f;
+
+		public const int BloodFrontMax = 4;
+		public const int BloodBackMax = 4;
+
 		public string Name { get; }
 		public int Hp { get; private set; }
 		public PixelMask PixelMask { get; private set; }
@@ -92,10 +97,15 @@ namespace DungeonRacer
 			p.PixelMask = Asset.GetPixelMask("circle_small");
 			p.Anim = new AnimatorData("gfx/game/player", 16, 16);
 			p.Anim.Add("idle", 0);
-			p.Anim.Add("blood1", 1);
-			p.Anim.Add("blood2", 2);
-			p.Anim.Add("blood3", 3);
 			p.Anim.Add("hurt", 7);
+			p.Anim.Add("blood_front_1", 8);
+			p.Anim.Add("blood_front_2", 9);
+			p.Anim.Add("blood_front_3", 10);
+			p.Anim.Add("blood_front_4", 11);
+			p.Anim.Add("blood_back_1", 16);
+			p.Anim.Add("blood_back_2", 17);
+			p.Anim.Add("blood_back_3", 18);
+			p.Anim.Add("blood_back_4", 19);
 		}
 
 		public static PlayerData Get(string name)

@@ -68,7 +68,7 @@ namespace DungeonRacer
 
 		protected virtual void OnUpdateAlive(float deltaTime)
 		{
-			MoveBy(velocity * deltaTime, Global.TypeMap, Global.TypeSolid);
+			MoveBy(velocity * deltaTime, Global.TypeMap, Global.TypeSolid, Global.TypePlayer);
 			UpdateSortOrder();
 		}
 
@@ -89,10 +89,12 @@ namespace DungeonRacer
 			return true;
 		}
 
-		public override bool HandlePlayerHit(Player player, int dx, int dy)
+		public override HitFlags HandlePlayerHit(Player player, int dx, int dy)
 		{
 			if (state == State.Alive)
 			{
+				if (player.Speed < PlayerData.MinimumHitSpeed) return HitFlags.Stop;
+
 				Hp--;
 				if (Hp == 0)
 				{
@@ -102,27 +104,29 @@ namespace DungeonRacer
 					}
 
 					velocity = player.Velocity * 2.0f;
+					state = State.Bouncing;
 
 					Sprite.Play("dead_bouncing");
 					player.AddTireBlood(1.0f);
 					GameScene.Map.DrawGroundEffect(X + dx * 6, Y + dy * 6, "blood" + Rand.NextInt(3), 1.0f, Rand.NextFloat(Mathf.Pi2));
 					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 7.0f);
 					Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
+
+					return HitFlags.Blood;
 				}
 				else
 				{
 					velocity = player.Velocity * 1.25f;
+					state = State.Bouncing;
 
 					Sprite.Play("hurt");
 					player.AddTireBlood(0.25f);
 					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 4.0f);
 					GameScene.Map.DrawGroundEffect(X + dx * 4, Y + dy * 4, "blood_small" + Rand.NextInt(2), 1.0f, Rand.NextFloat(Mathf.Pi2));
 					Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
+
+					return HitFlags.Stop;
 				}
-
-				state = State.Bouncing;
-
-				return Hp > 0;
 			}
 
 			if (state == State.Dead)
@@ -140,7 +144,7 @@ namespace DungeonRacer
 				velocity = player.Velocity * 0.22f;
 			}
 
-			return false;
+			return HitFlags.Nothing;
 		}
 	}
 }

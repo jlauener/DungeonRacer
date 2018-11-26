@@ -39,7 +39,8 @@ namespace DungeonRacer
 		private float enginePct;
 		private float driftPct;
 		private float tireBloodPct;
-		private int blood;
+		private int bloodFront;
+		private int bloodBack;
 
 		private enum State
 		{
@@ -76,7 +77,11 @@ namespace DungeonRacer
 		private PlayerData data;
 		private readonly Dictionary<ItemType, int> inventory = new Dictionary<ItemType, int>();
 
+		private readonly Renderable sortNode;
 		private readonly Animator sprite;
+		private readonly Animator bloodFrontSprite;
+		private readonly Animator bloodBackSprite;
+		private readonly Animator hurtSprite;
 		private readonly Blinker blinker;
 		private readonly DungeonMap dungeon;
 
@@ -102,12 +107,27 @@ namespace DungeonRacer
 			Hp = data.Hp;
 			MaxHp = data.Hp;
 
+			sortNode = new Renderable();
+			Add(sortNode);
+
 			sprite = new Animator(data.Anim);
 			sprite.CenterOrigin();
-			PlayIdleSprite();
-			Add(sprite);
+			sprite.Play("idle");
+			sortNode.Add(sprite);
 
-			blinker = new Blinker(PlayerData.InvincibleBlinkInterval, sprite);
+			bloodFrontSprite = new Animator(data.Anim);
+			bloodFrontSprite.CenterOrigin();
+			sortNode.Add(bloodFrontSprite);
+
+			bloodBackSprite = new Animator(data.Anim);
+			bloodBackSprite.CenterOrigin();
+			sortNode.Add(bloodBackSprite);
+
+			hurtSprite = new Animator(data.Anim);
+			hurtSprite.CenterOrigin();
+			sortNode.Add(hurtSprite);
+
+			blinker = new Blinker(PlayerData.InvincibleBlinkInterval, sortNode);
 			blinker.Enabled = false;
 			Add(blinker);
 
@@ -131,6 +151,7 @@ namespace DungeonRacer
 			Engine.Track(this, "velocity");
 			Engine.Track(this, "bounceVelocity");
 			Engine.Track(this, "driftAngle");
+			Engine.Track(this, "forward");
 		}
 
 		public void Damage(int value, DamageType damageType)
@@ -190,8 +211,8 @@ namespace DungeonRacer
 		private void ShowHurtFrame(float duration)
 		{
 			if (hurtFrameCallback != null) hurtFrameCallback.Cancel();
-			sprite.Play("hurt");
-			hurtFrameCallback = Scene.Callback(duration, PlayIdleSprite);
+			hurtSprite.Play("hurt");
+			hurtFrameCallback = Scene.Callback(duration, hurtSprite.Stop);
 		}
 
 		public void Heal(int value)
@@ -298,7 +319,10 @@ namespace DungeonRacer
 			}
 
 			sprite.Rotation = actualAngle;
-			sprite.SortOrder = Mathf.Floor(Bottom) * 10;
+			bloodFrontSprite.Rotation = actualAngle;
+			bloodBackSprite.Rotation = actualAngle;
+			hurtSprite.Rotation = actualAngle;
+			sortNode.SortOrder = Mathf.Floor(Bottom) * 10;
 
 			base.OnUpdate(deltaTime);
 
@@ -332,8 +356,6 @@ namespace DungeonRacer
 
 			if (spikeImmuneCounter > 0.0f) spikeImmuneCounter -= deltaTime;
 			if (lavaImmuneCounter > 0.0f) lavaImmuneCounter -= deltaTime;
-
-			var forward = Vector2.Dot(velocity, Vector2.UnitX.Rotate(Angle));
 
 			if (Input.IsDown("a") || Input.IsDown("up"))
 			{
@@ -506,29 +528,41 @@ namespace DungeonRacer
 		{
 			var entity = (GameEntity)hit.Other;
 
-			var stop = entity.HandlePlayerHit(this, hit.DeltaX, hit.DeltaY);
+			var flags = entity.HandlePlayerHit(this, hit.DeltaX, hit.DeltaY);
 
-			if (entity is Enemy)
+			if ((flags & HitFlags.Blood) > 0)
 			{
-				if (blood == 0)
+				if (forward > 0.0f)
 				{
-					blood++;
-					PlayIdleSprite();
+					if (bloodFront == 0)
+					{
+						bloodFront++;
+						bloodFrontSprite.Play("blood_front_" + bloodFront);
+					}
+					else if (bloodFront < PlayerData.BloodFrontMax && Rand.NextFloat() < 0.33f)
+					{
+						bloodFront++;
+						bloodFrontSprite.Play("blood_front_" + bloodFront);
+					}
 				}
-				else if (blood < 3 && Rand.NextFloat() < 0.33f)
+				else
 				{
-					blood++;
-					PlayIdleSprite();
+					if (bloodBack == 0)
+					{
+						bloodBack++;
+						bloodBackSprite.Play("blood_back_" + bloodBack);
+					}
+					else if (bloodBack < PlayerData.BloodBackMax && Rand.NextFloat() < 0.33f)
+					{
+						bloodBack++;
+						bloodBackSprite.Play("blood_back_" + bloodBack);
+					}
 				}
 			}
-			else if (stop) HandleWallCollision();
 
+			var stop = (flags & HitFlags.Stop) > 0;
+			if (stop) HandleWallCollision();
 			return stop;
-		}
-
-		private void PlayIdleSprite()
-		{
-			sprite.Play(blood == 0 ? "idle" : "blood" + blood);
 		}
 
 		protected override void OnRenderDebug(SpriteBatch spriteBatch)
