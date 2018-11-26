@@ -58,7 +58,10 @@ namespace DungeonRacer
 			Input.Define("debug_8", Keys.D8);
 			Input.Define("debug_9", Keys.D9);
 			Input.Define("debug_10", Keys.D0);
-			//#endif
+//#endif
+
+			Asset.AddPixelMask("circle_small", "mask/circle_small");
+			Asset.AddPixelMask("circle_big", "mask/circle_big");
 
 			EntityData.Init();
 			PlayerData.Init();
@@ -74,8 +77,7 @@ namespace DungeonRacer
 
 		protected override void OnStart()
 		{
-			//Scene = new GameScene(DungeonData.Get("test"));
-			Scene = new GameScene(DungeonData.Get("big_room"));
+			Scene = new GameScene(DungeonData.Get("test"));
 		}
 
 		private void HandleViewportChanged(int width, int height, bool fullscreen)

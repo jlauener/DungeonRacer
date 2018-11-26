@@ -39,8 +39,8 @@
 /build:font/04b_0.png
 
 #begin font/04b_19.fnt
-/importer:
-/processor:
+/importer:BitmapFontImporter
+/processor:BitmapFontProcessor
 /build:font/04b_19.fnt
 
 #begin font/04b_19_0.png
@@ -73,8 +73,8 @@
 /build:font/04b03_0.png
 
 #begin font/joystix.fnt
-/importer:
-/processor:
+/importer:BitmapFontImporter
+/processor:BitmapFontProcessor
 /build:font/joystix.fnt
 
 #begin font/joystix.png
@@ -90,8 +90,8 @@
 /build:font/joystix.png
 
 #begin font/press_start_2p.fnt
-/importer:
-/processor:
+/importer:BitmapFontImporter
+/processor:BitmapFontProcessor
 /build:font/press_start_2p.fnt
 
 #begin font/press_start_2p_0.png
@@ -214,42 +214,6 @@
 /processorParam:TextureFormat=Color
 /build:gfx/game/tileset.png
 
-#begin gfx/mask/entity_mask.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:gfx/mask/entity_mask.png
-
-#begin gfx/mask/player_mask.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:gfx/mask/player_mask.png
-
-#begin gfx/mask/tileset_mask.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:gfx/mask/tileset_mask.png
-
 #begin gfx/ui/background.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -274,15 +238,46 @@
 /processorParam:TextureFormat=Color
 /build:gfx/ui/hp_bar.png
 
-#begin map/big_room.tmx
-/importer:
-/processor:
-/build:map/big_room.tmx
-
 #begin map/test.tmx
-/importer:
-/processor:
+/importer:TiledMapImporter
+/processor:TiledMapProcessor
 /build:map/test.tmx
+
+#begin mask/circle_big.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:mask/circle_big.png
+
+#begin mask/circle_small.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:mask/circle_small.png
+
+#begin mask/tileset.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:mask/tileset.png
 
 #begin sfx/car_break.wav
 /importer:WavImporter
@@ -313,12 +308,6 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:sfx/car_hit_hurt.wav
-
-#begin sfx/car_start.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:sfx/car_start.wav
 
 #begin sfx/enemy_die.wav
 /importer:WavImporter
@@ -361,10 +350,4 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:sfx/room_clear.wav
-
-#begin sfx/room_switch.wav
-/importer:WavImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:sfx/room_switch.wav
 

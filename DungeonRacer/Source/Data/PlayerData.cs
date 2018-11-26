@@ -89,7 +89,7 @@ namespace DungeonRacer
 			p.LavaDamage = 3;
 			p.LavaImmuneDuration = 0.25f;
 
-			p.PixelMask = new PixelMask("gfx/mask/player_mask");
+			p.PixelMask = Asset.GetPixelMask("circle_small");
 			p.Anim = new AnimatorData("gfx/game/player", 16, 16);
 			p.Anim.Add("idle", 0);
 			p.Anim.Add("blood1", 1);

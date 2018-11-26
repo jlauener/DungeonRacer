@@ -2,6 +2,7 @@
 using System;
 using MonoPunk;
 using System.Collections.Generic;
+using System.IO;
 
 namespace DungeonRacer
 {
@@ -30,20 +31,21 @@ namespace DungeonRacer
 	{
 		public int X { get; }
 		public int Y { get; }
+		public int Id { get; }
 		public Dictionary<string, string> Properties { get; }
 
-		public int Id { get; set; } = -1;
 		public int DisplayTid { get; set; } = -1;
 		public DungeonTileType Type { get; set; }
 		public TileSolidType SolidType { get; set; } = TileSolidType.None;
-		public TriggerType Trigger { get; set; } = TriggerType.None;
-		//public DungeonTileLayer Layer { get; set; } = DungeonTileLayer.Back;
-		public AnimatorData Anim { get; set; }
+		public PixelMask PixelMask { get; set; }
+		public string Trigger { get; set; }
+		public string Anim { get; set; }
 
-		public DungeonTile(int x, int y, Dictionary<string, string> properties)
+		public DungeonTile(int x, int y, int id, Dictionary<string, string> properties)
 		{
 			X = x;
 			Y = y;
+			Id = id;
 			Properties = properties;
 		}
 
@@ -70,9 +72,9 @@ namespace DungeonRacer
 		private readonly List<EntityArguments> entities = new List<EntityArguments>();
 		//private readonly RoomData[,] rooms;
 
-		private DungeonData(TiledMap map)
+		private DungeonData(TiledMap map, string name)
 		{
-			Name = map.Properties.GetString("name");
+			Name = name;
 			WidthTiles = map.Width;
 			HeightTiles = map.Height;
 			Width = WidthTiles / Global.RoomWidth;
@@ -96,28 +98,19 @@ namespace DungeonRacer
 			{
 				for (var iy = 0; iy < HeightTiles; iy++)
 				{
-					var tileProperties = map.GetTilePropertiesAt(layer, ix, iy);
+					var tid = -1;
+					if (layer.TryGetTile(ix, iy, out TiledMapTile? tiledTile))
+					{
+						tid = tiledTile.Value.GlobalIdentifier;
+					}
 
-					var tile = new DungeonTile(ix, iy, tileProperties);
+					var properties = map.GetTilePropertiesAt(layer, ix, iy);
+					var tile = new DungeonTile(ix, iy, tid, properties);
+					if (properties != null)
+					{
+						InitTile(tile, properties);
+					}
 					tiles[ix, iy] = tile;
-
-					if (tileProperties == null)
-					{
-						continue;
-					}
-
-					if (tileProperties.ContainsKey("tile"))
-					{
-						InitTile(tile, tileProperties);
-					}
-					else if (tileProperties.ContainsKey("entity"))
-					{
-						InitEntity(tile, tileProperties);
-					}
-					else
-					{
-						Log.Error("Unknown tile type (no 'tile' or 'entity' property) at " + tile);
-					}
 				}
 			}
 
@@ -131,16 +124,7 @@ namespace DungeonRacer
 
 		private void InitTile(DungeonTile tile, TiledMapProperties properties)
 		{
-			if (Enum.TryParse(properties.GetString("tile"), out DungeonTileType type))
-			{
-				tile.Type = type;
-			}
-			else
-			{
-				Log.Error("Unknown tile type '" + properties.GetString("type") + "' at " + tile);
-			}
-
-			if (Enum.TryParse(properties.GetString("solidType"), out TileSolidType solidType))
+			if (Enum.TryParse(properties.GetString("solidType", "None"), out TileSolidType solidType))
 			{
 				tile.SolidType = solidType;
 			}
@@ -149,32 +133,30 @@ namespace DungeonRacer
 				Log.Error("Unknown tile solid type '" + properties.GetString("solidType") + "' at " + tile);
 			}
 
-			if (properties.ContainsKey("trigger"))
+			if (properties.ContainsKey("tile"))
 			{
-				if (Enum.TryParse(properties.GetString("trigger"), out TriggerType trigger))
+				if (Enum.TryParse(properties.GetString("tile"), out DungeonTileType type))
 				{
-					tile.Trigger = trigger;
+					tile.Type = type;
 				}
 				else
 				{
-					Log.Error("Unknown tile trigger '" + properties.GetString("trigger") + "' at " + tile);
+					Log.Error("Unknown tile type '" + properties.GetString("type") + "' at " + tile);
 				}
 			}
 
-			if (properties.GetBool("animated"))
-			{
-				var frameCount = properties.GetInt("animFrameCount");
-				var interval = properties.GetFloat("animInterval");
-				var frames = new int[frameCount];
-				for (var i = 0; i < frameCount; i++) frames[i] = tile.DisplayTid + i;
-				// TODO don't create a new AnimatorData each time
-				tile.Anim = new AnimatorData(Tileset);
-				tile.Anim.Add("idle", AnimatorMode.Loop, interval, frames);
-			}
+			tile.Trigger = properties.GetString("trigger");
+
+			tile.Anim = properties.GetString("anim");
 
 			if (properties.ContainsKey("displayTid"))
 			{
 				tile.DisplayTid = properties.GetInt("displayTid");
+			}
+
+			if (properties.ContainsKey("entity"))
+			{
+				InitEntity(tile, properties);
 			}
 		}
 
@@ -262,7 +244,7 @@ namespace DungeonRacer
 
 		public override string ToString()
 		{
-			return "[DungeonData Name='" + Name + " Width=" + WidthTiles + " Height=" + HeightTiles + "]";
+			return "[DungeonData Name='" + Name + "' Width=" + WidthTiles + " Height=" + HeightTiles + "]";
 		}
 
 		private static readonly Dictionary<string, DungeonData> dungeons = new Dictionary<string, DungeonData>();
@@ -274,12 +256,12 @@ namespace DungeonRacer
 			{
 				if (map.Properties.GetString("type") == "dungeon")
 				{
-					var name = map.Properties.GetString("name");
+					var name = Path.GetFileName(map.Name);
 					if (dungeons.ContainsKey(name))
 					{
 						throw new Exception("Dungeon '" + name + "' already exists.");
 					}
-					dungeons[name] = new DungeonData(map);
+					dungeons[name] = new DungeonData(map, name);
 				}
 			}
 		}

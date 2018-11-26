@@ -120,8 +120,6 @@ namespace DungeonRacer
 			Asset.AddTileset("entities_16_32", "gfx/game/entities", 16, 32);
 			Asset.AddTileset("entities_32_16", "gfx/game/entities", 32, 16);
 
-			Asset.AddPixelMask("edged_square", "gfx/mask/entity_mask");
-
 			EntityData e;
 
 			e = CreateItem("coin");
@@ -154,17 +152,17 @@ namespace DungeonRacer
 			//e.AddAnim("idle", 81).AddAnim("collect", AnimatorMode.OneShot, 0.08f, 32, 33);
 			//e.CollectSfx = new Sfx("sfx/key"); // TODO sfx
 
-			e = Create("block").SetHitbox(Global.TileSize, Global.TileSize);
+			e = Create("block").SetPixelMask("circle_big"); //.SetHitbox(Global.TileSize, Global.TileSize);
 			e.AddAnim("idle", 0);
 
-			e = Create("push_block").SetHitbox(Global.TileSize, Global.TileSize);
+			e = Create("crate").SetHitbox(Global.TileSize, Global.TileSize);
 			//e.Pushable = true;
 			e.Hp = 1;
 			e.Loot = Get("coin");
 			e.AddAnim("idle", 16);
 			e.AddAnim("die", AnimatorMode.OneShot, 0.1f, 34, 35, 36);
 
-			e = Create("pillar").SetPixelMask("edged_square");
+			e = Create("pillar").SetPixelMask("circle_big");
 			e.CreateAnimator("entities_16_32").AddAnim("idle", 1);
 			e.SpriteOrigin = new Vector2(0.0f, Global.TileSize);
 

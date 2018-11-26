@@ -494,6 +494,10 @@ namespace DungeonRacer
 			{
 				Damage(data.LavaDamage, DamageType.Lava);
 			}
+			else
+			{
+				Log.Warn("Unknown trigger collision '" + trigger + "'");
+			}
 
 			return false;
 		}
