@@ -10,7 +10,7 @@ namespace DungeonRacer
 
 		private readonly ItemSlot[] slots = new ItemSlot[ItemMax];
 
-		public InventoryWidget(Player player, float x, float y) : base(x, y)
+		public InventoryWidget(PlayerData player, float x, float y) : base(x, y)
 		{
 			Layer = Global.LayerUi;
 
@@ -23,7 +23,7 @@ namespace DungeonRacer
 			player.OnUse += HandleUse;
 		}
 
-		private void HandleCollect(Player player, ItemType item)
+		private void HandleCollect(PlayerData player, ItemType item)
 		{
 			if (item == ItemType.Coin) return;
 
@@ -35,7 +35,7 @@ namespace DungeonRacer
 			Log.Error("Inventory full, will not diplay item " + item + ".");
 		}
 
-		private void HandleUse(Player player, ItemType item)
+		private void HandleUse(PlayerData player, ItemType item)
 		{
 			if (item == ItemType.Coin) return;
 

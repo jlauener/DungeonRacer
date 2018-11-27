@@ -30,6 +30,9 @@ namespace DungeonRacer
 		public bool SpriteFlipX { get; private set; }
 		public bool SpriteFlipY { get; private set; }
 
+		public bool Groupable { get; private set; }
+		public Vector2 LootSpawnOffset { get; private set; }
+
 		public int Hp { get; private set; }
 		public bool Pushable { get; private set; }
 
@@ -39,7 +42,7 @@ namespace DungeonRacer
 
 		public ItemType ItemType { get; private set; }
 
-		public Action<Player> OnCollect { get; private set; }
+		public Action<PlayerData> OnCollect { get; private set; }
 		public Sfx CollectSfx { get; private set; }
 
 		public EntityData Loot { get; private set; }
@@ -153,12 +156,14 @@ namespace DungeonRacer
 			//e.CollectSfx = new Sfx("sfx/key"); // TODO sfx
 
 			e = Create("block").SetPixelMask("circle_big"); //.SetHitbox(Global.TileSize, Global.TileSize);
+			e.Hp = 2;
 			e.AddAnim("idle", 0);
 
 			e = Create("crate").SetHitbox(Global.TileSize, Global.TileSize);
 			//e.Pushable = true;
 			e.Hp = 1;
 			e.Loot = Get("coin");
+			e.LootSpawnOffset = new Vector2(8.0f, 6.0f);
 			e.AddAnim("idle", 16);
 			e.AddAnim("die", AnimatorMode.OneShot, 0.1f, 34, 35, 36);
 
@@ -168,7 +173,8 @@ namespace DungeonRacer
 
 			e = Create("goblin", Global.TypeEnemy, typeof(Goblin));
 			e.Hp = 1;
-			e.Loot = Get("coin");
+			e.Groupable = true;
+			e.LootSpawnOffset = new Vector2(0.0f, -4.0f);
 			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
 			e.SetHitbox(8, 8, 4, 8);
 
@@ -182,9 +188,11 @@ namespace DungeonRacer
 
 			e = Create("minotaur", Global.TypeEnemy, typeof(Minotaur));
 			e.Hp = 3;
+			e.Groupable = true;
+			e.Loot = Get("key_a");
 			e.TileOffset = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
 			e.SetHitbox(8, 8, 4, 8);
-			e.Loot = Get("key_a");
+			e.LootSpawnOffset = new Vector2(0.0f, -4.0f);
 
 			e.SpriteOrigin = new Vector2(Global.TileSize / 2, Global.TileSize - 2);
 			e.AddAnim("walk", AnimatorMode.Loop, 0.25f, 226, 227);

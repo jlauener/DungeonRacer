@@ -21,7 +21,7 @@ namespace DungeonRacer
 				//Y -= 8.0f;
 				Scene.Tween(this, new { Y = Y - 32.0f}, 0.3f).Ease(Ease.QuadOut).OnComplete(() =>
 				{
-					Collect(GameScene.Player);
+					Collect(Scene.GetEntity<Player>());
 				});
 			}
 		}
@@ -29,7 +29,7 @@ namespace DungeonRacer
 		private void Collect(Player player)
 		{
 			Collidable = false;
-			Data.OnCollect?.Invoke(player);
+			Data.OnCollect?.Invoke(player.Data);
 
 			if (Data.CollectSfx != null) Data.CollectSfx.Play();
 			Sprite.Play("collect", RemoveFromScene);

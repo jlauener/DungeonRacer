@@ -5,24 +5,28 @@
   <properties>
    <property name="direction" value="Left"/>
    <property name="entity" value="player"/>
+   <property name="tile" value="Roof"/>
   </properties>
  </tile>
  <tile id="1">
   <properties>
    <property name="direction" value="Right"/>
    <property name="entity" value="player"/>
+   <property name="tile" value="Roof"/>
   </properties>
  </tile>
  <tile id="2">
   <properties>
    <property name="direction" value="Up"/>
    <property name="entity" value="player"/>
+   <property name="tile" value="Roof"/>
   </properties>
  </tile>
  <tile id="3">
   <properties>
    <property name="direction" value="Down"/>
    <property name="entity" value="player"/>
+   <property name="tile" value="Roof"/>
   </properties>
  </tile>
  <tile id="4">

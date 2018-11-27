@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using MonoPunk;
 
@@ -11,7 +12,7 @@ namespace DungeonRacer
 		public int TileY { get; }
 		public Vector2 Position { get; }
 		public Direction Direction { get; }
-		public bool Enter { get; }
+		public int GroupId { get; set; } = -1;
 
 		public EntityArguments(EntityData data, Vector2 position, Direction direction = Direction.Down)
 		{
@@ -29,16 +30,57 @@ namespace DungeonRacer
 		}
 	}
 
+	class EntityGroup
+	{
+		public int Id { get; }
+
+		private readonly List<GameEntity> entities = new List<GameEntity>();
+		private readonly EntityData loot;
+
+		public EntityGroup(int id, EntityData loot)
+		{
+			Id = id;
+			this.loot = loot;
+		}
+
+		public void Add(GameEntity entity)
+		{
+			entities.Add(entity);
+			Log.Debug("Added " + entity + " to " + this + ".");
+		}
+
+		public EntityData Remove(GameEntity entity)
+		{
+			entities.Remove(entity);
+			Log.Debug("Removed " + entity + " from " + this + ".");
+			if (entities.Count > 0)
+			{
+				return null;
+			}
+
+			Log.Debug("Group complete, spawning " + loot + ".");
+			return loot;
+		}
+
+		public override string ToString()
+		{
+			return "[EntityGroup Id=" + Id + " Loot=" + loot + "]"; 
+		}
+	}
+
 	[Flags]
 	enum HitFlags
 	{
 		Nothing = 0x00,
 		Stop = 0x01,
-		Blood = 0x02
+		Destroy =0x02,
+		Blood = 0x04,
 	}
 
 	class GameEntity : Entity
 	{
+		public EntityGroup Group { get; set; }
+
 		protected EntityArguments Args { get; }
 		public EntityData Data { get { return Args.Data; } }
 		//protected Room Room { get; private set; }
@@ -103,7 +145,14 @@ namespace DungeonRacer
 				else
 				{
 					Collidable = false;
-					Sprite.Play("die", RemoveFromScene);
+					if (Sprite.Contains("die"))
+					{
+						Sprite.Play("die", RemoveFromScene);
+					}
+					else
+					{
+						RemoveFromScene();
+					}
 				}
 				return HitFlags.Nothing;
 			}
@@ -121,18 +170,22 @@ namespace DungeonRacer
 
 				if (--Hp == 0)
 				{
-					Collidable = false;
-					Sprite.Play("die", RemoveFromScene);
-
-					if (Data.Loot != null)
+					if (Sprite.Contains("die"))
 					{
-						Scene.Add(Create(Data.Loot, Position + new Vector2(8.0f, 6.0f)));
+						Collidable = false;
+						Sprite.Play("die", RemoveFromScene);
+					}
+					else
+					{
+						RemoveFromScene();
 					}
 
-					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 4.0f);
-					Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
+					Die();
 
-					return HitFlags.Nothing;
+					Scene.GetEntity<Shaker>().Shake(Vector2.Normalize(player.Velocity) * 4.0f);
+					Asset.LoadSoundEffect("sfx/prop_destroy").Play();
+
+					return HitFlags.Destroy;
 				}
 			}
 
@@ -153,6 +206,21 @@ namespace DungeonRacer
 
 		protected virtual void OnUpdateActive(float deltaTime)
 		{
+		}
+
+		protected void Die()
+		{
+			var loot = Data.Loot;
+
+			if(Group != null)
+			{
+				loot = Group.Remove(this);
+			}
+
+			if (loot != null)
+			{
+				Scene.Add(Create(loot, Position + Data.LootSpawnOffset));
+			}
 		}
 
 		public static GameEntity Create(EntityArguments args)

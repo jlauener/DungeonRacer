@@ -4,6 +4,9 @@ namespace DungeonRacer
 {
 	static class Global
 	{
+		public const string StartingRoom = "dungeon1";
+		//public const string StartingRoom = "menu";
+
 		public static bool CrtEnabled = false;
 
 		public static int ScreenWidth = 256;
@@ -32,6 +35,7 @@ namespace DungeonRacer
 		public const int TypeEnemy = 5;
 		public const int TypeTrigger = 6;
 		public const int TypeProjectile = 7;
+		public const int TypeObject = 8;
 
 		public const int LayerUi = 20;
 		public const int LayerMapRoof = 30;

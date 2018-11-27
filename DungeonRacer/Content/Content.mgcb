@@ -238,6 +238,16 @@
 /processorParam:TextureFormat=Color
 /build:gfx/ui/hp_bar.png
 
+#begin map/dungeon1.tmx
+/importer:
+/processor:
+/build:map/dungeon1.tmx
+
+#begin map/menu.tmx
+/importer:
+/processor:
+/build:map/menu.tmx
+
 #begin map/test.tmx
 /importer:TiledMapImporter
 /processor:TiledMapProcessor
@@ -285,11 +295,17 @@
 /processorParam:Quality=Best
 /build:sfx/car_break.wav
 
-#begin sfx/car_drift.wav
+#begin sfx/car_drift_1.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
-/build:sfx/car_drift.wav
+/build:sfx/car_drift_1.wav
+
+#begin sfx/car_drift_2.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/car_drift_2.wav
 
 #begin sfx/car_engine.wav
 /importer:WavImporter
@@ -308,6 +324,12 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:sfx/car_hit_hurt.wav
+
+#begin sfx/enemy_dead_hit.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/enemy_dead_hit.wav
 
 #begin sfx/enemy_die.wav
 /importer:WavImporter
@@ -345,9 +367,21 @@
 /processorParam:Quality=Best
 /build:sfx/item_key.wav
 
+#begin sfx/prop_destroy.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/prop_destroy.wav
+
 #begin sfx/room_clear.wav
 /importer:WavImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:sfx/room_clear.wav
+
+#begin sfx/room_switch.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:sfx/room_switch.wav
 

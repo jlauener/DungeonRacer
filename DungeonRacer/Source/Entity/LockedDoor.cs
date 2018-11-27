@@ -11,7 +11,7 @@ namespace DungeonRacer
 
 		public override HitFlags HandlePlayerHit(Player player, int dx, int dy)
 		{
-			if (!player.UseItem(Data.ItemType))
+			if (!player.Data.UseItem(Data.ItemType))
 			{
 				return HitFlags.Stop;
 			}

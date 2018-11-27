@@ -27,7 +27,7 @@ namespace DungeonRacer
 		protected override void OnUpdate(float deltaTime)
 		{
 			base.OnUpdate(deltaTime);
-			label.Text = gameScene.Time.ToString("0.00");
+			label.Text = gameScene.Time.ToString("00");
 			blinker.Enabled = gameScene.TimePaused && !gameScene.Finished;
 		}
 	}

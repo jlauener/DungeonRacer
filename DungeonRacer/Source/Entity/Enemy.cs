@@ -1,9 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using MonoPunk;
 using System;
+using System.Collections.Generic;
 
 namespace DungeonRacer
 {
+
 	class Enemy : GameEntity
 	{
 		public bool Alive { get { return state == State.Alive || state == State.Enter; } }
@@ -98,21 +100,18 @@ namespace DungeonRacer
 				Hp--;
 				if (Hp == 0)
 				{
-					if (Data.Loot != null)
-					{
-						Scene.Add(Create(Data.Loot, Position + new Vector2(0.0f, -4.0f)));
-					}
+					Die();
 
 					velocity = player.Velocity * 2.0f;
 					state = State.Bouncing;
 
 					Sprite.Play("dead_bouncing");
 					player.AddTireBlood(1.0f);
-					GameScene.Map.DrawGroundEffect(X + dx * 6, Y + dy * 6, "blood" + Rand.NextInt(3), 1.0f, Rand.NextFloat(Mathf.Pi2));
-					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 7.0f);
-					Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
+					Scene.GetEntity<DungeonMap>().DrawGroundEffect(X + dx * 6, Y + dy * 6, "blood" + Rand.NextInt(3), 1.0f, Rand.NextFloat(Mathf.Pi2));
+					Scene.GetEntity<Shaker>().Shake(Vector2.Normalize(player.Velocity) * 7.0f);
+					Asset.LoadSoundEffect("sfx/enemy_die").Play();
 
-					return HitFlags.Blood;
+					return HitFlags.Blood | HitFlags.Destroy;
 				}
 				else
 				{
@@ -121,8 +120,8 @@ namespace DungeonRacer
 
 					Sprite.Play("hurt");
 					player.AddTireBlood(0.25f);
-					GameScene.Shaker.Shake(Vector2.Normalize(player.Velocity) * 4.0f);
-					GameScene.Map.DrawGroundEffect(X + dx * 4, Y + dy * 4, "blood_small" + Rand.NextInt(2), 1.0f, Rand.NextFloat(Mathf.Pi2));
+					Scene.GetEntity<Shaker>().Shake(Vector2.Normalize(player.Velocity) * 4.0f);
+					Scene.GetEntity<DungeonMap>().DrawGroundEffect(X + dx * 4, Y + dy * 4, "blood_small" + Rand.NextInt(2), 1.0f, Rand.NextFloat(Mathf.Pi2));
 					Asset.LoadSoundEffect("sfx/enemy_hurt").Play();
 
 					return HitFlags.Stop;
@@ -134,10 +133,11 @@ namespace DungeonRacer
 				if (hasBlood)
 				{
 					player.AddTireBlood(0.25f);
-					GameScene.Map.DrawGroundEffect(X + dx * 4, Y + dy * 4, "blood_small" + Rand.NextInt(2), 1.0f, Rand.NextFloat(Mathf.Pi2));
+					Scene.GetEntity<DungeonMap>().DrawGroundEffect(X + dx * 4, Y + dy * 4, "blood_small" + Rand.NextInt(2), 1.0f, Rand.NextFloat(Mathf.Pi2));
 					hasBlood = false;
 
 					// TODO play sfx
+					Asset.LoadSoundEffect("sfx/enemy_dead_hit").Play();
 				}
 
 				player.AddTireBlood(0.02f);

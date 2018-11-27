@@ -7,7 +7,7 @@ namespace DungeonRacer
 	{
 		private readonly Label label;
 
-		public CoinWidget(Player player, float x, float y) : base(x, y)
+		public CoinWidget(PlayerData player, float x, float y) : base(x, y)
 		{
 			Layer = Global.LayerUi;
 
@@ -18,7 +18,7 @@ namespace DungeonRacer
 			player.OnCollect += HandleCollect;
 		}
 
-		private void HandleCollect(Player player, ItemType item)
+		private void HandleCollect(PlayerData player, ItemType item)
 		{
 			if (item != ItemType.Coin) return;
 

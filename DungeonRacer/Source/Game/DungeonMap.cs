@@ -1,6 +1,7 @@
 ﻿using System;
 using MonoPunk;
 using Microsoft.Xna.Framework;
+using System.Collections.Generic;
 
 namespace DungeonRacer
 {
@@ -12,7 +13,7 @@ namespace DungeonRacer
 
 		public DungeonData Data { get; }
 
-		//public Room StartingRoom { get; private set; }
+		private readonly Dictionary<int, EntityGroup> groups = new Dictionary<int, EntityGroup>();
 
 		private readonly DrawLayer tireLayer;
 
@@ -66,7 +67,7 @@ namespace DungeonRacer
 						break;
 				}
 
-				if(tile.Trigger != null)
+				if (tile.Trigger != null)
 				{
 					backMap.SetTileAt(tile.X, tile.Y, tile.DisplayTid);
 				}
@@ -101,6 +102,28 @@ namespace DungeonRacer
 			triggerEntity.Type = Global.TypeTrigger;
 			triggerEntity.Collider = triggerGrid;
 			Scene.Add(triggerEntity);
+
+			Data.IterateObjects((obj) => Scene.Add(new Object(obj)));
+
+			Log.Debug("Loading groups...");
+			Data.IterateEntities((args) =>
+			{
+				var entity = GameEntity.Create(args);
+				if (args.GroupId != -1)
+				{
+					EntityGroup group;
+					if (!groups.TryGetValue(args.GroupId, out group))
+					{
+						group = new EntityGroup(args.GroupId, Data.GetGroupReward(args.GroupId));
+						groups[args.GroupId] = group;
+						Log.Debug("Created group " + args.GroupId);
+					}
+
+					group.Add(entity);
+					entity.Group = group;
+				}
+				Scene.Add(entity);
+			});
 		}
 
 		public void DrawGroundEffect(float x, float y, string name, float alpha = 1.0f, float angle = 0.0f)

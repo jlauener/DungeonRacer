@@ -18,13 +18,7 @@ namespace DungeonRacer
 
 	class Player : Entity
 	{
-		public event Action<Player, ItemType> OnCollect;
-		public event Action<Player, ItemType> OnUse;
-		public event Action<Player, int, DamageType> OnDamage;
-		public event Action<Player, int> OnHeal;
-
-		public int Hp { get; private set; }
-		public int MaxHp { get; private set; }
+		public PlayerData Data { get; }
 
 		public float Speed { get; private set; }
 		public float Angle { get; private set; }
@@ -58,6 +52,10 @@ namespace DungeonRacer
 		private float spikeImmuneCounter;
 		private float lavaImmuneCounter;
 
+		private int combo;
+		private EntityData comboEntity;
+		private float comboCounter;
+
 		private enum EngineState
 		{
 			Idle,
@@ -74,28 +72,25 @@ namespace DungeonRacer
 
 		private float invincibleCounter;
 
-		private PlayerData data;
-		private readonly Dictionary<ItemType, int> inventory = new Dictionary<ItemType, int>();
-
 		private readonly Renderable sortNode;
 		private readonly Animator sprite;
 		private readonly Animator bloodFrontSprite;
 		private readonly Animator bloodBackSprite;
 		private readonly Animator hurtSprite;
 		private readonly Blinker blinker;
-		private readonly DungeonMap dungeon;
 
 		private static SoundEffectInstance engineSound;
-		private static SoundEffectInstance driftSound;
+		private static SoundEffectInstance[] driftSounds;
 		private static SoundEffectInstance breakSound;
 
-		public Player(PlayerData data, DungeonMap dungeon, int tileX, int tileY, Direction direction)
-		{
-			this.data = data;
-			this.dungeon = dungeon;
+		private SoundEffectInstance driftSound;
 
-			X = tileX * Global.TileSize + Global.TileSize / 2;
-			Y = tileY * Global.TileSize + Global.TileSize / 2;
+		public Player(PlayerData data, DungeonTile tile, Direction direction)
+		{
+			Data = data;
+
+			X = tile.ScreenX + Global.TileSize / 2;
+			Y = tile.ScreenY + Global.TileSize / 2;
 			Angle = DirectionUtils.GetAngle(direction);
 
 			Type = Global.TypePlayer;
@@ -103,9 +98,6 @@ namespace DungeonRacer
 			Collider = data.PixelMask;
 			OriginX = Width / 2;
 			OriginY = Height / 2;
-
-			Hp = data.Hp;
-			MaxHp = data.Hp;
 
 			sortNode = new Renderable();
 			Add(sortNode);
@@ -136,12 +128,20 @@ namespace DungeonRacer
 			engineSound.IsLooped = true;
 			engineSound.Play();
 
-			if (driftSound == null) driftSound = Asset.LoadSoundEffect("sfx/car_drift").CreateInstance();
-			driftSound.Volume = 0.7f;
+			if (driftSounds == null)
+			{
+				driftSounds = new SoundEffectInstance[2];
+				for (var i = 0; i < driftSounds.Length; i++)
+				{
+					driftSounds[i] = Asset.LoadSoundEffect("sfx/car_drift_" + (i + 1)).CreateInstance();
+					driftSounds[i].Volume = 0.7f;
+				}
+			}
 
 			if (breakSound == null) breakSound = Asset.LoadSoundEffect("sfx/car_break").CreateInstance();
 			breakSound.Volume = 0.7f;
 
+			Engine.Track(this, "Position");
 			Engine.Track(this, "Speed");
 			Engine.Track(this, "Angle");
 			Engine.Track(this, "engineState");
@@ -168,10 +168,7 @@ namespace DungeonRacer
 					break;
 			}
 
-			Hp -= value;
-			Hp = Mathf.Max(Hp, 0);
-
-			OnDamage?.Invoke(this, value, damageType);
+			Data.Damage(value, damageType);
 
 			switch (damageType)
 			{
@@ -180,27 +177,27 @@ namespace DungeonRacer
 						break;
 					}
 				case DamageType.Spike:
-					spikeImmuneCounter += data.SpikeImmuneDuration;
+					spikeImmuneCounter += Data.SpikeImmuneDuration;
 					ShowHurtFrame(0.15f);
-					GameScene.Shaker.Shake(Vector2.Normalize(velocity) * 4.0f);
+					Scene.GetEntity<Shaker>().Shake(Vector2.Normalize(velocity) * 4.0f);
 					break;
 				case DamageType.Lava:
-					lavaImmuneCounter += data.LavaImmuneDuration;
+					lavaImmuneCounter += Data.LavaImmuneDuration;
 					ShowHurtFrame(0.1f);
-					GameScene.Shaker.Shake(Vector2.Normalize(velocity) * 3.0f);
+					Scene.GetEntity<Shaker>().Shake(Vector2.Normalize(velocity) * 3.0f);
 					break;
 				case DamageType.Entity:
 					{
 						var pct = value / (float)PlayerData.EntityDamageFeedbackMax;
 						ShowHurtFrame(0.1f + pct * 0.2f);
-						GameScene.Shaker.Shake(Vector2.Normalize(velocity) * (4.0f + pct * 12.0f));
+						Scene.GetEntity<Shaker>().Shake(Vector2.Normalize(velocity) * (4.0f + pct * 12.0f));
 						break;
 					}
 			}
 
-			Log.Debug("damage " + value + " hp=" + Hp);
+			Log.Debug("damage " + value + " hp=" + Data.Hp);
 
-			if (Hp == 0)
+			if (Data.Hp == 0)
 			{
 				// TODO
 				state = State.GameOver;
@@ -217,39 +214,37 @@ namespace DungeonRacer
 
 		public void Heal(int value)
 		{
-			Hp += value;
-			Hp = Mathf.Min(Hp, MaxHp);
-			OnHeal?.Invoke(this, value);
+			Data.Heal(value);
 		}
 
-		public void AddItem(ItemType item)
-		{
-			if(item == ItemType.Coin)
-			{
-				((GameScene)Scene).AddTime(1.0f);
-			}
-			inventory.TryGetValue(item, out int count);
-			inventory[item] = count + 1;
-			OnCollect?.Invoke(this, item);
-		}
+		//public void AddItem(ItemType item)
+		//{
+		//	//if(item == ItemType.Coin)
+		//	//{
+		//	//	((GameScene)Scene).AddTime(1.0f);
+		//	//}
+		//	inventory.TryGetValue(item, out int count);
+		//	inventory[item] = count + 1;
+		//	OnCollect?.Invoke(this, item);
+		//}
 
-		public bool UseItem(ItemType item)
-		{
-			if (!inventory.TryGetValue(item, out int count) || count == 0)
-			{
-				return false;
-			}
+		//public bool UseItem(ItemType item)
+		//{
+		//	if (!inventory.TryGetValue(item, out int count) || count == 0)
+		//	{
+		//		return false;
+		//	}
 
-			inventory[item] = count - 1;
-			OnUse?.Invoke(this, item);
-			return true;
-		}
+		//	inventory[item] = count - 1;
+		//	OnUse?.Invoke(this, item);
+		//	return true;
+		//}
 
-		public int GetItemCount(ItemType item)
-		{
-			inventory.TryGetValue(item, out int count);
-			return count;
-		}
+		//public int GetItemCount(ItemType item)
+		//{
+		//	inventory.TryGetValue(item, out int count);
+		//	return count;
+		//}
 
 		public void AddTireBlood(float pct)
 		{
@@ -268,9 +263,9 @@ namespace DungeonRacer
 				case State.Active:
 					UpdateActive(deltaTime);
 					break;
-				case State.Paused:
-					UpdatePaused(deltaTime);
-					break;
+				//case State.Paused:
+				//	UpdatePaused(deltaTime);
+				//	break;
 				case State.GameOver:
 					UpdateGameOver(deltaTime);
 					break;
@@ -289,7 +284,7 @@ namespace DungeonRacer
 			if (Speed > 80.0f && driftAngle > 0.25f)
 			{
 				var anglePct = Mathf.Min(1.0f, (driftAngle - 0.25f) / 0.3f);
-				driftPct = (Speed / data.MaxSpeed) * anglePct * 0.5f;
+				driftPct = (Speed / Data.MaxSpeed) * anglePct * 0.5f;
 			}
 			else
 			{
@@ -298,11 +293,19 @@ namespace DungeonRacer
 
 			if (Speed > 80.0f && driftAngle > 0.6f)
 			{
-				driftSound.Play();
+				if (driftSound == null)
+				{
+					driftSound = driftSounds[Rand.NextInt(driftSounds.Length)];
+					driftSound.Play();
+				}
 			}
 			else if (driftAngle < 0.1f)
 			{
-				driftSound.Stop();
+				if(driftSound != null)
+				{
+					driftSound.Stop();
+					driftSound = null;
+				}
 			}
 
 			engineSound.Pitch = enginePct;
@@ -311,11 +314,11 @@ namespace DungeonRacer
 			if (tireBloodPct > 0.05f)
 			{
 				tireBloodPct *= 0.9f;
-				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0xCF, 0x32, 0x32), tireBloodPct * 0.35f, Angle);
+				Scene.GetEntity<DungeonMap>().DrawGroundEffect(X, Y, "tire", new Color(0xCF, 0x32, 0x32), tireBloodPct * 0.35f, Angle);
 			}
 			else if (driftPct > 0.1f)
 			{
-				dungeon.DrawGroundEffect(X, Y, "tire", new Color(0x00, 0x00, 0x00), driftPct * 0.15f, Angle);
+				Scene.GetEntity<DungeonMap>().DrawGroundEffect(X, Y, "tire", new Color(0x00, 0x00, 0x00), driftPct * 0.15f, Angle);
 			}
 
 			sprite.Rotation = actualAngle;
@@ -328,16 +331,16 @@ namespace DungeonRacer
 
 		}
 
-		private void UpdatePaused(float deltaTime)
-		{
-			breakSound.Stop();
-			driftSound.Stop();
-		}
+		//private void UpdatePaused(float deltaTime)
+		//{
+		//	breakSound.Stop();
+		//	foreach (var sound in driftSound) sound.Stop();
+		//}
 
 		private void UpdateGameOver(float deltaTime)
 		{
 			enginePct = 0.0f;
-			velocity *= data.Friction;
+			velocity *= Data.Friction;
 			bounceVelocity *= PlayerData.BounceFriction;
 			if (bounceVelocity.Length() < 5.0f) bounceVelocity = Vector2.Zero;
 			MoveBy((velocity + bounceVelocity) * deltaTime, CollisionFlags.NonStop, Global.TypeSolid, Global.TypeMap);
@@ -345,6 +348,19 @@ namespace DungeonRacer
 
 		private void UpdateActive(float deltaTime)
 		{
+			if (comboCounter > 0.0f)
+			{
+				comboCounter -= deltaTime;
+				if(comboCounter <= 0.0f)
+				{
+					comboEntity = null;
+					comboCounter = 0.0f;
+					combo = 0;
+
+					Data.NotifyComboStop();
+				}
+			}
+
 			if (invincibleCounter > 0.0f)
 			{
 				invincibleCounter -= deltaTime;
@@ -367,7 +383,7 @@ namespace DungeonRacer
 				else
 				{
 					// front gear
-					enginePct += deltaTime * (1.0f - enginePct) * data.FrontGearSpeed;
+					enginePct += deltaTime * (1.0f - enginePct) * Data.FrontGearSpeed;
 					enginePct = Mathf.Clamp(enginePct, 0.1f, 1.0f);
 					engineState = EngineState.FrontGear;
 				}
@@ -382,7 +398,7 @@ namespace DungeonRacer
 				else
 				{
 					// rear gear
-					enginePct += deltaTime * (1.0f - enginePct) * data.RearGearSpeed;
+					enginePct += deltaTime * (1.0f - enginePct) * Data.RearGearSpeed;
 					enginePct = Mathf.Clamp(enginePct, 0.1f, 1.0f);
 					engineState = EngineState.RearGear;
 				}
@@ -390,7 +406,7 @@ namespace DungeonRacer
 			else
 			{
 				// idle
-				enginePct *= data.EngineDecay;
+				enginePct *= Data.EngineDecay;
 				if (enginePct < 0.1f)
 				{
 					enginePct = 0.0f;
@@ -403,37 +419,37 @@ namespace DungeonRacer
 			{
 				case EngineState.Break:
 					enginePct = 0.0f;
-					velocity *= data.BreakFriction;
+					velocity *= Data.BreakFriction;
 					break;
 				case EngineState.FrontGear:
-					velocity += Vector2.UnitX.Rotate(actualAngle) * data.FrontGearForce * deltaTime * enginePct;
+					velocity += Vector2.UnitX.Rotate(actualAngle) * Data.FrontGearForce * deltaTime * enginePct;
 					turnDir = 1;
 					break;
 				case EngineState.RearGear:
-					velocity -= Vector2.UnitX.Rotate(actualAngle) * data.RearGearForce * deltaTime * enginePct;
+					velocity -= Vector2.UnitX.Rotate(actualAngle) * Data.RearGearForce * deltaTime * enginePct;
 					turnDir = -1;
 					break;
 			}
 
-			velocity *= data.Friction;
+			velocity *= Data.Friction;
 
 			Speed = velocity.Length();
-			Speed = Mathf.Min(Speed, data.MaxSpeed);
-			var speedPct = Speed / data.MaxSpeed;
+			Speed = Mathf.Min(Speed, Data.MaxSpeed);
+			var speedPct = Speed / Data.MaxSpeed;
 
 			if (Input.IsDown("left"))
 			{
-				angularVelocity -= data.TurnSpeed * deltaTime * speedPct * turnDir;
+				angularVelocity -= Data.TurnSpeed * deltaTime * speedPct * turnDir;
 			}
 			if (Input.IsDown("right"))
 			{
-				angularVelocity += data.TurnSpeed * deltaTime * speedPct * turnDir;
+				angularVelocity += Data.TurnSpeed * deltaTime * speedPct * turnDir;
 			}
 
 			Angle += angularVelocity;
 			while (Angle < 0.0f) Angle += Mathf.Pi2;
 			while (Angle > Mathf.Pi2) Angle -= Mathf.Pi2;
-			angularVelocity *= data.AngularFriction;
+			angularVelocity *= Data.AngularFriction;
 
 			bounceVelocity *= PlayerData.BounceFriction;
 			if (bounceVelocity.Length() < 5.0f) bounceVelocity = Vector2.Zero;
@@ -487,20 +503,20 @@ namespace DungeonRacer
 
 		private void HandleWallCollision()
 		{
-			var speedPct = Speed / data.MaxSpeed;
+			var speedPct = Speed / Data.MaxSpeed;
 			if (speedPct > PlayerData.WallDamageSpeedMin)
 			{
 				var damagePct = (speedPct - PlayerData.WallDamageSpeedMin) * (1.0f / (1.0f - PlayerData.WallDamageSpeedMin));
-				var damage = data.WallDamageMin + (int)(damagePct * (data.WallDamageMax - data.WallDamageMin));
+				var damage = Data.WallDamageMin + (int)(damagePct * (Data.WallDamageMax - Data.WallDamageMin));
 				Damage(damage, DamageType.Wall);
 
-				GameScene.Shaker.Bounce(Vector2.Normalize(-velocity) * 2.0f, 0.07f);
+				Scene.GetEntity<Shaker>().Bounce(Vector2.Normalize(-velocity) * 2.0f, 0.07f);
 				ShowHurtFrame(0.07f);
 				Asset.LoadSoundEffect("sfx/car_hit_hurt").Play();
 			}
 			else if (speedPct > 0.25f)
 			{
-				GameScene.Shaker.Bounce(Vector2.Normalize(-velocity) * 1.0f, 0.04f);
+				Scene.GetEntity<Shaker>().Bounce(Vector2.Normalize(-velocity) * 1.0f, 0.04f);
 				Asset.LoadSoundEffect("sfx/car_hit").Play();
 			}
 		}
@@ -510,11 +526,11 @@ namespace DungeonRacer
 			var trigger = hit.Tile.GetString("trigger");
 			if (trigger == "Spike")
 			{
-				Damage(data.SpikeDamage, DamageType.Spike);
+				Damage(Data.SpikeDamage, DamageType.Spike);
 			}
 			else if (trigger == "Lava")
 			{
-				Damage(data.LavaDamage, DamageType.Lava);
+				Damage(Data.LavaDamage, DamageType.Lava);
 			}
 			else
 			{
@@ -529,6 +545,21 @@ namespace DungeonRacer
 			var entity = (GameEntity)hit.Other;
 
 			var flags = entity.HandlePlayerHit(this, hit.DeltaX, hit.DeltaY);
+
+			if ((flags & HitFlags.Destroy) > 0)
+			{
+				if (comboEntity == null || comboEntity != entity.Data)
+				{
+					comboEntity = entity.Data;
+					combo = 1;
+				}
+				else
+				{
+					combo++;
+				}
+				comboCounter = PlayerData.ComboWindow;
+				Data.NotifyCombo(comboEntity, combo);
+			}
 
 			if ((flags & HitFlags.Blood) > 0)
 			{

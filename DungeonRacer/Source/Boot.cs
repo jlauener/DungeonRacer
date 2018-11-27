@@ -64,7 +64,6 @@ namespace DungeonRacer
 			Asset.AddPixelMask("circle_big", "mask/circle_big");
 
 			EntityData.Init();
-			PlayerData.Init();
 			DungeonData.Init();
 
 			CrtEffect = Asset.LoadEffect("effects/CRT-easymode");
@@ -77,7 +76,7 @@ namespace DungeonRacer
 
 		protected override void OnStart()
 		{
-			Scene = new GameScene(DungeonData.Get("test"));
+			GameManager.StartNewGame();
 		}
 
 		private void HandleViewportChanged(int width, int height, bool fullscreen)

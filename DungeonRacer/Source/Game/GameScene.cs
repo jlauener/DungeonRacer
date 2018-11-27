@@ -8,14 +8,12 @@ namespace DungeonRacer
 {
 	class GameScene : Scene
 	{
-		//public event Action<GameScene, Room> OnEnterRoom;
+		public DungeonData Data { get; }
 
 		private enum State
 		{
 			Start,
 			Play,
-			//Switch,
-			//Enter,
 			Finished
 		}
 		private State state = State.Play;
@@ -24,82 +22,55 @@ namespace DungeonRacer
 		{
 			get
 			{
-				return state != State.Play; // || currentRoom.Data.Type != RoomType.Normal;
+				return state != State.Play;
 			}
 		}
-		public float Time { get; private set; } = 30.0f;
+		public float Time { get; private set; } = 60.0f;
 
 		public bool Finished
 		{
 			get { return state == State.Finished; }
 		}
 
-		public static Player Player { get; private set; }
-		public static DungeonMap Map { get; private set;  }
-		public static Shaker Shaker { get; private set; }
-
+		private readonly GameManager game;
+		private Player player;
 		private Vector2 cameraPosition;
 
-		//private Room previousRoom;
-		//private Room currentRoom;
-		//private readonly Room[,] rooms;
-
-		public GameScene(DungeonData dungeonData)
+		public GameScene(GameManager game, DungeonData dungeonData)
 		{
-			Map = new DungeonMap(dungeonData); ;
-			Add(Map);
+			this.game = game;
+			Data = dungeonData;
 
-			dungeonData.IterateEntities((args) =>
-			{
-				Add(GameEntity.Create(args));
-			});
-
-			//rooms = new Room[dungeonData.Width, dungeonData.Height];
-			//dungeonData.IterateRooms((roomData) =>
-			//{
-			//	var room = new Room(roomData, roomData.X, roomData.Y);
-			//	rooms[roomData.X, roomData.Y] = room;
-			//	Add(room);
-			//	if (roomData.Type == RoomType.Start)
-			//	{
-			//		currentRoom = room;
-			//	}
-			//});
-			//Camera.Position = GetCameraPosition(currentRoom);
-
-			Player = new Player(PlayerData.Get("normal"), Map, dungeonData.PlayerStartTile.X, dungeonData.PlayerStartTile.Y, dungeonData.PlayerStartDirection);
-			Add(Player);
-
-			cameraPosition = Player.Position - new Vector2(Engine.HalfWidth, Engine.HalfHeight);
+			var dungeonMap = new DungeonMap(dungeonData);
+			Add(dungeonMap);
 
 			var uiCamera = Engine.CreateCamera();
 			SetCamera(Global.LayerUi, uiCamera);
 
-			//var uiBack = new Sprite("gfx/ui/background");
-			//uiBack.Layer = Global.LayerUi;
-			//Add(uiBack);
+			//Add(new TimeWidget(this, Engine.HalfWidth, 0));
+			Add(new ComboWidget(game.Player, Engine.HalfWidth, 1));
 
-			Add(new TimeWidget(this, Engine.HalfWidth, 0));
+			Add(new CoinWidget(game.Player, Engine.Width - 2, 1));
+			Add(new HpWidget(game.Player, 2, 2));
 
-			Add(new CoinWidget(Player, Engine.Width - 2, 1));
-			Add(new HpWidget(Player, 2, 2));
+			//Add(new RoomWidget(this, Engine.Width - 2, 1));
+			Add(new InventoryWidget(game.Player, 202, 2));
 
-			Add(new RoomWidget(this, Engine.Width - 2, 1));
-			Add(new InventoryWidget(Player, 202, 14));
+			Add(new Shaker());
 
-			Shaker = new Shaker(Camera);
-			Add(Shaker);
-
-			Engine.Track(this, "state");
-			//Engine.Track(this, "currentRoom");
+			//Engine.Track(this, "state");
 		}
 
-		protected override void OnBegin()
+		public void InitPlayer(PlayerData data, DungeonTile tile, Direction direction)
 		{
-			base.OnBegin();
+			if(player != null)
+			{
+				Remove(player);
+			}
 
-			//OnEnterRoom?.Invoke(this, currentRoom);
-			//currentRoom.Enter();
+			player = new Player(data, tile, direction);
+			Add(player);
+			cameraPosition = player.Position - new Vector2(Engine.HalfWidth, Engine.HalfHeight);
 		}
 
 		protected override void OnUpdate(float deltaTime)
@@ -114,12 +85,12 @@ namespace DungeonRacer
 				//case State.Enter:
 				//	UpdateEnter(deltaTime);
 				//	break;
-				//case State.Finished:
-				//	UpdateFinished(deltaTime);
-				//	break;
+				case State.Finished:
+					UpdateFinished(deltaTime);
+					break;
 			}
 
-			Camera.Position = cameraPosition + Shaker.Offset;
+			Camera.Position = cameraPosition + GetEntity<Shaker>().Offset;
 
 			if (Input.WasPressed("back"))
 			{
@@ -128,7 +99,7 @@ namespace DungeonRacer
 
 			if (Input.WasPressed("reset"))
 			{
-				Engine.Scene = new GameScene(Map.Data);
+				GameManager.StartNewGame();
 			}
 
 			if (Input.WasPressed("debug_1"))
@@ -173,7 +144,7 @@ namespace DungeonRacer
 
 			if (Input.WasPressed("debug_10"))
 			{
-				Engine.Scene = new GameScene(DungeonData.Get("test"));
+				//Engine.Scene = new GameScene(DungeonData.Get("test"));
 			}
 		}
 
@@ -227,65 +198,29 @@ namespace DungeonRacer
 
 		private void UpdatePlay(float deltaTime)
 		{
-			var cameraEdge = new Vector2(96.0f, 96.0f); // Engine.Height / 2);
+			var cameraEdge = new Vector2(96.0f, 96.0f);
 
-			if (Player.X < cameraPosition.X + cameraEdge.X) cameraPosition.X = Player.X - cameraEdge.X;
-			else if (Player.X > cameraPosition.X + Engine.Width - cameraEdge.X) cameraPosition.X = Player.X - Engine.Width + cameraEdge.X;
+			if (player.X < cameraPosition.X + cameraEdge.X) cameraPosition.X = player.X - cameraEdge.X;
+			else if (player.X > cameraPosition.X + Engine.Width - cameraEdge.X) cameraPosition.X = player.X - Engine.Width + cameraEdge.X;
 
-			if (Player.Y < cameraPosition.Y + cameraEdge.Y) cameraPosition.Y = Player.Y - cameraEdge.Y;
-			else if (Player.Y > cameraPosition.Y + Engine.Height - cameraEdge.Y) cameraPosition.Y = Player.Y - Engine.Height + cameraEdge.Y;
+			if (player.Y < cameraPosition.Y + cameraEdge.Y) cameraPosition.Y = player.Y - cameraEdge.Y;
+			else if (player.Y > cameraPosition.Y + Engine.Height - cameraEdge.Y) cameraPosition.Y = player.Y - Engine.Height + cameraEdge.Y;
 
-			cameraPosition.X = Mathf.Clamp(cameraPosition.X, 0.0f, Map.Width - Engine.Width);
-			cameraPosition.Y = Mathf.Clamp(cameraPosition.Y, 0.0f, Map.Height - Engine.Height);
+			var map = GetEntity<DungeonMap>();
+			cameraPosition.X = Mathf.Clamp(cameraPosition.X, 0.0f, map.Width - Engine.Width);
+			cameraPosition.Y = Mathf.Clamp(cameraPosition.Y, 0.0f, map.Height - Engine.Height);
 
-			//cameraPosition.X = 8.0f;
-
-			//Shaker.Origin = position;
-			//Camera.Position = cameraPosition;
-
-			//CheckRoomSwitch();
 			if (!TimePaused) Time -= deltaTime;
 
-			if (!Player.Alive)
+			if (!GetEntity<Player>().Alive)
 			{
-				SetGameOver();
+				SetGameOver("CAR BROKEN!");
+			}
+			else if (Time <= 0.0f)
+			{
+				//SetGameOver("TIME'S UP!");
 			}
 		}
-
-		//private void GotoRoom(int dx, int dy)
-		//{
-		//	previousRoom = currentRoom;
-
-		//	var x = currentRoom.RoomX + dx;
-		//	var y = currentRoom.RoomY + dy;
-		//	if (x < 0 || y < 0 || x >= rooms.GetLength(0) || y >= rooms.GetLength(1))
-		//	{
-		//		SetGameFinished();
-		//		return;
-		//	}
-
-		//	currentRoom = rooms[x, y];
-
-		//	Player.Paused = true;
-		//	state = State.Switch;
-		//	var target = GetCameraPosition(currentRoom);
-		//	Shaker.StopAll();
-		//	Shaker.Enabled = false;
-		//	Tween(Camera, new { Position = target }, 0.5f).Ease(Ease.QuadInOut).OnComplete(() =>
-		//	 {
-		//		 Player.Paused = false;
-		//		 state = State.Enter;
-		//		 Shaker.ResetCameraOrigin();
-		//		 Shaker.Enabled = true;
-		//	 });
-
-		//	Asset.LoadSoundEffect("sfx/room_switch").Play();
-		//}
-
-		//private Vector2 GetCameraPosition(Room room)
-		//{
-		//	return new Vector2(room.X, room.Y - Global.UiHeight);
-		//}
 
 		private void SetGameFinished()
 		{
@@ -301,11 +236,11 @@ namespace DungeonRacer
 			Callback(1.0f, () => Input.Enabled = true);
 		}
 
-		private void SetGameOver()
+		private void SetGameOver(string reason)
 		{
 			state = State.Finished;
 
-			var label = new Label(Global.Font, "GAME OVER");
+			var label = new Label(Global.Font, reason);
 			label.Scale = 3.0f;
 			label.Layer = Global.LayerUi;
 			label.Center();
@@ -319,8 +254,20 @@ namespace DungeonRacer
 		{
 			if (Input.WasPressed("start"))
 			{
-				Engine.Scene = new GameScene(DungeonData.Get("dungeon1"));
+				GameManager.StartNewGame();
 			}
+		}
+
+		public void GotoDungeon(DungeonData dungeon)
+		{
+			// TODO transition
+			game.LoadScene(dungeon.Name);
+			Asset.LoadSoundEffect("sfx/room_switch").Play();
+		}
+
+		public void ShowInfo(string text)
+		{
+			Log.Debug("INFO " + text);
 		}
 
 		//protected override void OnRenderDebug(SpriteBatch spriteBatch)

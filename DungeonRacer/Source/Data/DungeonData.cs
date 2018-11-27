@@ -3,16 +3,10 @@ using System;
 using MonoPunk;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.Xna.Framework;
 
 namespace DungeonRacer
 {
-	//enum DungeonTileLayer
-	//{
-	//	Ground,
-	//	Back,
-	//	Front
-	//}
-
 	enum DungeonTileType
 	{
 		Ground,
@@ -27,10 +21,51 @@ namespace DungeonRacer
 		Lava
 	}
 
+	enum ObjectType
+	{
+		Link,
+		Info
+	}
+
+	class ObjectData
+	{
+		public static ObjectData CreateLink(Rectangle bounds, DungeonData target)
+		{
+			return new ObjectData(bounds, ObjectType.Link, target, null);
+		}
+
+		public static ObjectData CreateInfo(Rectangle bounds, string text)
+		{
+			return new ObjectData(bounds, ObjectType.Info, null, text);
+		}
+
+		public Rectangle Bounds { get; }
+		public ObjectType Type { get; }
+		public DungeonData Target { get; }
+		public string Text { get; }
+		public EntityData Loot { get; }
+
+		private ObjectData(Rectangle bounds, ObjectType type, DungeonData target, string text)
+		{
+			Bounds = bounds;
+			Type = type;
+			Target = target;
+			Text = text;
+		}
+
+		public override string ToString()
+		{
+			return "[ObjectData Bounds=" + Bounds + " Type=" + Type + " Target=" + Target +" Text='" + Text + "']";
+		}
+	}
+
 	class DungeonTile
 	{
 		public int X { get; }
 		public int Y { get; }
+		public float ScreenX { get { return X * Global.TileSize; } }
+		public float ScreenY { get { return Y * Global.TileSize; } }
+
 		public int Id { get; }
 		public Dictionary<string, string> Properties { get; }
 
@@ -64,31 +99,24 @@ namespace DungeonRacer
 		public int HeightTiles { get; }
 		public Tileset Tileset { get; private set; }
 
-		//public RoomData StartingRoom { get; private set; }
 		public DungeonTile PlayerStartTile { get; private set; }
 		public Direction PlayerStartDirection { get; private set; }
 
+		private readonly TiledMap map;
 		private readonly DungeonTile[,] tiles;
 		private readonly List<EntityArguments> entities = new List<EntityArguments>();
-		//private readonly RoomData[,] rooms;
+		private readonly List<ObjectData> objects = new List<ObjectData>();
+		private readonly List<EntityData> groupRewards = new List<EntityData>();
 
 		private DungeonData(TiledMap map, string name)
 		{
+			this.map = map;
 			Name = name;
 			WidthTiles = map.Width;
 			HeightTiles = map.Height;
 			Width = WidthTiles / Global.RoomWidth;
 			Height = HeightTiles / Global.RoomHeight;
 			Tileset = new Tileset("gfx/game/" + map.Properties.GetString("tileset"), Global.TileSize, Global.TileSize);
-
-			//rooms = new RoomData[Width, Height];
-			//for (var ix = 0; ix < Width; ix++)
-			//{
-			//	for(var iy = 0; iy < Height; iy++)
-			//	{
-			//		rooms[ix,iy] = new RoomData(ix, iy);
-			//	}
-			//}
 
 			tiles = new DungeonTile[WidthTiles, HeightTiles];
 
@@ -173,17 +201,11 @@ namespace DungeonRacer
 				Log.Error("Unknown entity direction '" + properties.GetString("direction") + "' at " + tile);
 			}
 
-			//var roomX = tile.X / Global.RoomWidth;
-			//var roomY = tile.Y / Global.RoomHeight;
-			//var room = GetRoomAt(roomX, roomY);
-
 			var entityName = properties.GetString("entity");
 			if (entityName == "player")
 			{
-				//StartingRoom = room;
 				PlayerStartTile = tile;
 				PlayerStartDirection = direction;
-				//room.Type = RoomType.Start;
 			}
 			else
 			{
@@ -194,41 +216,95 @@ namespace DungeonRacer
 				}
 				else
 				{
-					//room.AddEntity(entity, tile.X, tile.Y, direction);
 					entities.Add(new EntityArguments(entity, tile.X, tile.Y, direction));
 				}
 			}
+		}
+
+		private void InitObjects()
+		{
+			Log.Debug("Creating objects for " + this + ".");
+
+			var layer = map.GetLayer<TiledMapObjectLayer>("object");
+			if (layer == null)
+			{
+				Log.Warn(this + " has no 'object' layer.");
+				return;
+			}
+
+			foreach(var obj in layer.Objects)
+			{
+				var bounds = new Rectangle((int)obj.Position.X, (int)obj.Position.Y, (int)obj.Size.Width, (int)obj.Size.Height);
+
+				if (obj.Properties.GetString("type") == "Group")
+				{
+					InitGroup(obj, bounds);
+				}
+				else
+				{
+					if (!Enum.TryParse(obj.Properties.GetString("type"), out ObjectType type))
+					{
+						Log.Error("Unknown object type '" + obj.Properties.GetString("type") + "' at " + bounds + ".");
+						continue;
+					}
+
+					switch (type)
+					{
+						case ObjectType.Link:
+							{
+								var target = Get(obj.Properties.GetString("target"));
+								if (target == null)
+								{
+									Log.Error("Object at " + bounds + " has an invalid target '" + obj.Properties.GetString("target") + "'.");
+									continue;
+								}
+								objects.Add(ObjectData.CreateLink(bounds, target));
+								break;
+							}
+						case ObjectType.Info:
+							{
+								var text = obj.Properties.GetString("text");
+								if (text == null)
+								{
+									Log.Error("Object at " + bounds + " has an no text.");
+									continue;
+								}
+								objects.Add(ObjectData.CreateInfo(bounds, text));
+								break;
+							}
+					}
+
+					Log.Debug("Added " + objects[objects.Count - 1] + ".");
+				}
+			}
+		}
+
+		private void InitGroup(TiledMapObject obj, Rectangle bounds)
+		{
+			var loot = EntityData.Get(obj.Properties.GetString("loot"));
+			if (loot == null)
+			{
+				Log.Error("Group at " + bounds + " has an invalid loot '" + obj.Properties.GetString("loot") + "'.");
+				return;
+			}
+
+			var id = groupRewards.Count;
+			groupRewards.Add(loot);
+
+			IterateEntities((entity) =>
+			{
+				if(entity.Data.Groupable && Mathf.IntersectPoint(bounds, entity.TileX * Global.TileSize, entity.TileY * Global.TileSize))
+				{
+					entity.GroupId = id;
+					Log.Debug("Assigned " + entity + " to group " + id + ".");
+				}
+			});
 		}
 
 		public DungeonTile GetTileAt(int x, int y)
 		{
 			if (x < 0 || x >= WidthTiles || y < 0 || y >= HeightTiles) return null;
 			return tiles[x, y];
-		}
-
-		//public RoomData GetRoomAt(int x, int y)
-		//{
-		//	if (x < 0 || x >= Width || y < 0 || y >= Height) return null;
-		//	return rooms[x, y];
-		//}
-
-		//public void IterateRooms(Action<RoomData> action)
-		//{
-		//	for (var ix = 0; ix < Width; ix++)
-		//	{
-		//		for (var iy = 0; iy < Height; iy++)
-		//		{
-		//			action(rooms[ix, iy]);
-		//		}
-		//	}
-		//}
-
-		public void IterateEntities(Action<EntityArguments> action)
-		{
-			foreach (var entity in entities)
-			{
-				action(entity);
-			}
 		}
 
 		public void IterateTiles(Action<DungeonTile> action)
@@ -242,6 +318,29 @@ namespace DungeonRacer
 			}
 		}
 
+		public void IterateEntities(Action<EntityArguments> action)
+		{
+			foreach (var entity in entities)
+			{
+				action(entity);
+			}
+		}
+
+		public void IterateObjects(Action<ObjectData> action)
+		{
+			foreach(var obj in objects)
+			{
+				action(obj);
+			}
+		}
+
+		public EntityData GetGroupReward(int id)
+		{
+			if (id < 0) return null;
+
+			return groupRewards[id];
+		}
+
 		public override string ToString()
 		{
 			return "[DungeonData Name='" + Name + "' Width=" + WidthTiles + " Height=" + HeightTiles + "]";
@@ -251,6 +350,7 @@ namespace DungeonRacer
 
 		public static void Init()
 		{
+			Log.Debug("Loading maps...");
 			var maps = Asset.LoadAll<TiledMap>("map");
 			foreach (var map in maps.Values)
 			{
@@ -263,6 +363,12 @@ namespace DungeonRacer
 					}
 					dungeons[name] = new DungeonData(map, name);
 				}
+			}
+
+			Log.Debug("Initializing objects...");
+			foreach(var room in dungeons.Values)
+			{
+				room.InitObjects();
 			}
 		}
 

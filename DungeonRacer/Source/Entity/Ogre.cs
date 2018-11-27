@@ -15,9 +15,9 @@ namespace DungeonRacer
 
 		protected override void OnUpdateAlive(float deltaTime)
 		{
-			if (GameScene.Player.Alive)
+			if (Scene.GetEntity<Player>().Alive)
 			{
-				var delta = GameScene.Player.Position - Position;
+				var delta = Scene.GetEntity<Player>().Position - Position;
 				if (delta.Length() > 10.0f)
 				{
 					delta.Normalize();
